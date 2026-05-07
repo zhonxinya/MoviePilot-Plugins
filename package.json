@@ -1,0 +1,26 @@
+{
+  "Sonovel": {
+    "name": "Sonovel",
+    "description": "Sonovel 插件",
+    "labels": "",
+    "version": "1.0.0",
+    "icon": "",
+    "author": "",
+    "level": 1,
+    "history": {
+      "v1.0.0": "初始版本"
+    }
+  },
+  "Talebook": {
+    "name": "Talebook",
+    "description": "Talebook 插件",
+    "labels": "",
+    "version": "1.0.0",
+    "icon": "",
+    "author": "",
+    "level": 1,
+    "history": {
+      "v1.0.0": "初始版本"
+    }
+  }
+}

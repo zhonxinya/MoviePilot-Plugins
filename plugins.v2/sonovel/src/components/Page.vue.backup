@@ -1,0 +1,1144 @@
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import SearchHeader from './SearchHeader.vue'
+import TabNavigation from './TabNavigation.vue'
+import ResultsList from './ResultsList.vue'
+import HistoryList from './HistoryList.vue'
+import CacheManager from './CacheManager.vue'
+import NotificationContainer from './NotificationContainer.vue'
+import { UI_CONSTANTS } from '../constants'
+
+const props = defineProps({
+  api: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['action', 'switch', 'close'])
+
+// 调试信息
+console.log('[SoNovel Page] ========== 组件加载 ==========')
+console.log('[SoNovel Page] Props:', props)
+
+// 插件 ID
+const pluginId = 'Sonovel'
+
+// API 基础路径
+const getApiUrl = (path: string) => {
+  return `/api/v1/plugin/${pluginId}${path}`
+}
+
+// 搜索相关
+const searchKeyword = ref('')
+const searchResults = ref([])
+const isLoading = ref(false)
+const error = ref('')
+
+// 分页相关
+const PAGE_SIZE = UI_CONSTANTS.PAGE_SIZE
+const currentPage = ref(1)
+const isLoadingMore = ref(false)
+
+// 合并同名同作者的小说
+const mergedResults = computed(() => {
+  const mergedMap = new Map()
+  
+  searchResults.value.forEach(book => {
+    // 生成唯一键: 书名 + 作者
+    const key = `${book.bookName}|||${book.author}`
+    
+    if (mergedMap.has(key)) {
+      // 已存在,添加到源列表
+      const existing = mergedMap.get(key)
+      if (!existing.sources) {
+        existing.sources = [existing]
+      }
+      existing.sources.push(book)
+      
+      // 选择最佳封面(优先有封面的)
+      if (!existing.coverUrl && book.coverUrl) {
+        existing.coverUrl = book.coverUrl
+      }
+      
+      // 选择最新章节(最新的)
+      if (book.latestChapter && (!existing.latestChapter || book.lastUpdateTime > existing.lastUpdateTime)) {
+        existing.latestChapter = book.latestChapter
+        existing.lastUpdateTime = book.lastUpdateTime
+      }
+    } else {
+      // 新建条目,深拷贝避免引用问题
+      mergedMap.set(key, { ...book })
+    }
+  })
+  
+  return Array.from(mergedMap.values())
+})
+
+// 计算显示的结果(使用合并后的数据)
+const displayedResults = computed(() => {
+  return mergedResults.value.slice(0, currentPage.value * PAGE_SIZE)
+})
+
+// 是否有更多结果
+const hasMoreResults = computed(() => {
+  return displayedResults.value.length < searchResults.value.length
+})
+
+// 剩余结果数量
+const remainingCount = computed(() => {
+  return searchResults.value.length - displayedResults.value.length
+})
+
+// 标签页相关
+const currentTab = ref('search') // 'search', 'history', 'cache'
+const cacheStatus = ref(null)
+const isLoadingCache = ref(false)
+
+// 搜索历史
+const searchHistory = ref([])
+
+// 通知相关
+const notifications = ref([])
+
+// 显示通知
+function showNotification(type, title, message, duration = UI_CONSTANTS.NOTIFICATION_DURATION) {
+  const id = Date.now()
+  const notification = {
+    id,
+    type,
+    title,
+    message,
+    duration
+  }
+  
+  notifications.value.push(notification)
+  
+  // 自动关闭
+  setTimeout(() => {
+    removeNotification(id)
+  }, duration)
+}
+
+// 移除通知
+function removeNotification(id) {
+  const index = notifications.value.findIndex(n => n.id === id)
+  if (index !== -1) {
+    notifications.value.splice(index, 1)
+  }
+}
+
+// API 错误处理工具函数
+async function safeApiCall(
+  apiCall,
+  retries = 2,
+  delay = 1000
+) {
+  let lastError = null
+  
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await apiCall()
+    } catch (error) {
+      lastError = error
+      if (i < retries) {
+        // 指数退避重试
+        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)))
+        console.warn(`API 调用失败，第 ${i + 1} 次重试...`, error)
+      }
+    }
+  }
+  
+  throw lastError
+}
+
+// 执行搜索
+async function handleSearch() {
+  if (!searchKeyword.value.trim()) {
+    error.value = '请输入搜索关键词'
+    return
+  }
+
+  isLoading.value = true
+  error.value = ''
+  
+  try {
+    // ✅ 使用 props.api 调用,自动携带 Bearer Token
+    // MoviePilot-Frontend 已自动解析响应,直接返回 data 字段
+    const response = await safeApiCall(() => 
+      props.api.get(`plugin/${pluginId}/search?keyword=${encodeURIComponent(searchKeyword.value)}`)
+    )
+    
+    // response 已经是后端返回的 {code, message, data}
+    if (response.code === 200) {
+      searchResults.value = response.data || []
+      // 保存到搜索历史
+      saveToSearchHistory(searchKeyword.value, searchResults.value.length)
+      // 显示成功通知
+      showNotification('success', '搜索成功', `找到 ${searchResults.value.length} 本相关书籍`)
+      // 触发刷新事件
+      emit('action')
+    } else {
+      throw new Error(response.message || '搜索失败')
+    }
+  } catch (err) {
+    console.error('搜索出错:', err)
+    error.value = err instanceof Error ? err.message : '未知错误'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 下载书籍
+async function handleDownload(book) {
+  console.log('[SoNovel Page] 开始下载流程')
+  
+  try {
+    const downloadData = {
+      sourceId: String(book.sourceId),
+      sourceName: book.sourceName,
+      url: book.url,
+      bookName: book.bookName,
+      author: book.author,
+      category: book.category || undefined,
+      latestChapter: book.latestChapter || undefined,
+      lastUpdateTime: book.lastUpdateTime || undefined,
+      status: book.status || undefined,
+      format: 'epub',
+      language: 'zh_CN',
+      coverUrl: book.coverUrl || undefined,
+    }
+    
+    // ✅ 使用 props.api 调用,自动携带 Bearer Token
+    // MoviePilot-Frontend 已自动解析响应,直接返回 data 字段
+    const response = await safeApiCall(() => 
+      props.api.post(`plugin/${pluginId}/download`, downloadData)
+    )
+    
+    // response 已经是后端返回的 {code, message, data}
+    if (response.code === 200) {
+      const taskId = response.data?.task_id
+      // 显示成功通知
+      showNotification('success', '任务已提交', `任务ID: ${taskId}\n请在后台查看进度`)
+      emit('action')
+    } else {
+      throw new Error(response.message || '下载失败')
+    }
+  } catch (err) {
+    console.error('下载异常:', err)
+    // 显示错误通知
+    showNotification('error', '下载失败', err instanceof Error ? err.message : '未知错误')
+  }
+}
+
+// 加载搜索历史
+async function loadSearchHistory() {
+  try {
+    const historyStr = localStorage.getItem('sonovel_search_history')
+    searchHistory.value = historyStr ? JSON.parse(historyStr) : []
+  } catch (err) {
+    console.error('加载搜索历史失败:', err)
+    searchHistory.value = []
+  }
+}
+
+// 保存搜索历史
+function saveToSearchHistory(keyword, count) {
+  try {
+    const history = JSON.parse(localStorage.getItem('sonovel_search_history') || '[]')
+    
+    // 检查是否已存在相同的关键词
+    const existingIndex = history.findIndex(item => item.keyword === keyword)
+    if (existingIndex !== -1) {
+      // 更新现有记录
+      history[existingIndex].count = count
+      history[existingIndex].timestamp = new Date().toLocaleString('zh-CN')
+      // 移到最前面
+      const item = history.splice(existingIndex, 1)[0]
+      history.unshift(item)
+    } else {
+      // 添加新记录
+      history.unshift({
+        keyword,
+        count,
+        timestamp: new Date().toLocaleString('zh-CN')
+      })
+    }
+    
+    // 只保留最近 MAX_HISTORY_ITEMS 条
+    localStorage.setItem('sonovel_search_history', JSON.stringify(history.slice(0, UI_CONSTANTS.MAX_HISTORY_ITEMS)))
+    
+    // 更新本地状态
+    searchHistory.value = history.slice(0, UI_CONSTANTS.MAX_HISTORY_ITEMS)
+  } catch (err) {
+    console.error('保存搜索历史失败:', err)
+  }
+}
+
+// 清空搜索结果
+function clearResults() {
+  searchResults.value = []
+  searchKeyword.value = ''
+  error.value = ''
+  currentPage.value = 1 // 重置分页
+}
+
+// 删除单条历史记录
+function deleteHistoryRecord(index) {
+  try {
+    searchHistory.value.splice(index, 1)
+    localStorage.setItem('sonovel_search_history', JSON.stringify(searchHistory.value))
+    showNotification('success', '已删除', '搜索记录已删除')
+  } catch (err) {
+    console.error('删除历史记录失败:', err)
+  }
+}
+
+// 清空所有历史记录
+function clearAllHistory() {
+  try {
+    searchHistory.value = []
+    localStorage.removeItem('sonovel_search_history')
+    showNotification('success', '已清空', '所有搜索历史已清空')
+  } catch (err) {
+    console.error('清空历史记录失败:', err)
+  }
+}
+
+// 加载更多结果
+function loadMore() {
+  isLoadingMore.value = true
+  // 模拟加载延迟以提升用户体验
+  setTimeout(() => {
+    currentPage.value++
+    isLoadingMore.value = false
+  }, UI_CONSTANTS.LOAD_MORE_DELAY)
+}
+
+// 通知主应用切换到配置页面
+function notifySwitch() {
+  emit('switch')
+}
+
+// 通知主应用关闭组件
+function notifyClose() {
+  emit('close')
+}
+
+// 加载缓存状态
+async function loadCacheStatus() {
+  try {
+    isLoadingCache.value = true
+    const response = await safeApiCall(() => 
+      props.api.get(`plugin/${pluginId}/cache_status`)
+    )
+    if (response.code === 200) {
+      cacheStatus.value = response.data
+    }
+  } catch (err) {
+    console.error('加载缓存状态失败:', err)
+  } finally {
+    isLoadingCache.value = false
+  }
+}
+
+// 格式化 TTL 时间
+function formatTTL(seconds) {
+  if (!seconds) return 'N/A'
+  
+  if (seconds < 60) {
+    return `${seconds}秒`
+  } else if (seconds < 3600) {
+    return `${Math.floor(seconds / 60)}分钟`
+  } else {
+    return `${Math.floor(seconds / 3600)}小时`
+  }
+}
+
+// 清空缓存
+async function handleClearCache() {
+  try {
+    const response = await safeApiCall(() => 
+      props.api.post(`plugin/${pluginId}/cache/clear`)
+    )
+    if (response.code === 200) {
+      showNotification('success', '缓存已清空', `清除了 ${response.data.cleared_count} 条记录`)
+      await loadCacheStatus()
+    }
+  } catch (err) {
+    showNotification('error', '清空缓存失败', err instanceof Error ? err.message : '未知错误')
+  }
+}
+
+onMounted(() => {
+  loadSearchHistory()
+  loadCacheStatus()
+})
+</script>
+
+<template>
+  <div class="sonovel-page">
+    <!-- 通知区域 -->
+    <div class="notification-container">
+      <transition-group name="notification-slide">
+        <v-alert
+          v-for="notification in notifications"
+          :key="notification.id"
+          :type="getNotificationColor(notification.type)"
+          :title="notification.title"
+          :text="notification.message"
+          closable
+          density="comfortable"
+          variant="tonal"
+          border="start"
+          class="mb-2 notification-alert"
+          @click:close="removeNotification(notification.id)"
+        >
+          <template #prepend>
+            <v-icon :icon="getNotificationIcon(notification.type)"></v-icon>
+          </template>
+        </v-alert>
+      </transition-group>
+    </div>
+
+    <!-- 搜索区域 -->
+    <v-card class="mb-6 search-header-card" elevation="8">
+      <div class="header-gradient-bg"></div>
+      <div class="header-particles"></div>
+      <v-card-item class="position-relative" style="z-index: 1;">
+        <v-card-title class="d-flex align-center py-4">
+          <v-avatar size="56" color="white" class="mr-3 elevation-6 pulse-animation">
+            <v-icon icon="mdi-book-search" size="30" color="primary"></v-icon>
+          </v-avatar>
+          <div>
+            <span class="text-h4 font-weight-black text-white d-block letter-spacing-tight">SoNovel 图书搜索</span>
+            <span class="text-subtitle-2 text-white-opacity mt-1 d-block">聚合多书源 · 一键搜索海量电子书</span>
+          </div>
+        </v-card-title>
+        <template #append>
+          <v-btn icon color="white" variant="text" @click="notifyClose" class="close-btn">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </template>
+      </v-card-item>
+      <v-card-text class="position-relative pt-2 pb-4">
+        <v-alert v-if="error" type="error" variant="tonal" density="compact" class="mb-4" border="start">
+          <v-icon start>mdi-alert-circle-outline</v-icon>
+          {{ error }}
+        </v-alert>
+        
+        <v-row>
+          <v-col cols="12" md="9">
+            <v-text-field
+              v-model="searchKeyword"
+              label="搜索关键词"
+              placeholder="请输入书名、作者或关键词..."
+              prepend-inner-icon="mdi-magnify"
+              clearable
+              variant="solo-filled"
+              density="comfortable"
+              bg-color="rgba(255, 255, 255, 0.95)"
+              @keyup.enter="handleSearch"
+              hide-details
+              class="search-field glow-effect"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-btn
+              color="white"
+              size="x-large"
+              block
+              prepend-icon="mdi-search-web"
+              :loading="isLoading"
+              @click="handleSearch"
+              elevation="6"
+              class="search-action-btn text-primary font-weight-bold shimmer-effect"
+            >
+              开始搜索
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <!-- 标签页导航 -->
+    <v-card class="mb-6 tab-navigation-card" elevation="6">
+      <v-tabs
+        v-model="currentTab"
+        color="primary"
+        centered
+        bg-color="transparent"
+        class="tab-navigation"
+      >
+        <v-tab value="search" prepend-icon="mdi-magnify">
+          搜索结果
+          <v-badge v-if="mergedResults.length > 0" :content="mergedResults.length" inline color="success" size="small"></v-badge>
+        </v-tab>
+        <v-tab value="history" prepend-icon="mdi-history">
+          搜索历史
+          <v-badge v-if="searchHistory.length > 0" :content="searchHistory.length" inline color="info" size="small"></v-badge>
+        </v-tab>
+        <v-tab value="cache" prepend-icon="mdi-database">
+          缓存管理
+        </v-tab>
+      </v-tabs>
+    </v-card>
+
+    <!-- 标签页内容 -->
+    <v-window v-model="currentTab">
+      <!-- 搜索结果标签页 -->
+      <v-window-item value="search">
+    <v-card v-if="mergedResults.length > 0" class="mb-6 results-container" elevation="6">
+      <v-card-title class="d-flex align-center justify-space-between py-4 bg-gradient glass-effect">
+        <div class="d-flex align-center">
+          <v-avatar size="48" color="success" class="mr-3 elevation-4 bounce-in">
+            <v-icon icon="mdi-format-list-bulleted" size="26" color="white"></v-icon>
+          </v-avatar>
+          <div>
+            <span class="text-h5 font-weight-bold text-white d-block">搜索结果</span>
+            <span class="text-subtitle-2 text-white-opacity">
+              共找到 {{ mergedResults.length }} 本相关书籍
+              <span v-if="searchResults.length > mergedResults.length" class="ml-2">
+                (已合并 {{ searchResults.length - mergedResults.length }} 个重复项)
+              </span>
+            </span>
+          </div>
+        </div>
+        <v-btn 
+          size="small" 
+          variant="outlined" 
+          color="white"
+          prepend-icon="mdi-close"
+          @click="clearResults"
+          class="white--text"
+        >
+          清空结果
+        </v-btn>
+      </v-card-title>
+      <v-card-text class="pa-5">
+        <v-row>
+          <v-col
+            v-for="(book, index) in displayedResults"
+            :key="book.url"
+            cols="12"
+            sm="6"
+            md="4"
+            lg="3"
+            class="animate-fade-in"
+            :style="{ animationDelay: `${index * 0.05}s` }"
+          >
+            <BookCard 
+              :book="book" 
+              @download="handleDownload"
+            />
+          </v-col>
+        </v-row>
+        
+        <!-- 加载更多按钮 -->
+        <div v-if="hasMoreResults" class="text-center mt-8">
+          <v-btn
+            color="primary"
+            variant="tonal"
+            prepend-icon="mdi-dots-horizontal-circle"
+            :loading="isLoadingMore"
+            @click="loadMore"
+            size="x-large"
+            elevation="4"
+            class="load-more-btn"
+          >
+            加载更多 ({{ remainingCount }} 条)
+          </v-btn>
+        </div>
+      </v-card-text>
+    </v-card>
+      </v-window-item>
+
+      <!-- 搜索历史标签页 -->
+      <v-window-item value="history">
+      <v-card v-if="searchHistory.length > 0" class="history-card" elevation="6">
+        <v-card-title class="d-flex align-center py-4 bg-gradient-secondary">
+          <v-avatar size="44" color="white" class="mr-3 elevation-3">
+            <v-icon icon="mdi-history" size="24" color="success"></v-icon>
+          </v-avatar>
+          <div>
+            <span class="text-h6 font-weight-bold text-white d-block">搜索历史记录</span>
+            <span class="text-caption text-white-opacity">查看和管理您的搜索历史</span>
+          </div>
+        </v-card-title>
+        <v-card-text class="pa-5">
+          <v-table hover class="history-table">
+            <thead>
+              <tr>
+                <th class="text-left">
+                  <v-icon size="small" class="mr-1">mdi-magnify</v-icon>
+                  关键词
+                </th>
+                <th class="text-center">
+                  <v-icon size="small" class="mr-1">mdi-format-list-numbered</v-icon>
+                  结果数
+                </th>
+                <th class="text-right">
+                  <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
+                  时间
+                </th>
+                <th class="text-center" style="width: 120px;">
+                  <v-icon size="small" class="mr-1">mdi-cog</v-icon>
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(record, index) in searchHistory" :key="index" class="history-row">
+                <td class="font-weight-medium">
+                  <v-chip 
+                    size="small" 
+                    color="primary" 
+                    variant="tonal"
+                    @click="searchKeyword = record.keyword; handleSearch()"
+                    class="cursor-pointer"
+                  >
+                    {{ record.keyword }}
+                  </v-chip>
+                </td>
+                <td class="text-center">
+                  <v-chip size="small" color="primary" variant="tonal">
+                    {{ record.count }}
+                  </v-chip>
+                </td>
+                <td class="text-right text-grey">{{ record.timestamp }}</td>
+                <td class="text-center">
+                  <v-btn 
+                    size="x-small" 
+                    variant="text" 
+                    color="error"
+                    icon="mdi-delete"
+                    @click="deleteHistoryRecord(index)"
+                  ></v-btn>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn 
+            color="error" 
+            variant="outlined"
+            prepend-icon="mdi-delete-sweep"
+            @click="clearAllHistory"
+            elevation="2"
+          >
+            清空全部历史
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+      <v-card v-else class="empty-state-card" elevation="4">
+        <v-card-text class="text-center py-16">
+          <div class="empty-icon-wrapper mb-6">
+            <v-icon size="80" color="grey-lighten-2" class="floating-animation">mdi-history-remove</v-icon>
+          </div>
+          <h3 class="text-h4 mb-4 font-weight-bold text-grey-darken-2">暂无搜索历史</h3>
+          <p class="text-body-1 text-grey-darken-1 mb-6">开始搜索后，历史记录将显示在这里</p>
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-arrow-up-bold"
+            size="large"
+            elevation="4"
+            @click="currentTab = 'search'"
+            class="cta-button"
+          >
+            去搜索
+          </v-btn>
+        </v-card-text>
+      </v-card>
+      </v-window-item>
+
+      <!-- 缓存管理标签页 -->
+      <v-window-item value="cache">
+      <v-card class="cache-card" elevation="6">
+        <v-card-title class="d-flex align-center py-4 bg-gradient-cache">
+          <v-avatar size="44" color="white" class="mr-3 elevation-3">
+            <v-icon icon="mdi-database" size="24" color="purple"></v-icon>
+          </v-avatar>
+          <div>
+            <span class="text-h6 font-weight-bold text-white d-block">缓存管理</span>
+            <span class="text-caption text-white-opacity">优化性能和存储空间</span>
+          </div>
+        </v-card-title>
+        <v-card-text class="pa-5">
+          <v-progress-linear 
+            v-if="isLoadingCache" 
+            indeterminate 
+            color="primary"
+            class="mb-4"
+          ></v-progress-linear>
+          
+          <v-row v-if="cacheStatus">
+            <v-col cols="12" md="4">
+              <v-card variant="outlined" class="cache-stat-card">
+                <v-card-text>
+                  <div class="d-flex align-center mb-3">
+                    <v-icon size="32" color="primary" class="mr-3">mdi-database-check</v-icon>
+                    <div>
+                      <div class="text-caption text-grey">缓存条目数</div>
+                      <div class="text-h4 font-weight-bold text-primary">{{ cacheStatus.cache_size || 0 }}</div>
+                    </div>
+                  </div>
+                  <v-divider class="my-3"></v-divider>
+                  <div class="text-body-2 text-grey">
+                    已缓存的搜索关键词数量
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="4">
+              <v-card variant="outlined" class="cache-stat-card">
+                <v-card-text>
+                  <div class="d-flex align-center mb-3">
+                    <v-icon size="32" color="success" class="mr-3">mdi-memory</v-icon>
+                    <div>
+                      <div class="text-caption text-grey">内存使用</div>
+                      <div class="text-h4 font-weight-bold text-success">{{ cacheStatus.memory_usage || 'N/A' }}</div>
+                    </div>
+                  </div>
+                  <v-divider class="my-3"></v-divider>
+                  <div class="text-body-2 text-grey">
+                    当前内存中的缓存数据
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+            
+            <v-col cols="12" md="4">
+              <v-card variant="outlined" class="cache-stat-card">
+                <v-card-text>
+                  <div class="d-flex align-center mb-3">
+                    <v-icon size="32" color="info" class="mr-3">mdi-clock-outline</v-icon>
+                    <div>
+                      <div class="text-caption text-grey">缓存有效期</div>
+                      <div class="text-h4 font-weight-bold text-info">{{ formatTTL(cacheStatus.cache_ttl) }}</div>
+                    </div>
+                  </div>
+                  <v-divider class="my-3"></v-divider>
+                  <div class="text-body-2 text-grey">
+                    每条缓存的保存时间
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+          
+          <v-alert
+            type="info"
+            variant="tonal"
+            density="comfortable"
+            class="mt-4"
+            border="start"
+          >
+            <template #prepend>
+              <v-icon>mdi-information-outline</v-icon>
+            </template>
+            <div>
+              <strong>缓存说明：</strong><br>
+              • 缓存可以加快重复搜索的速度<br>
+              • 缓存数据会在插件重启时自动保存<br>
+              • 定期清理过期缓存可释放存储空间
+            </div>
+          </v-alert>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn 
+            color="primary" 
+            variant="flat"
+            prepend-icon="mdi-refresh"
+            @click="loadCacheStatus"
+            :loading="isLoadingCache"
+            elevation="2"
+          >
+            刷新状态
+          </v-btn>
+          <v-btn 
+            color="warning" 
+            variant="outlined"
+            prepend-icon="mdi-delete-forever"
+            @click="handleClearCache"
+            :loading="isLoadingCache"
+            elevation="2"
+          >
+            清空缓存
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+      </v-window-item>
+    </v-window>
+  </div>
+</template>
+
+<style scoped>
+.sonovel-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 通知容器 */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  max-width: 400px;
+  width: 100%;
+}
+
+.notification-alert {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+}
+
+/* 通知动画 */
+.notification-slide-enter-active,
+.notification-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.notification-slide-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.notification-slide-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.search-header-card {
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-header-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3) !important;
+}
+
+.header-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  opacity: 0.95;
+  z-index: 0;
+}
+
+.header-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.text-white-opacity {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.letter-spacing-tight {
+  letter-spacing: -0.5px;
+}
+
+/* 脉冲动画 */
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 浮动动画 */
+.floating-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* 弹入动画 */
+.bounce-in {
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.search-field :deep(.v-field) {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.search-field :deep(.v-field--focused) {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+/* 发光效果 */
+.glow-effect :deep(.v-field) {
+  transition: all 0.3s ease;
+}
+
+.glow-effect :deep(.v-field--focused) {
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.4), 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+/* 闪烁效果 */
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.shimmer-effect:hover::before {
+  left: 100%;
+}
+
+.search-action-btn {
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
+.search-action-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(255, 255, 255, 0.4) !important;
+}
+
+.results-container {
+  border-radius: 20px;
+  overflow: hidden;
+  animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+/* 玻璃态效果 */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.bg-gradient-cache {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.tab-navigation-card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.tab-navigation :deep(.v-tab) {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.tab-navigation :deep(.v-tab--selected) {
+  transform: scale(1.05);
+}
+
+.cache-stat-card {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.cache-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cursor-pointer:hover {
+  transform: scale(1.05);
+}
+
+.empty-state-card {
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  animation: fadeIn 0.5s ease-in;
+}
+
+.empty-icon-wrapper {
+  display: inline-block;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+}
+
+.cta-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.4) !important;
+}
+
+.history-card {
+  border-radius: 20px;
+  overflow: hidden;
+  animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
+.history-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.history-table thead tr {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.history-table th {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 0.875rem;
+}
+
+.history-row:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.load-more-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.load-more-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* 响应式优化 */
+@media (max-width: 600px) {
+  .sonovel-page {
+    padding: 12px;
+  }
+  
+  .search-header-card :deep(.v-card-title) {
+    padding: 16px !important;
+  }
+  
+  .text-h5 {
+    font-size: 1.25rem !important;
+  }
+}
+</style>
