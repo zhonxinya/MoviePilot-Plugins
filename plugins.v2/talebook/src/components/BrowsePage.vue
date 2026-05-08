@@ -159,12 +159,12 @@ async function loadBooks() {
     // 如果有元数据筛选条件
     if (props.metaType && props.metaName) {
       // 按元数据分类获取书籍
-      url = `/api/v1/plugin/Talebook/meta/${props.metaType}/${encodeURIComponent(props.metaName)}`
+      url = `/plugin/Talebook/meta/${props.metaType}/${encodeURIComponent(props.metaName)}`
       params.append('page', currentPage.value.toString())
       params.append('num', '20')
     } else {
       // 获取全部书籍(分页)
-      url = '/api/v1/plugin/Talebook/books'
+      url = '/plugin/Talebook/books'
       params.append('page', currentPage.value.toString())
       params.append('limit', '20')
     }
@@ -212,7 +212,7 @@ async function handleBookDetail(bookId: number) {
   
   // 获取书籍详情
   try {
-    const response = await fetch(`/api/v1/plugin/Talebook/book/detail/${bookId}`)
+    const response = await fetch(`/plugin/Talebook/book/detail/${bookId}`)
     const data = await response.json()
     
     if (data.code === 200) {

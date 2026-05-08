@@ -1113,7 +1113,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       loading.value = true;
       metaList.value = [];
       try {
-        const response = await fetch(`/api/v1/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`);
+        const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`);
         const data = await response.json();
         if (data.code === 200) {
           metaList.value = data.data || [];
@@ -1312,7 +1312,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-55645d61"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-27c9c4c7"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 

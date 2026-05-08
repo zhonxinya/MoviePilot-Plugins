@@ -134,7 +134,8 @@ async function loadMetaList() {
   metaList.value = []
   
   try {
-    const response = await fetch(`/api/v1/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`)
+    // 使用相对路径,MoviePilot-Frontend 会自动添加认证 token
+    const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`)
     const data = await response.json()
     
     if (data.code === 200) {
