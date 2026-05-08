@@ -5,6 +5,10 @@ const {ref: ref$3,onMounted: onMounted$2,onUnmounted} = await importShared('vue'
 
 const imageCache = /* @__PURE__ */ new Map();
 const loadingImages = /* @__PURE__ */ new Map();
+function getAuthToken() {
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  return token || null;
+}
 async function loadImage(imageUrl, _api, useCache = true) {
   if (!imageUrl) {
     console.warn("[ImageLoader] 图片 URL 为空");
@@ -31,13 +35,19 @@ async function loadImage(imageUrl, _api, useCache = true) {
       if (imageUrl.startsWith("/")) {
         fullUrl = `${window.location.origin}${imageUrl}`;
       }
+      const token = getAuthToken();
+      const headers = {
+        "Accept": "image/jpeg,image/png,image/webp,*/*"
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+        console.log("[ImageLoader] 使用 Bearer Token 认证");
+      } else {
+        console.warn("[ImageLoader] 未找到认证 token");
+      }
       const response = await fetch(fullUrl, {
         method: "GET",
-        headers: {
-          "Accept": "image/jpeg,image/png,image/webp,*/*"
-        },
-        credentials: "include"
-        // 包含 cookie
+        headers
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

@@ -16,6 +16,16 @@ const imageCache = new Map<string, string>()
 const loadingImages = new Map<string, Promise<string>>()
 
 /**
+ * 获取认证 token
+ */
+function getAuthToken(): string | null {
+  // 从 localStorage 或 sessionStorage 中获取 MoviePilot 的 token
+  const token = localStorage.getItem('token') || 
+                sessionStorage.getItem('token')
+  return token || null
+}
+
+/**
  * 加载图片并返回 Blob URL
  * 
  * @param imageUrl - 图片 URL (相对路径或完整 URL)
@@ -65,15 +75,26 @@ export async function loadImage(
         fullUrl = `${window.location.origin}${imageUrl}`
       }
 
-      // 使用原生 fetch 请求图片(因为需要 responseType: 'blob')
-      // 注意: MoviePilot-Frontend 的 axios 拦截器会自动携带 Bearer Token
-      // 所以即使不使用 props.api,fetch 也会通过 cookie/session 认证
+      // 获取认证 token
+      const token = getAuthToken()
+      
+      // 构建请求头
+      const headers: HeadersInit = {
+        'Accept': 'image/jpeg,image/png,image/webp,*/*'
+      }
+      
+      // 添加 Bearer Token 认证
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+        console.log('[ImageLoader] 使用 Bearer Token 认证')
+      } else {
+        console.warn('[ImageLoader] 未找到认证 token')
+      }
+
+      // 发起请求
       const response = await fetch(fullUrl, {
         method: 'GET',
-        headers: {
-          'Accept': 'image/jpeg,image/png,image/webp,*/*'
-        },
-        credentials: 'include' // 包含 cookie
+        headers
       })
 
       if (!response.ok) {
