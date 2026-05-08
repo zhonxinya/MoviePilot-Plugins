@@ -412,7 +412,7 @@ class XunleiPan(_PluginBase):
                 return {"code": 400, "message": "启用插件时必须提供用户名和密码"}
             
             # 保存配置
-            self.save_plugin_config(self.__class__.__name__, new_config)
+            self.update_config(new_config)
             
             # 重新初始化插件以应用新配置
             self.init_plugin(new_config)
