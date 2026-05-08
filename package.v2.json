@@ -3,11 +3,12 @@
     "name": "Sonovel",
     "description": "SoNovel 图书搜索与下载插件，支持多书源聚合搜索和电子书下载。",
     "labels": "电子书,搜索,下载,多书源,聚合",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "icon": "Bookstack_A.png",
     "author": "trient",
     "level": 1,
     "history": {
+      "v1.0.3": "添加502错误处理机制和详细日志系统",
       "v1.0.2": "优化依赖管理和构建配置",
       "v1.0.1": "版本更新",
       "v1.0.0": "初始版本"
@@ -17,11 +18,12 @@
     "name": "Talebook",
     "description": "Talebook 本地书库管理，支持扫描目录批量导入小说（与 Sonovel 联动）",
     "labels": "电子书,管理,搜索,扫描,导入",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "icon": "Calibre_B.png",
     "author": "trient",
     "level": 1,
     "history": {
+      "v1.0.4": "添加502错误处理和通用重试机制",
       "v1.0.3": "新增元数据分类功能(标签/作者/丛书/评分/出版社/语言)",
       "v1.0.2": "优化依赖管理和构建配置",
       "v1.0.1": "版本更新",
@@ -32,11 +34,12 @@
     "name": "起点图书",
     "description": "获取起点中文网图书信息，支持搜索和详情查询。",
     "labels": "图书,搜索,起点",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "Bookstack_A.png",
     "author": "trient",
     "level": 1,
     "history": {
+      "v1.0.1": "版本更新",
       "v1.0.0": "初始版本，支持起点图书搜索和详情查询"
     }
   }

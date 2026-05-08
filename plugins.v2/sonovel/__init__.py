@@ -33,7 +33,7 @@ class Sonovel(_PluginBase):
     plugin_name = "Sonovel"
     plugin_desc = "SoNovel 图书搜索与下载插件，支持多书源聚合搜索和电子书下载。"
     plugin_icon = "Bookstack_A.png"
-    plugin_version = "1.0.2"
+    plugin_version = "1.0.3"
     plugin_author = "trient"
     author_url = "https://github.com/trient"
     plugin_config_prefix = "sonovel_"

@@ -25,7 +25,7 @@ class Talebook(_PluginBase):
     plugin_name = "Talebook"
     plugin_desc = "Talebook 本地书库管理，支持扫描目录批量导入小说（与 Sonovel 联动）"
     plugin_icon = "Calibre_B.png"
-    plugin_version = "1.0.3"
+    plugin_version = "1.0.4"
     plugin_author = "trient"
     author_url = "https://github.com/jxxghp/MoviePilot-Plugins"
     plugin_config_prefix = "talebook_"
