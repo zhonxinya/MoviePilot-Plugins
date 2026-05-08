@@ -1,3 +1,127 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useToast } from 'vue-toastification'
+
+const props = defineProps({
+  api: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['action', 'switch', 'close'])
+
+// 调试信息
+console.log('[XunleiPan Config] ========== 组件加载 ==========')
+console.log('[XunleiPan Config] Props:', props)
+
+const toast = useToast()
+
+// 插件 ID
+const pluginId = 'XunleiPan'
+
+// ===== 配置数据 =====
+const config = ref({
+  username: '',
+  password: '',
+  timeout: 10,
+  max_retries: 3,
+  auto_refresh: false
+})
+
+const saving = ref(false)
+const testing = ref(false)
+
+// ===== API 调用 =====
+const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
+  try {
+    const response = await fetch(`/api/v1/plugin/XunleiPan${endpoint}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: data ? JSON.stringify(data) : undefined
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    return await response.json()
+  } catch (error: any) {
+    toast.error(`API 调用失败: ${error.message}`)
+    throw error
+  }
+}
+
+// ===== 配置操作 =====
+const loadConfig = async () => {
+  try {
+    const result = await apiCall('/config')
+    if (result.code === 200 && result.data) {
+      config.value = {
+        ...config.value,
+        ...result.data
+      }
+    }
+  } catch (error) {
+    console.error('加载配置失败:', error)
+  }
+}
+
+const saveConfig = async () => {
+  // 验证必填字段
+  if (!config.value.username || !config.value.password) {
+    toast.error('请填写完整的账号信息')
+    return
+  }
+  
+  saving.value = true
+  try {
+    const result = await apiCall('/config', 'POST', config.value)
+    if (result.code === 200) {
+      toast.success('配置保存成功')
+    } else {
+      toast.error(result.message || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存配置失败:', error)
+  } finally {
+    saving.value = false
+  }
+}
+
+const testConnection = async () => {
+  if (!config.value.username || !config.value.password) {
+    toast.error('请先填写账号信息')
+    return
+  }
+  
+  testing.value = true
+  try {
+    const result = await apiCall('/test_connection', 'POST', {
+      username: config.value.username,
+      password: config.value.password
+    })
+    
+    if (result.code === 200) {
+      toast.success('连接测试成功!')
+    } else {
+      toast.error(`连接失败: ${result.message}`)
+    }
+  } catch (error) {
+    console.error('连接测试失败:', error)
+  } finally {
+    testing.value = false
+  }
+}
+
+// ===== 生命周期 =====
+onMounted(() => {
+  loadConfig()
+})
+</script>
+
 <template>
   <v-container fluid>
     <v-form ref="configForm">
@@ -165,114 +289,6 @@
     </v-form>
   </v-container>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
-
-const toast = useToast()
-
-// ===== 配置数据 =====
-const config = ref({
-  username: '',
-  password: '',
-  timeout: 10,
-  max_retries: 3,
-  auto_refresh: false
-})
-
-const saving = ref(false)
-const testing = ref(false)
-
-// ===== API 调用 =====
-const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
-  try {
-    const response = await fetch(`/api/v1/plugin/XunleiPan${endpoint}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: data ? JSON.stringify(data) : undefined
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    return await response.json()
-  } catch (error: any) {
-    toast.error(`API 调用失败: ${error.message}`)
-    throw error
-  }
-}
-
-// ===== 配置操作 =====
-const loadConfig = async () => {
-  try {
-    const result = await apiCall('/config')
-    if (result.code === 200 && result.data) {
-      config.value = {
-        ...config.value,
-        ...result.data
-      }
-    }
-  } catch (error) {
-    console.error('加载配置失败:', error)
-  }
-}
-
-const saveConfig = async () => {
-  // 验证必填字段
-  if (!config.value.username || !config.value.password) {
-    toast.error('请填写完整的账号信息')
-    return
-  }
-  
-  saving.value = true
-  try {
-    const result = await apiCall('/config', 'POST', config.value)
-    if (result.code === 200) {
-      toast.success('配置保存成功')
-    } else {
-      toast.error(result.message || '保存失败')
-    }
-  } catch (error) {
-    console.error('保存配置失败:', error)
-  } finally {
-    saving.value = false
-  }
-}
-
-const testConnection = async () => {
-  if (!config.value.username || !config.value.password) {
-    toast.error('请先填写账号信息')
-    return
-  }
-  
-  testing.value = true
-  try {
-    const result = await apiCall('/test_connection', 'POST', {
-      username: config.value.username,
-      password: config.value.password
-    })
-    
-    if (result.code === 200) {
-      toast.success('连接测试成功!')
-    } else {
-      toast.error(`连接失败: ${result.message}`)
-    }
-  } catch (error) {
-    console.error('连接测试失败:', error)
-  } finally {
-    testing.value = false
-  }
-}
-
-// ===== 生命周期 =====
-onMounted(() => {
-  loadConfig()
-})
-</script>
 
 <style scoped>
 /* 无特殊样式 */
