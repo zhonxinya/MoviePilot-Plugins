@@ -29,6 +29,7 @@ class XunleiPan(_PluginBase):
     plugin_config_prefix = "xunleipan_"
     plugin_order = 0
     auth_level = 1
+    plugin_labels = "网盘,下载,离线,迅雷"
     
     def __init__(self):
         super().__init__()
