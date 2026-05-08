@@ -5,13 +5,13 @@ const {ref: ref$3,onMounted: onMounted$2,onUnmounted} = await importShared('vue'
 
 const imageCache = /* @__PURE__ */ new Map();
 const loadingImages = /* @__PURE__ */ new Map();
-function getAuthToken() {
-  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-  return token || null;
-}
-async function loadImage(imageUrl, _api, useCache = true) {
+async function loadImage(imageUrl, api, useCache = true) {
   if (!imageUrl) {
     console.warn("[ImageLoader] 图片 URL 为空");
+    return "";
+  }
+  if (!api || typeof api.get !== "function") {
+    console.error("[ImageLoader] API 对象无效:", api);
     return "";
   }
   if (useCache && imageCache.has(imageUrl)) {
@@ -35,24 +35,12 @@ async function loadImage(imageUrl, _api, useCache = true) {
       if (imageUrl.startsWith("/")) {
         fullUrl = `${window.location.origin}${imageUrl}`;
       }
-      const token = getAuthToken();
-      const headers = {
-        "Accept": "image/jpeg,image/png,image/webp,*/*"
-      };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-        console.log("[ImageLoader] 使用 Bearer Token 认证");
-      } else {
-        console.warn("[ImageLoader] 未找到认证 token");
-      }
-      const response = await fetch(fullUrl, {
-        method: "GET",
-        headers
+      console.log("[ImageLoader] 请求 URL:", fullUrl);
+      const response = await api.get(fullUrl, {
+        responseType: "blob"
       });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const blob = await response.blob();
+      console.log("[ImageLoader] 响应状态:", response.status);
+      const blob = response.data;
       const blobUrl = URL.createObjectURL(blob);
       if (useCache) {
         imageCache.set(imageUrl, blobUrl);
@@ -69,17 +57,17 @@ async function loadImage(imageUrl, _api, useCache = true) {
   loadingImages.set(imageUrl, loadPromise);
   return loadPromise;
 }
-function useImageLoader(imageUrl, _api) {
+function useImageLoader(imageUrl, api) {
   const loadedUrl = ref$3("");
   const loading = ref$3(false);
   const error = ref$3("");
   let cancelled = false;
   const load = async () => {
-    if (!imageUrl || !_api || cancelled) return;
+    if (!imageUrl || !api || cancelled) return;
     loading.value = true;
     error.value = "";
     try {
-      const url = await loadImage(imageUrl, _api);
+      const url = await loadImage(imageUrl, api);
       if (!cancelled) {
         loadedUrl.value = url;
         if (!url) {

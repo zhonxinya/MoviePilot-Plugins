@@ -16,30 +16,25 @@ const imageCache = new Map<string, string>()
 const loadingImages = new Map<string, Promise<string>>()
 
 /**
- * 获取认证 token
- */
-function getAuthToken(): string | null {
-  // 从 localStorage 或 sessionStorage 中获取 MoviePilot 的 token
-  const token = localStorage.getItem('token') || 
-                sessionStorage.getItem('token')
-  return token || null
-}
-
-/**
  * 加载图片并返回 Blob URL
  * 
  * @param imageUrl - 图片 URL (相对路径或完整 URL)
- * @param api - MoviePilot-Frontend 的 API 对象
+ * @param api - MoviePilot-Frontend 的 API 对象(axios 实例)
  * @param useCache - 是否使用缓存 (默认 true)
  * @returns Blob URL 或空字符串(失败时)
  */
 export async function loadImage(
   imageUrl: string,
-  _api: any,  // 保留 api 参数以便将来扩展
+  api: any,
   useCache: boolean = true
 ): Promise<string> {
   if (!imageUrl) {
     console.warn('[ImageLoader] 图片 URL 为空')
+    return ''
+  }
+
+  if (!api || typeof api.get !== 'function') {
+    console.error('[ImageLoader] API 对象无效:', api)
     return ''
   }
 
@@ -75,34 +70,18 @@ export async function loadImage(
         fullUrl = `${window.location.origin}${imageUrl}`
       }
 
-      // 获取认证 token
-      const token = getAuthToken()
+      console.log('[ImageLoader] 请求 URL:', fullUrl)
       
-      // 构建请求头
-      const headers: HeadersInit = {
-        'Accept': 'image/jpeg,image/png,image/webp,*/*'
-      }
-      
-      // 添加 Bearer Token 认证
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-        console.log('[ImageLoader] 使用 Bearer Token 认证')
-      } else {
-        console.warn('[ImageLoader] 未找到认证 token')
-      }
-
-      // 发起请求
-      const response = await fetch(fullUrl, {
-        method: 'GET',
-        headers
+      // 使用 axios 获取图片 blob
+      // responseType: 'blob' 告诉 axios 返回二进制数据
+      const response = await api.get(fullUrl, {
+        responseType: 'blob'
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      // 获取图片二进制数据
-      const blob = await response.blob()
+      console.log('[ImageLoader] 响应状态:', response.status)
+      
+      // 获取 Blob 数据
+      const blob = response.data
       
       // 创建 Blob URL
       const blobUrl = URL.createObjectURL(blob)
@@ -184,7 +163,7 @@ export function getCacheStats(): { count: number; urls: string[] } {
  * const { imageUrl, loading, error } = useImageLoader(book.thumb, props.api)
  * ```
  */
-export function useImageLoader(imageUrl: string, _api: any) {
+export function useImageLoader(imageUrl: string, api: any) {
   const loadedUrl = ref<string>('')
   const loading = ref<boolean>(false)
   const error = ref<string>('')
@@ -192,13 +171,13 @@ export function useImageLoader(imageUrl: string, _api: any) {
   let cancelled = false
 
   const load = async () => {
-    if (!imageUrl || !_api || cancelled) return
+    if (!imageUrl || !api || cancelled) return
     
     loading.value = true
     error.value = ''
     
     try {
-      const url = await loadImage(imageUrl, _api)
+      const url = await loadImage(imageUrl, api)
       if (!cancelled) {
         loadedUrl.value = url
         if (!url) {
