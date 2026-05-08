@@ -1149,11 +1149,11 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     }
     function getCoverUrl(book) {
       if (!book) return "";
-      const serverUrl = getServerUrl();
       if (book.thumb) {
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
+        const serverUrl = talebookServerUrl.value;
         if (serverUrl) {
           return `${serverUrl}${book.thumb}`;
         }
@@ -1163,6 +1163,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
+        const serverUrl = talebookServerUrl.value;
         if (serverUrl) {
           return `${serverUrl}${book.img}`;
         }
@@ -1190,13 +1191,6 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       } catch (error) {
         console.error("[MetaCategory] 加载配置失败:", error);
       }
-    }
-    function getServerUrl() {
-      if (talebookServerUrl.value) {
-        return talebookServerUrl.value;
-      }
-      console.warn("[MetaCategory] 未配置 Talebook 服务器地址");
-      return "";
     }
     async function loadMetaList() {
       loading.value = true;
@@ -1662,7 +1656,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-bce67afe"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ced46dc6"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 

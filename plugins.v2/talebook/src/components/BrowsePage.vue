@@ -158,14 +158,13 @@ function getMetaTypeName(type: string): string {
 function getCoverUrl(book: any): string {
   if (!book) return ''
   
-  const serverUrl = getServerUrl()
-  
   // 优先使用 thumb 字段(缩略图)
   if (book.thumb) {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
     // 如果有服务器地址,拼接完整 URL
+    const serverUrl = talebookServerUrl.value
     if (serverUrl) {
       return `${serverUrl}${book.thumb}`
     }
@@ -178,6 +177,7 @@ function getCoverUrl(book: any): string {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
     }
+    const serverUrl = talebookServerUrl.value
     if (serverUrl) {
       return `${serverUrl}${book.img}`
     }
@@ -219,20 +219,6 @@ async function loadConfig() {
   } catch (error) {
     console.error('[BrowsePage] 加载配置失败:', error)
   }
-}
-
-/**
- * 获取 Talebook 服务器地址
- */
-function getServerUrl(): string {
-  // 优先使用缓存的服务器地址
-  if (talebookServerUrl.value) {
-    return talebookServerUrl.value
-  }
-  
-  // 如果没有配置,返回空字符串
-  console.warn('[BrowsePage] 未配置 Talebook 服务器地址')
-  return ''
 }
 
 /**
