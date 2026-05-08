@@ -92,6 +92,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+interface Props {
+  api?: any  // MoviePilot-Frontend 提供的 API 对象
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  api: undefined
+})
+
 interface MetaItem {
   name: string
   count: number
@@ -134,14 +142,27 @@ async function loadMetaList() {
   metaList.value = []
   
   try {
-    // 使用相对路径,MoviePilot-Frontend 会自动添加认证 token
-    const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`)
-    const data = await response.json()
-    
-    if (data.code === 200) {
-      metaList.value = data.data || []
+    // 如果有 api 对象,使用它来调用(自动携带认证)
+    if (props.api) {
+      const response = await props.api.get(`/plugin/Talebook/meta/${selectedMetaType.value}`, {
+        params: { show_all: true }
+      })
+      
+      if (response && response.code === 200) {
+        metaList.value = response.data || []
+      } else {
+        console.error('加载元数据列表失败:', response?.message)
+      }
     } else {
-      console.error('加载元数据列表失败:', data.message)
+      // 降级方案: 使用 fetch
+      const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`)
+      const data = await response.json()
+      
+      if (data.code === 200) {
+        metaList.value = data.data || []
+      } else {
+        console.error('加载元数据列表失败:', data.message)
+      }
     }
   } catch (error) {
     console.error('加载元数据列表异常:', error)

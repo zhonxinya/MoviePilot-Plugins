@@ -1086,7 +1086,11 @@ const {ref: ref$1,onMounted: onMounted$1} = await importShared('vue');
 
 const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   __name: "MetaCategory",
+  props: {
+    api: { default: void 0 }
+  },
   setup(__props) {
+    const props = __props;
     const selectedMetaType = ref$1("tag");
     const metaList = ref$1([]);
     const loading = ref$1(false);
@@ -1113,12 +1117,23 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       loading.value = true;
       metaList.value = [];
       try {
-        const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`);
-        const data = await response.json();
-        if (data.code === 200) {
-          metaList.value = data.data || [];
+        if (props.api) {
+          const response = await props.api.get(`/plugin/Talebook/meta/${selectedMetaType.value}`, {
+            params: { show_all: true }
+          });
+          if (response && response.code === 200) {
+            metaList.value = response.data || [];
+          } else {
+            console.error("加载元数据列表失败:", response?.message);
+          }
         } else {
-          console.error("加载元数据列表失败:", data.message);
+          const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`);
+          const data = await response.json();
+          if (data.code === 200) {
+            metaList.value = data.data || [];
+          } else {
+            console.error("加载元数据列表失败:", data.message);
+          }
         }
       } catch (error) {
         console.error("加载元数据列表异常:", error);
@@ -1225,8 +1240,8 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                       }, {
                         default: _withCtx$1(() => [
                           _createVNode$1(_component_v_hover, null, {
-                            default: _withCtx$1(({ isHovering, props }) => [
-                              _createVNode$1(_component_v_card, _mergeProps({ ref_for: true }, props, {
+                            default: _withCtx$1(({ isHovering, props: props2 }) => [
+                              _createVNode$1(_component_v_card, _mergeProps({ ref_for: true }, props2, {
                                 class: [{ "on-hover": isHovering }, "transition-swing"],
                                 elevation: isHovering ? 8 : 2,
                                 onClick: ($event) => viewMetaBooks(item.name)
@@ -1312,7 +1327,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-27c9c4c7"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-54551668"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -2344,7 +2359,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
               }),
               _createVNode(_component_v_window_item, { value: "meta" }, {
                 default: _withCtx(() => [
-                  _createVNode(MetaCategory)
+                  _createVNode(MetaCategory, { api: __props.api }, null, 8, ["api"])
                 ]),
                 _: 1
               })
@@ -2369,6 +2384,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-e50a6aee"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-d9695abd"]]);
 
 export { Page as default };

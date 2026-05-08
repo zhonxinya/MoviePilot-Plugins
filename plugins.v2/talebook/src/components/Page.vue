@@ -275,7 +275,7 @@
       
       <!-- 元数据分类标签页 -->
       <v-window-item value="meta">
-        <MetaCategory />
+        <MetaCategory :api="api" />
       </v-window-item>
     </v-window>
 

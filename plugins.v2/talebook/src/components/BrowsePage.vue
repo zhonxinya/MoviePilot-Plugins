@@ -91,11 +91,13 @@ import BookDetailDialog from './BookDetailDialog.vue'
 interface Props {
   metaType?: string  // tag/author/series/rating/publisher/language
   metaName?: string  // 具体的元数据名称
+  api?: any  // MoviePilot-Frontend 提供的 API 对象
 }
 
 const props = withDefaults(defineProps<Props>(), {
   metaType: '',
-  metaName: ''
+  metaName: '',
+  api: undefined
 })
 
 // 响应式数据
@@ -154,23 +156,31 @@ async function loadBooks() {
   
   try {
     let url = ''
-    const params = new URLSearchParams()
+    const params: any = {}
     
     // 如果有元数据筛选条件
     if (props.metaType && props.metaName) {
       // 按元数据分类获取书籍
       url = `/plugin/Talebook/meta/${props.metaType}/${encodeURIComponent(props.metaName)}`
-      params.append('page', currentPage.value.toString())
-      params.append('num', '20')
+      params.page = currentPage.value
+      params.num = 20
     } else {
       // 获取全部书籍(分页)
       url = '/plugin/Talebook/books'
-      params.append('page', currentPage.value.toString())
-      params.append('limit', '20')
+      params.page = currentPage.value
+      params.limit = 20
     }
     
-    const response = await fetch(`${url}?${params.toString()}`)
-    const data = await response.json()
+    // 使用 api 对象或 fetch
+    let data
+    if (props.api) {
+      const response = await props.api.get(url, { params })
+      data = response
+    } else {
+      const queryString = new URLSearchParams(params).toString()
+      const response = await fetch(`${url}?${queryString}`)
+      data = await response.json()
+    }
     
     if (data.code === 200) {
       // 处理不同的返回格式
@@ -212,8 +222,14 @@ async function handleBookDetail(bookId: number) {
   
   // 获取书籍详情
   try {
-    const response = await fetch(`/plugin/Talebook/book/detail/${bookId}`)
-    const data = await response.json()
+    let data
+    if (props.api) {
+      const response = await props.api.get(`/plugin/Talebook/book/detail/${bookId}`)
+      data = response
+    } else {
+      const response = await fetch(`/plugin/Talebook/book/detail/${bookId}`)
+      data = await response.json()
+    }
     
     if (data.code === 200) {
       selectedBook.value = data.data
