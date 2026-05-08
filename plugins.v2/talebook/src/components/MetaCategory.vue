@@ -1,7 +1,7 @@
 <template>
   <div class="meta-category-page">
     <!-- 元数据类型选择器 -->
-    <v-card class="mb-4 elevation-2">
+    <v-card class="mb-4 elevation-2" color="primary" variant="tonal">
       <v-card-text>
         <v-row align="center">
           <v-col cols="12" md="6">
@@ -14,55 +14,99 @@
               prepend-icon="mdi-tag-multiple"
               variant="outlined"
               density="comfortable"
+              bg-color="white"
               @update:model-value="loadMetaList"
             />
           </v-col>
-          <v-col cols="12" md="6" class="text-right">
-            <v-chip color="primary" size="large">
-              <v-icon start>mdi-format-list-bulleted</v-icon>
-              共 {{ metaList.length }} 项
-            </v-chip>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="searchKeyword"
+              label="搜索"
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="comfortable"
+              clearable
+              hide-details
+              bg-color="white"
+            />
           </v-col>
         </v-row>
       </v-card-text>
     </v-card>
 
+    <!-- 统计信息 -->
+    <v-alert
+      v-if="!loading && filteredList.length > 0"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+    >
+      <template v-slot:prepend>
+        <v-icon>mdi-information-outline</v-icon>
+      </template>
+      共 {{ filteredList.length }} 项，点击可查看该分类下的书籍
+    </v-alert>
+
     <!-- 元数据列表 -->
     <v-card v-if="!loading" class="elevation-2">
       <v-card-text>
-        <v-row>
+        <!-- 骨架屏加载 -->
+        <v-skeleton-loader
+          v-if="metaList.length === 0 && !searchKeyword"
+          type="list-item-three-line"
+          :loading="true"
+          class="mb-2"
+        />
+        
+        <v-row v-else>
           <v-col
-            v-for="item in metaList"
+            v-for="item in filteredList"
             :key="item.name"
             cols="12"
             sm="6"
             md="4"
             lg="3"
+            xl="2"
           >
             <v-hover v-slot="{ isHovering, props }">
               <v-card
                 v-bind="props"
                 :class="{ 'on-hover': isHovering }"
-                :elevation="isHovering ? 8 : 2"
-                class="transition-swing"
+                :elevation="isHovering ? 12 : 2"
+                class="transition-swing meta-card"
                 @click="viewMetaBooks(item.name)"
               >
                 <v-card-text class="pa-4">
-                  <div class="d-flex align-center justify-space-between">
-                    <div class="flex-grow-1 mr-2">
-                      <div class="text-subtitle-1 font-weight-medium text-truncate">
+                  <div class="d-flex align-center">
+                    <div class="flex-grow-1 mr-3">
+                      <div class="text-subtitle-1 font-weight-bold text-truncate mb-1">
                         {{ item.name }}
                       </div>
-                      <div class="text-caption text-grey mt-1">
-                        <v-icon size="small" class="mr-1">mdi-book-multiple</v-icon>
-                        {{ item.count }} 本书
+                      <div class="d-flex align-center">
+                        <v-icon size="small" color="primary" class="mr-1">mdi-book-multiple</v-icon>
+                        <span class="text-body-2 font-weight-medium">{{ item.count }}</span>
+                        <span class="text-caption text-grey ml-1">本</span>
                       </div>
                     </div>
-                    <v-icon color="primary" size="large">
+                    <v-icon
+                      color="primary"
+                      :size="isHovering ? 'large' : 'default'"
+                      class="transition-swing"
+                    >
                       mdi-chevron-right
                     </v-icon>
                   </div>
                 </v-card-text>
+                
+                <!-- 底部装饰条 -->
+                <v-divider />
+                <div class="card-footer pa-2 d-flex justify-space-between align-center">
+                  <v-chip size="x-small" color="primary" variant="tonal">
+                    {{ getMetaTypeName(selectedMetaType) }}
+                  </v-chip>
+                  <v-icon size="small" color="grey-lighten-1">mdi-arrow-right-circle</v-icon>
+                </div>
               </v-card>
             </v-hover>
           </v-col>
@@ -70,12 +114,24 @@
 
         <!-- 空状态 -->
         <v-empty-state
-          v-if="metaList.length === 0"
+          v-if="filteredList.length === 0 && !loading"
           icon="mdi-tag-off-outline"
           title="暂无数据"
-          :text="`还没有${getMetaTypeName(selectedMetaType)}信息`"
+          :text="searchKeyword ? `未找到包含“${searchKeyword}”的${getMetaTypeName(selectedMetaType)}` : `还没有${getMetaTypeName(selectedMetaType)}信息`"
           class="mt-8"
-        />
+        >
+          <template v-slot:actions>
+            <v-btn
+              v-if="searchKeyword"
+              color="primary"
+              variant="tonal"
+              prepend-icon="mdi-close"
+              @click="searchKeyword = ''"
+            >
+              清除搜索
+            </v-btn>
+          </template>
+        </v-empty-state>
       </v-card-text>
     </v-card>
 
@@ -90,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 interface Props {
   api?: any  // MoviePilot-Frontend 提供的 API 对象
@@ -108,6 +164,18 @@ interface MetaItem {
 const selectedMetaType = ref('tag')
 const metaList = ref<MetaItem[]>([])
 const loading = ref(false)
+const searchKeyword = ref('')
+
+// 过滤后的列表(支持搜索)
+const filteredList = computed(() => {
+  if (!searchKeyword.value) {
+    return metaList.value
+  }
+  const keyword = searchKeyword.value.toLowerCase()
+  return metaList.value.filter(item => 
+    item.name.toLowerCase().includes(keyword)
+  )
+})
 
 // 元数据类型选项
 const metaTypes = [
@@ -215,11 +283,25 @@ onMounted(() => {
   min-height: 100%;
 }
 
-.transition-swing {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+.meta-card {
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.meta-card:hover {
+  transform: translateY(-4px);
+}
+
+.card-footer {
+  background: linear-gradient(to right, rgba(var(--v-theme-primary), 0.05), transparent);
 }
 
 .on-hover {
-  transform: translateY(-4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-swing {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 </style>

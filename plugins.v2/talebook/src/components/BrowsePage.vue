@@ -1,11 +1,18 @@
 <template>
   <div class="browse-page">
     <!-- 页面标题和筛选条件 -->
-    <v-card class="mb-4 elevation-2">
+    <v-card class="mb-4 elevation-2" color="primary" variant="tonal">
       <v-card-text>
         <v-row align="center">
           <v-col cols="12" md="8">
             <div class="d-flex align-center">
+              <v-btn
+                icon="mdi-arrow-left"
+                variant="text"
+                color="primary"
+                class="mr-2"
+                @click="goBack"
+              />
               <v-icon size="x-large" color="primary" class="mr-3">
                 {{ getMetaTypeIcon(metaType) }}
               </v-icon>
@@ -20,7 +27,7 @@
             </div>
           </v-col>
           <v-col cols="12" md="4" class="text-right">
-            <v-chip color="primary" size="large">
+            <v-chip color="primary" size="large" variant="elevated">
               <v-icon start>mdi-book-multiple</v-icon>
               共 {{ totalBooks }} 本
             </v-chip>
@@ -63,11 +70,13 @@
     </v-card>
 
     <!-- 分页 -->
-    <div v-if="totalPages > 1" class="mt-4 d-flex justify-center">
+    <div v-if="totalPages > 1" class="mt-6 d-flex justify-center">
       <v-pagination
         v-model="currentPage"
         :length="totalPages"
         :total-visible="7"
+        size="large"
+        color="primary"
         @update:model-value="handlePageChange"
       />
     </div>
@@ -259,6 +268,13 @@ function handleToggleFavorite(bookId: number) {
 function handleDownload(bookId: number) {
   console.log('下载书籍:', bookId)
   // TODO: 实现下载功能
+}
+
+/**
+ * 返回上一页
+ */
+function goBack() {
+  window.history.back()
 }
 
 // 监听路由参数变化

@@ -292,8 +292,8 @@ const _hoisted_2$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_3$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_4$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_5$2 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_6 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_7 = {
+const _hoisted_6$1 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_7$1 = {
   key: 0,
   class: "mt-4"
 };
@@ -301,7 +301,7 @@ const _hoisted_8 = {
   class: "line-clamp-8",
   style: { "line-height": "1.8" }
 };
-const {computed: computed$1} = await importShared('vue');
+const {computed: computed$2} = await importShared('vue');
 
 const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   __name: "BookDetailDialog",
@@ -316,7 +316,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   setup(__props, { emit: __emit }) {
     const props = __props;
     const emit = __emit;
-    const dialogVisible = computed$1({
+    const dialogVisible = computed$2({
       get: () => props.modelValue,
       set: (value) => emit("update:modelValue", value)
     });
@@ -593,7 +593,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                   }, {
                                     default: _withCtx$4(() => [
                                       _cache[16] || (_cache[16] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "ISBN", -1)),
-                                      _createElementVNode$4("div", _hoisted_6, [
+                                      _createElementVNode$4("div", _hoisted_6$1, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
@@ -612,7 +612,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                 ]),
                                 _: 1
                               }),
-                              __props.book.tags || __props.book.tag ? (_openBlock$4(), _createElementBlock$2("div", _hoisted_7, [
+                              __props.book.tags || __props.book.tag ? (_openBlock$4(), _createElementBlock$2("div", _hoisted_7$1, [
                                 _cache[17] || (_cache[17] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-2" }, "标签", -1)),
                                 _createVNode$4(_component_v_chip_group, { column: "" }, {
                                   default: _withCtx$4(() => [
@@ -1075,14 +1075,16 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
 
 const {defineComponent:_defineComponent$1} = await importShared('vue');
 
-const {resolveComponent:_resolveComponent$1,createVNode:_createVNode$1,withCtx:_withCtx$1,createTextVNode:_createTextVNode$1,toDisplayString:_toDisplayString,renderList:_renderList,Fragment:_Fragment,openBlock:_openBlock$1,createElementBlock:_createElementBlock,createElementVNode:_createElementVNode$1,mergeProps:_mergeProps,createBlock:_createBlock$1,createCommentVNode:_createCommentVNode$1} = await importShared('vue');
+const {resolveComponent:_resolveComponent$1,createVNode:_createVNode$1,withCtx:_withCtx$1,createTextVNode:_createTextVNode$1,toDisplayString:_toDisplayString,openBlock:_openBlock$1,createBlock:_createBlock$1,createCommentVNode:_createCommentVNode$1,renderList:_renderList,Fragment:_Fragment,createElementBlock:_createElementBlock,createElementVNode:_createElementVNode$1,mergeProps:_mergeProps} = await importShared('vue');
 
 const _hoisted_1 = { class: "meta-category-page" };
-const _hoisted_2 = { class: "d-flex align-center justify-space-between" };
-const _hoisted_3 = { class: "flex-grow-1 mr-2" };
-const _hoisted_4 = { class: "text-subtitle-1 font-weight-medium text-truncate" };
-const _hoisted_5 = { class: "text-caption text-grey mt-1" };
-const {ref: ref$1,onMounted: onMounted$1} = await importShared('vue');
+const _hoisted_2 = { class: "d-flex align-center" };
+const _hoisted_3 = { class: "flex-grow-1 mr-3" };
+const _hoisted_4 = { class: "text-subtitle-1 font-weight-bold text-truncate mb-1" };
+const _hoisted_5 = { class: "d-flex align-center" };
+const _hoisted_6 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_7 = { class: "card-footer pa-2 d-flex justify-space-between align-center" };
+const {ref: ref$1,computed: computed$1,onMounted: onMounted$1} = await importShared('vue');
 
 const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   __name: "MetaCategory",
@@ -1094,6 +1096,16 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     const selectedMetaType = ref$1("tag");
     const metaList = ref$1([]);
     const loading = ref$1(false);
+    const searchKeyword = ref$1("");
+    const filteredList = computed$1(() => {
+      if (!searchKeyword.value) {
+        return metaList.value;
+      }
+      const keyword = searchKeyword.value.toLowerCase();
+      return metaList.value.filter(
+        (item) => item.name.toLowerCase().includes(keyword)
+      );
+    });
     const metaTypes = [
       { label: "标签", value: "tag", icon: "mdi-tag" },
       { label: "作者", value: "author", icon: "mdi-account" },
@@ -1169,16 +1181,25 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     return (_ctx, _cache) => {
       const _component_v_select = _resolveComponent$1("v-select");
       const _component_v_col = _resolveComponent$1("v-col");
-      const _component_v_icon = _resolveComponent$1("v-icon");
-      const _component_v_chip = _resolveComponent$1("v-chip");
+      const _component_v_text_field = _resolveComponent$1("v-text-field");
       const _component_v_row = _resolveComponent$1("v-row");
       const _component_v_card_text = _resolveComponent$1("v-card-text");
       const _component_v_card = _resolveComponent$1("v-card");
+      const _component_v_icon = _resolveComponent$1("v-icon");
+      const _component_v_alert = _resolveComponent$1("v-alert");
+      const _component_v_skeleton_loader = _resolveComponent$1("v-skeleton-loader");
+      const _component_v_divider = _resolveComponent$1("v-divider");
+      const _component_v_chip = _resolveComponent$1("v-chip");
       const _component_v_hover = _resolveComponent$1("v-hover");
+      const _component_v_btn = _resolveComponent$1("v-btn");
       const _component_v_empty_state = _resolveComponent$1("v-empty-state");
       const _component_v_progress_circular = _resolveComponent$1("v-progress-circular");
       return _openBlock$1(), _createElementBlock("div", _hoisted_1, [
-        _createVNode$1(_component_v_card, { class: "mb-4 elevation-2" }, {
+        _createVNode$1(_component_v_card, {
+          class: "mb-4 elevation-2",
+          color: "primary",
+          variant: "tonal"
+        }, {
           default: _withCtx$1(() => [
             _createVNode$1(_component_v_card_text, null, {
               default: _withCtx$1(() => [
@@ -1201,32 +1222,28 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                           label: "选择元数据类型",
                           "prepend-icon": "mdi-tag-multiple",
                           variant: "outlined",
-                          density: "comfortable"
+                          density: "comfortable",
+                          "bg-color": "white"
                         }, null, 8, ["modelValue"])
                       ]),
                       _: 1
                     }),
                     _createVNode$1(_component_v_col, {
                       cols: "12",
-                      md: "6",
-                      class: "text-right"
+                      md: "6"
                     }, {
                       default: _withCtx$1(() => [
-                        _createVNode$1(_component_v_chip, {
-                          color: "primary",
-                          size: "large"
-                        }, {
-                          default: _withCtx$1(() => [
-                            _createVNode$1(_component_v_icon, { start: "" }, {
-                              default: _withCtx$1(() => [..._cache[1] || (_cache[1] = [
-                                _createTextVNode$1("mdi-format-list-bulleted", -1)
-                              ])]),
-                              _: 1
-                            }),
-                            _createTextVNode$1(" 共 " + _toDisplayString(metaList.value.length) + " 项 ", 1)
-                          ]),
-                          _: 1
-                        })
+                        _createVNode$1(_component_v_text_field, {
+                          modelValue: searchKeyword.value,
+                          "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => searchKeyword.value = $event),
+                          label: "搜索",
+                          "prepend-inner-icon": "mdi-magnify",
+                          variant: "outlined",
+                          density: "comfortable",
+                          clearable: "",
+                          "hide-details": "",
+                          "bg-color": "white"
+                        }, null, 8, ["modelValue"])
                       ]),
                       _: 1
                     })
@@ -1239,29 +1256,55 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
           ]),
           _: 1
         }),
-        !loading.value ? (_openBlock$1(), _createBlock$1(_component_v_card, {
+        !loading.value && filteredList.value.length > 0 ? (_openBlock$1(), _createBlock$1(_component_v_alert, {
           key: 0,
+          type: "info",
+          variant: "tonal",
+          density: "compact",
+          class: "mb-4"
+        }, {
+          prepend: _withCtx$1(() => [
+            _createVNode$1(_component_v_icon, null, {
+              default: _withCtx$1(() => [..._cache[3] || (_cache[3] = [
+                _createTextVNode$1("mdi-information-outline", -1)
+              ])]),
+              _: 1
+            })
+          ]),
+          default: _withCtx$1(() => [
+            _createTextVNode$1(" 共 " + _toDisplayString(filteredList.value.length) + " 项，点击可查看该分类下的书籍 ", 1)
+          ]),
+          _: 1
+        })) : _createCommentVNode$1("", true),
+        !loading.value ? (_openBlock$1(), _createBlock$1(_component_v_card, {
+          key: 1,
           class: "elevation-2"
         }, {
           default: _withCtx$1(() => [
             _createVNode$1(_component_v_card_text, null, {
               default: _withCtx$1(() => [
-                _createVNode$1(_component_v_row, null, {
+                metaList.value.length === 0 && !searchKeyword.value ? (_openBlock$1(), _createBlock$1(_component_v_skeleton_loader, {
+                  key: 0,
+                  type: "list-item-three-line",
+                  loading: true,
+                  class: "mb-2"
+                })) : (_openBlock$1(), _createBlock$1(_component_v_row, { key: 1 }, {
                   default: _withCtx$1(() => [
-                    (_openBlock$1(true), _createElementBlock(_Fragment, null, _renderList(metaList.value, (item) => {
+                    (_openBlock$1(true), _createElementBlock(_Fragment, null, _renderList(filteredList.value, (item) => {
                       return _openBlock$1(), _createBlock$1(_component_v_col, {
                         key: item.name,
                         cols: "12",
                         sm: "6",
                         md: "4",
-                        lg: "3"
+                        lg: "3",
+                        xl: "2"
                       }, {
                         default: _withCtx$1(() => [
                           _createVNode$1(_component_v_hover, null, {
                             default: _withCtx$1(({ isHovering, props: props2 }) => [
                               _createVNode$1(_component_v_card, _mergeProps({ ref_for: true }, props2, {
-                                class: [{ "on-hover": isHovering }, "transition-swing"],
-                                elevation: isHovering ? 8 : 2,
+                                class: [{ "on-hover": isHovering }, "transition-swing meta-card"],
+                                elevation: isHovering ? 12 : 2,
                                 onClick: ($event) => viewMetaBooks(item.name)
                               }), {
                                 default: _withCtx$1(() => [
@@ -1273,29 +1316,54 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                                           _createElementVNode$1("div", _hoisted_5, [
                                             _createVNode$1(_component_v_icon, {
                                               size: "small",
+                                              color: "primary",
                                               class: "mr-1"
                                             }, {
-                                              default: _withCtx$1(() => [..._cache[2] || (_cache[2] = [
+                                              default: _withCtx$1(() => [..._cache[4] || (_cache[4] = [
                                                 _createTextVNode$1("mdi-book-multiple", -1)
                                               ])]),
                                               _: 1
                                             }),
-                                            _createTextVNode$1(" " + _toDisplayString(item.count) + " 本书 ", 1)
+                                            _createElementVNode$1("span", _hoisted_6, _toDisplayString(item.count), 1),
+                                            _cache[5] || (_cache[5] = _createElementVNode$1("span", { class: "text-caption text-grey ml-1" }, "本", -1))
                                           ])
                                         ]),
                                         _createVNode$1(_component_v_icon, {
                                           color: "primary",
-                                          size: "large"
+                                          size: isHovering ? "large" : "default",
+                                          class: "transition-swing"
                                         }, {
-                                          default: _withCtx$1(() => [..._cache[3] || (_cache[3] = [
+                                          default: _withCtx$1(() => [..._cache[6] || (_cache[6] = [
                                             _createTextVNode$1(" mdi-chevron-right ", -1)
                                           ])]),
                                           _: 1
-                                        })
+                                        }, 8, ["size"])
                                       ])
                                     ]),
                                     _: 2
-                                  }, 1024)
+                                  }, 1024),
+                                  _createVNode$1(_component_v_divider),
+                                  _createElementVNode$1("div", _hoisted_7, [
+                                    _createVNode$1(_component_v_chip, {
+                                      size: "x-small",
+                                      color: "primary",
+                                      variant: "tonal"
+                                    }, {
+                                      default: _withCtx$1(() => [
+                                        _createTextVNode$1(_toDisplayString(getMetaTypeName(selectedMetaType.value)), 1)
+                                      ]),
+                                      _: 1
+                                    }),
+                                    _createVNode$1(_component_v_icon, {
+                                      size: "small",
+                                      color: "grey-lighten-1"
+                                    }, {
+                                      default: _withCtx$1(() => [..._cache[7] || (_cache[7] = [
+                                        _createTextVNode$1("mdi-arrow-right-circle", -1)
+                                      ])]),
+                                      _: 1
+                                    })
+                                  ])
                                 ]),
                                 _: 2
                               }, 1040, ["class", "elevation", "onClick"])
@@ -1308,21 +1376,37 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                     }), 128))
                   ]),
                   _: 1
-                }),
-                metaList.value.length === 0 ? (_openBlock$1(), _createBlock$1(_component_v_empty_state, {
-                  key: 0,
+                })),
+                filteredList.value.length === 0 && !loading.value ? (_openBlock$1(), _createBlock$1(_component_v_empty_state, {
+                  key: 2,
                   icon: "mdi-tag-off-outline",
                   title: "暂无数据",
-                  text: `还没有${getMetaTypeName(selectedMetaType.value)}信息`,
+                  text: searchKeyword.value ? `未找到包含“${searchKeyword.value}”的${getMetaTypeName(selectedMetaType.value)}` : `还没有${getMetaTypeName(selectedMetaType.value)}信息`,
                   class: "mt-8"
-                }, null, 8, ["text"])) : _createCommentVNode$1("", true)
+                }, {
+                  actions: _withCtx$1(() => [
+                    searchKeyword.value ? (_openBlock$1(), _createBlock$1(_component_v_btn, {
+                      key: 0,
+                      color: "primary",
+                      variant: "tonal",
+                      "prepend-icon": "mdi-close",
+                      onClick: _cache[2] || (_cache[2] = ($event) => searchKeyword.value = "")
+                    }, {
+                      default: _withCtx$1(() => [..._cache[8] || (_cache[8] = [
+                        _createTextVNode$1(" 清除搜索 ", -1)
+                      ])]),
+                      _: 1
+                    })) : _createCommentVNode$1("", true)
+                  ]),
+                  _: 1
+                }, 8, ["text"])) : _createCommentVNode$1("", true)
               ]),
               _: 1
             })
           ]),
           _: 1
         })) : (_openBlock$1(), _createBlock$1(_component_v_card, {
-          key: 1,
+          key: 2,
           class: "elevation-2"
         }, {
           default: _withCtx$1(() => [
@@ -1333,7 +1417,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                   color: "primary",
                   size: "64"
                 }),
-                _cache[4] || (_cache[4] = _createElementVNode$1("div", { class: "mt-4 text-body-1" }, "加载中...", -1))
+                _cache[9] || (_cache[9] = _createElementVNode$1("div", { class: "mt-4 text-body-1" }, "加载中...", -1))
               ]),
               _: 1
             })
@@ -1345,7 +1429,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-0b3c01ba"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-e80bb2b0"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
