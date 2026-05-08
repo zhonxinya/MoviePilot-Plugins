@@ -144,19 +144,43 @@ async function loadMetaList() {
   try {
     // 如果有 api 对象,使用它来调用(自动携带认证)
     if (props.api) {
+      console.log('[MetaCategory] 开始加载元数据列表:', selectedMetaType.value)
       const response = await props.api.get(`/plugin/Talebook/meta/${selectedMetaType.value}`, {
         params: { show_all: true }
       })
       
+      console.log('[MetaCategory] API 响应类型:', typeof response)
+      console.log('[MetaCategory] API 响应完整内容:', JSON.stringify(response, null, 2))
+      
+      // MoviePilot-Frontend 的 api.get() 可能直接返回数据,也可能返回 {code, data}
+      let dataList = []
       if (response && response.code === 200) {
-        metaList.value = response.data || []
+        console.log('[MetaCategory] 检测到 code=200,使用 response.data')
+        dataList = response.data || []
+      } else if (Array.isArray(response)) {
+        console.log('[MetaCategory] 检测到数组,直接使用')
+        dataList = response
+      } else if (response && response.items) {
+        // Talebook 原始格式
+        console.log('[MetaCategory] 检测到 items 字段,使用 response.items')
+        dataList = response.items
+      } else if (response && response.err === 'ok' && response.items) {
+        // Talebook 原始格式(未转换)
+        console.log('[MetaCategory] 检测到 Talebook 原始格式 err=ok')
+        dataList = response.items
       } else {
-        console.error('加载元数据列表失败:', response?.message)
+        console.warn('[MetaCategory] 无法识别的响应格式,尝试直接使用 response')
+        dataList = response || []
       }
+      
+      metaList.value = dataList
+      console.log('[MetaCategory] 加载成功,共', dataList.length, '条')
     } else {
       // 降级方案: 使用 fetch
       const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`)
       const data = await response.json()
+      
+      console.log('[MetaCategory] Fetch 响应:', data)
       
       if (data.code === 200) {
         metaList.value = data.data || []

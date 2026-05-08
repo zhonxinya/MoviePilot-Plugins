@@ -1118,17 +1118,35 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       metaList.value = [];
       try {
         if (props.api) {
+          console.log("[MetaCategory] 开始加载元数据列表:", selectedMetaType.value);
           const response = await props.api.get(`/plugin/Talebook/meta/${selectedMetaType.value}`, {
             params: { show_all: true }
           });
+          console.log("[MetaCategory] API 响应类型:", typeof response);
+          console.log("[MetaCategory] API 响应完整内容:", JSON.stringify(response, null, 2));
+          let dataList = [];
           if (response && response.code === 200) {
-            metaList.value = response.data || [];
+            console.log("[MetaCategory] 检测到 code=200,使用 response.data");
+            dataList = response.data || [];
+          } else if (Array.isArray(response)) {
+            console.log("[MetaCategory] 检测到数组,直接使用");
+            dataList = response;
+          } else if (response && response.items) {
+            console.log("[MetaCategory] 检测到 items 字段,使用 response.items");
+            dataList = response.items;
+          } else if (response && response.err === "ok" && response.items) {
+            console.log("[MetaCategory] 检测到 Talebook 原始格式 err=ok");
+            dataList = response.items;
           } else {
-            console.error("加载元数据列表失败:", response?.message);
+            console.warn("[MetaCategory] 无法识别的响应格式,尝试直接使用 response");
+            dataList = response || [];
           }
+          metaList.value = dataList;
+          console.log("[MetaCategory] 加载成功,共", dataList.length, "条");
         } else {
           const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`);
           const data = await response.json();
+          console.log("[MetaCategory] Fetch 响应:", data);
           if (data.code === 200) {
             metaList.value = data.data || [];
           } else {
@@ -1327,7 +1345,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-54551668"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-0b3c01ba"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 

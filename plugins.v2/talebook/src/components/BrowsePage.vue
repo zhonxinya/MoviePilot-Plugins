@@ -174,7 +174,10 @@ async function loadBooks() {
     // 使用 api 对象或 fetch
     let data
     if (props.api) {
+      console.log('[BrowsePage] 开始加载书籍列表, URL:', url)
       const response = await props.api.get(url, { params })
+      console.log('[BrowsePage] API 响应类型:', typeof response)
+      console.log('[BrowsePage] API 响应完整内容:', JSON.stringify(response, null, 2))
       data = response
     } else {
       const queryString = new URLSearchParams(params).toString()
