@@ -1147,8 +1147,23 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       return iconMap[type] || "mdi-book";
     }
     function getCoverUrl(book) {
-      if (!book.id) return "";
-      return `/api/v1/plugin/Talebook/book/${book.id}/cover`;
+      if (!book) return "";
+      if (book.thumb) {
+        if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
+          return book.thumb;
+        }
+        return book.thumb;
+      }
+      if (book.img) {
+        if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
+          return book.img;
+        }
+        return book.img;
+      }
+      if (book.id) {
+        return `/api/v1/plugin/Talebook/book/${book.id}/cover`;
+      }
+      return "";
     }
     async function loadMetaList() {
       loading.value = true;
@@ -1613,7 +1628,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ba937747"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-3d73ca15"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 

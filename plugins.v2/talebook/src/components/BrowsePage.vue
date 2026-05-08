@@ -153,8 +153,30 @@ function getMetaTypeName(type: string): string {
  * 获取封面 URL
  */
 function getCoverUrl(book: any): string {
-  if (!book.id) return ''
-  return `/api/v1/plugin/Talebook/book/${book.id}/cover`
+  if (!book) return ''
+  
+  // 优先使用 thumb 字段(缩略图)
+  if (book.thumb) {
+    if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
+      return book.thumb
+    }
+    return book.thumb
+  }
+  
+  // 其次使用 img 字段(大图)
+  if (book.img) {
+    if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
+      return book.img
+    }
+    return book.img
+  }
+  
+  // 最后使用插件 API
+  if (book.id) {
+    return `/api/v1/plugin/Talebook/book/${book.id}/cover`
+  }
+  
+  return ''
 }
 
 /**
