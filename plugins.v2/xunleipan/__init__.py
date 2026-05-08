@@ -85,17 +85,17 @@ class XunleiPan(_PluginBase):
                 password=self._password
             )
             logger.info(f"✅ 迅雷网盘插件已启用，API 客户端已创建")
+        elif not self._enabled:
+            logger.debug("⏸️ 插件未启用，跳过初始化")
         else:
             missing = []
-            if not self._enabled:
-                missing.append("enabled")
             if not self._username:
                 missing.append("username")
             if not self._password:
                 missing.append("password")
             
             if missing:
-                logger.warning(f"⚠️ 迅雷网盘插件配置不完整，缺失: {', '.join(missing)}")
+                logger.warning(f"⚠️ 插件已启用但配置不完整，缺失: {', '.join(missing)}")
     
     def get_state(self) -> bool:
         """返回插件运行状态"""
@@ -360,7 +360,10 @@ class XunleiPan(_PluginBase):
         return {
             "code": 200,
             "data": {
+                "enabled": config.get("enabled", False),
                 "username": config.get("username", ""),
+                # 不返回密码，前端显示为占位符
+                "password": "********" if config.get("password") else "",
                 "timeout": config.get("timeout", 10),
                 "max_retries": config.get("max_retries", 3),
                 "auto_refresh": config.get("auto_refresh", False)
@@ -373,22 +376,48 @@ class XunleiPan(_PluginBase):
             return {"code": 400, "message": "缺少配置数据"}
         
         try:
-            config = self.get_config() or {}
+            # 获取当前配置
+            current_config = self.get_config() or {}
             
-            # 如果密码被修改，则进行哈希加密
-            if "password" in config_data and config_data["password"]:
-                # 检查密码是否已经是哈希值（bcrypt 哈希以 $2b$ 开头）
-                if not config_data["password"].startswith("$2b$"):
-                    config_data["password"] = get_password_hash(config_data["password"])
-                    logger.info("🔒 密码已加密存储")
+            # 准备新配置
+            new_config = current_config.copy()
             
-            config.update(config_data)
-            self.update_config(config)
+            # 更新基本配置项
+            if "enabled" in config_data:
+                new_config["enabled"] = bool(config_data["enabled"])
+            if "username" in config_data:
+                new_config["username"] = str(config_data["username"]).strip()
+            if "timeout" in config_data:
+                new_config["timeout"] = int(config_data["timeout"])
+            if "max_retries" in config_data:
+                new_config["max_retries"] = int(config_data["max_retries"])
+            if "auto_refresh" in config_data:
+                new_config["auto_refresh"] = bool(config_data["auto_refresh"])
+            
+            # 处理密码：只有当密码不是占位符且不为空时才更新
+            if "password" in config_data:
+                password = config_data["password"]
+                if password and password != "********":
+                    # 检查密码是否已经是哈希值（bcrypt 哈希以 $2b$ 开头）
+                    if not password.startswith("$2b$"):
+                        new_config["password"] = get_password_hash(password)
+                        logger.info("🔒 密码已加密存储")
+                    else:
+                        new_config["password"] = password
+                        logger.debug("🔒 使用已加密的密码")
+                # 如果密码是占位符或空，保持原密码不变
+            
+            # 验证必要字段
+            if new_config.get("enabled") and (not new_config.get("username") or not new_config.get("password")):
+                return {"code": 400, "message": "启用插件时必须提供用户名和密码"}
+            
+            # 保存配置
+            self.save_plugin_config(self.__class__.__name__, new_config)
             
             # 重新初始化插件以应用新配置
-            self.init_plugin(config)
+            self.init_plugin(new_config)
             
-            logger.info("✅ 配置已保存")
+            logger.info("✅ 配置已保存并应用")
             return {"code": 200, "message": "配置保存成功"}
         except Exception as e:
             logger.error(f"❌ 保存配置异常: {str(e)}")

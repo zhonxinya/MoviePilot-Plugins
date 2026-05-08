@@ -40,6 +40,26 @@ const passwordChanged = ref(false)
 const saving = ref(false)
 const testing = ref(false)
 
+// 表单验证规则
+const rules = {
+  username: [
+    v => !!v || '请输入用户名',
+    v => (v && v.length >= 3) || '用户名至少3个字符'
+  ],
+  password: [
+    v => !!v || '请输入密码',
+    v => (v && v.length >= 6) || '密码至少6个字符'
+  ],
+  timeout: [
+    v => !!v || '请输入超时时间',
+    v => (v >= 5 && v <= 120) || '超时时间应在5-120秒之间'
+  ],
+  max_retries: [
+    v => !!v || '请输入重试次数',
+    v => (v >= 1 && v <= 10) || '重试次数应在1-10次之间'
+  ]
+}
+
 // ===== API 调用 =====
 const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
   try {
@@ -98,8 +118,15 @@ const loadConfig = async () => {
 
 const saveConfig = async () => {
   // 验证必填字段
-  if (!config.value.username || !config.value.password) {
+  if (!config.value.username || !config.value.password || config.value.password === '********') {
     toast.error('请填写完整的账号信息')
+    return
+  }
+  
+  // 验证表单
+  const form = document.querySelector('form')
+  if (form && !form.checkValidity()) {
+    toast.error('请检查输入格式')
     return
   }
   
@@ -108,9 +135,9 @@ const saveConfig = async () => {
     // 准备要保存的配置
     const configToSave: any = {
       enabled: config.value.enabled,
-      username: config.value.username,
-      timeout: config.value.timeout,
-      max_retries: config.value.max_retries,
+      username: config.value.username.trim(),
+      timeout: parseInt(config.value.timeout) || 10,
+      max_retries: parseInt(config.value.max_retries) || 3,
       auto_refresh: config.value.auto_refresh
     }
     
@@ -118,7 +145,7 @@ const saveConfig = async () => {
     if (passwordChanged.value && config.value.password !== '********') {
       configToSave.password = config.value.password
       console.log('[Config] 密码已修改，将更新密码')
-    } else if (config.value.password !== '********') {
+    } else if (config.value.password !== '********' && config.value.password) {
       // 第一次设置密码
       configToSave.password = config.value.password
       console.log('[Config] 设置新密码')
@@ -147,8 +174,8 @@ const saveConfig = async () => {
 }
 
 const testConnection = async () => {
-  if (!config.value.username || !config.value.password) {
-    toast.error('请先填写账号信息')
+  if (!config.value.username || !config.value.password || config.value.password === '********') {
+    toast.error('请先填写完整的账号信息')
     return
   }
   
@@ -160,12 +187,13 @@ const testConnection = async () => {
     })
     
     if (result.code === 200) {
-      toast.success('连接测试成功!')
+      toast.success('✅ 连接测试成功!')
     } else {
-      toast.error(`连接失败: ${result.message}`)
+      toast.error(`❌ 连接失败: ${result.message}`)
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('连接测试失败:', error)
+    toast.error(`❌ 连接测试失败: ${error.message}`)
   } finally {
     testing.value = false
   }
@@ -180,6 +208,47 @@ onMounted(() => {
 <template>
   <v-container fluid>
     <v-form ref="configForm">
+      <!-- 插件状态 -->
+      <v-card class="mb-4">
+        <v-card-title>
+          <v-icon color="success" class="mr-2">mdi-power</v-icon>
+          插件状态
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <v-switch
+                v-model="config.enabled"
+                label="启用插件"
+                prepend-icon="mdi-check-circle"
+                hint="开启后插件将自动运行"
+                persistent-hint
+              />
+            </v-col>
+          </v-row>
+          
+          <v-alert
+            v-if="config.enabled"
+            type="success"
+            variant="tonal"
+            class="mt-3"
+          >
+            <v-icon class="mr-2">mdi-check-circle</v-icon>
+            插件已启用，可以正常使用所有功能
+          </v-alert>
+          
+          <v-alert
+            v-else
+            type="warning"
+            variant="tonal"
+            class="mt-3"
+          >
+            <v-icon class="mr-2">mdi-alert-circle</v-icon>
+            插件已禁用，需要启用后才能使用功能
+          </v-alert>
+        </v-card-text>
+      </v-card>
+
       <!-- 账号配置 -->
       <v-card class="mb-4">
         <v-card-title>
@@ -194,8 +263,9 @@ onMounted(() => {
                 label="用户名/手机号"
                 placeholder="请输入迅雷账号"
                 prepend-icon="mdi-account"
-                :rules="[v => !!v || '请输入用户名']"
+                :rules="rules.username"
                 required
+                clearable
               />
             </v-col>
             <v-col cols="12" md="6">
@@ -205,9 +275,10 @@ onMounted(() => {
                 type="password"
                 placeholder="请输入密码"
                 prepend-icon="mdi-lock"
-                :rules="[v => !!v || '请输入密码']"
+                :rules="rules.password"
                 required
                 @input="passwordChanged = true"
+                clearable
               />
             </v-col>
           </v-row>
@@ -218,7 +289,7 @@ onMounted(() => {
             class="mt-3"
           >
             <v-icon class="mr-2">mdi-information</v-icon>
-            请确保输入的账号信息正确,插件将使用此账号登录迅雷网盘
+            请确保输入的账号信息正确，插件将使用此账号登录迅雷网盘。密码将以加密形式存储。
           </v-alert>
         </v-card-text>
       </v-card>
@@ -239,7 +310,9 @@ onMounted(() => {
                 min="5"
                 max="120"
                 prepend-icon="mdi-timer"
-                hint="API 请求超时时间,建议 10-30 秒"
+                :rules="rules.timeout"
+                hint="API 请求超时时间，建议 10-30 秒"
+                persistent-hint
               />
             </v-col>
             <v-col cols="12" md="6">
@@ -250,7 +323,9 @@ onMounted(() => {
                 min="1"
                 max="10"
                 prepend-icon="mdi-restart"
+                :rules="rules.max_retries"
                 hint="失败时的最大重试次数"
+                persistent-hint
               />
             </v-col>
           </v-row>
@@ -262,6 +337,7 @@ onMounted(() => {
                 label="自动刷新任务状态"
                 prepend-icon="mdi-autorenew"
                 hint="开启后将每 30 秒自动刷新离线下载任务状态"
+                persistent-hint
               />
             </v-col>
           </v-row>
