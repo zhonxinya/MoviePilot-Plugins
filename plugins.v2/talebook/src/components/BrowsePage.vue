@@ -168,13 +168,16 @@ function getCoverUrl(book: any): string {
   if (book.thumb) {
     // 如果是完整 URL,直接返回
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
+      console.log('[BrowsePage] 使用绝对 URL:', book.thumb)
       return book.thumb
     }
     // 如果是相对路径,与 Talebook 服务器地址拼接
     const serverUrl = getServerUrl()
     if (serverUrl) {
+      const url = `${serverUrl}${book.thumb}`
+      console.log('[BrowsePage] 拼接服务器地址:', url)
       // 直接拼接,利用浏览器默认缓存机制
-      return `${serverUrl}${book.thumb}`
+      return url
     }
   }
   
@@ -182,21 +185,27 @@ function getCoverUrl(book: any): string {
   if (book.img) {
     // 如果是完整 URL,直接返回
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
+      console.log('[BrowsePage] 使用绝对 URL (img):', book.img)
       return book.img
     }
     // 如果是相对路径,与 Talebook 服务器地址拼接
     const serverUrl = getServerUrl()
     if (serverUrl) {
+      const url = `${serverUrl}${book.img}`
+      console.log('[BrowsePage] 拼接服务器地址 (img):', url)
       // 直接拼接,利用浏览器默认缓存机制
-      return `${serverUrl}${book.img}`
+      return url
     }
   }
   
   // 最后使用插件 API 代理（仅在没有配置服务器地址时使用）
   if (book.id) {
-    return `/api/v1/plugin/Talebook/image/thumb/${book.id}`
+    const url = `/api/v1/plugin/Talebook/image/thumb/${book.id}`
+    console.log('[BrowsePage] 降级使用插件代理:', url)
+    return url
   }
   
+  console.warn('[BrowsePage] 无法获取封面 URL')
   return ''
 }
 
@@ -208,8 +217,10 @@ async function loadConfig() {
   
   try {
     const response = await props.api.get(getApiUrl('/config'))
+    console.log('[BrowsePage] 配置响应:', response)
     if (response && response.code === 200 && response.data) {
       talebookServerUrl.value = response.data.server_url || ''
+      console.log('[BrowsePage] 服务器地址:', talebookServerUrl.value)
     }
   } catch (error) {
     console.error('[BrowsePage] 加载配置失败:', error)
