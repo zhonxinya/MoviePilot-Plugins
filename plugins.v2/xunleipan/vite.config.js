@@ -16,19 +16,16 @@ export default defineConfig({
         vue: {
           requiredVersion: false,
           generate: false,
-          import: true,
         },
         vuetify: {
           requiredVersion: false,
           generate: false,
           singleton: true,
-          import: true,
         },
         'vuetify/styles': {
           requiredVersion: false,
           generate: false,
           singleton: true,
-          import: true,
         },
       },
       format: 'esm'
