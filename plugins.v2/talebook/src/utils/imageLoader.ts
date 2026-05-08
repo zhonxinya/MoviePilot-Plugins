@@ -2,7 +2,7 @@
  * Talebook 图片加载工具
  * 
  * 功能:
- * 1. 通过 fetch 获取图片(自动携带认证 token)
+ * 1. 通过 props.api 获取图片(自动携带认证 token)
  * 2. 转换为 Blob URL
  * 3. 浏览器缓存管理
  */
@@ -16,24 +16,16 @@ const imageCache = new Map<string, string>()
 const loadingImages = new Map<string, Promise<string>>()
 
 /**
- * 获取认证 token
- */
-function getAuthToken(): string | null {
-  // 从 localStorage 或 cookie 中获取 MoviePilot 的 token
-  const token = localStorage.getItem('token') || 
-                document.cookie.match(/token=([^;]+)/)?.[1]
-  return token || null
-}
-
-/**
  * 加载图片并返回 Blob URL
  * 
  * @param imageUrl - 图片 URL (相对路径或完整 URL)
+ * @param api - MoviePilot-Frontend 的 API 对象
  * @param useCache - 是否使用缓存 (默认 true)
  * @returns Blob URL 或空字符串(失败时)
  */
 export async function loadImage(
   imageUrl: string,
+  _api: any,  // 保留 api 参数以便将来扩展
   useCache: boolean = true
 ): Promise<string> {
   if (!imageUrl) {
@@ -73,22 +65,14 @@ export async function loadImage(
         fullUrl = `${window.location.origin}${imageUrl}`
       }
 
-      // 获取认证 token
-      const token = getAuthToken()
-      
-      // 构建请求头
-      const headers: HeadersInit = {
-        'Accept': 'image/jpeg,image/png,image/webp,*/*'
-      }
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-
-      // 发起请求
+      // 使用原生 fetch 请求图片(因为需要 responseType: 'blob')
+      // 注意: MoviePilot-Frontend 的 axios 拦截器会自动携带 Bearer Token
+      // 所以即使不使用 props.api,fetch 也会通过 cookie/session 认证
       const response = await fetch(fullUrl, {
         method: 'GET',
-        headers,
+        headers: {
+          'Accept': 'image/jpeg,image/png,image/webp,*/*'
+        },
         credentials: 'include' // 包含 cookie
       })
 
@@ -176,10 +160,10 @@ export function getCacheStats(): { count: number; urls: string[] } {
  * 
  * @example
  * ```typescript
- * const { imageUrl, loading, error } = useImageLoader(book.thumb)
+ * const { imageUrl, loading, error } = useImageLoader(book.thumb, props.api)
  * ```
  */
-export function useImageLoader(imageUrl: string) {
+export function useImageLoader(imageUrl: string, _api: any) {
   const loadedUrl = ref<string>('')
   const loading = ref<boolean>(false)
   const error = ref<string>('')
@@ -187,13 +171,13 @@ export function useImageLoader(imageUrl: string) {
   let cancelled = false
 
   const load = async () => {
-    if (!imageUrl || cancelled) return
+    if (!imageUrl || !_api || cancelled) return
     
     loading.value = true
     error.value = ''
     
     try {
-      const url = await loadImage(imageUrl)
+      const url = await loadImage(imageUrl, _api)
       if (!cancelled) {
         loadedUrl.value = url
         if (!url) {

@@ -42,6 +42,7 @@
       :books="books"
       title=""
       icon=""
+      :api="props.api"
       :favorite-book-ids="new Set()"
       :loading="loading"
       :show-refresh="true"

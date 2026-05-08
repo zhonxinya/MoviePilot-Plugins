@@ -102,6 +102,7 @@
           :books="books"
           :title="listTitle"
           icon="mdi-bookshelf"
+          :api="props.api"
           :favorite-book-ids="favoriteBookIds"
           :downloading-book-id="downloadingBook"
           :get-cover-url="getCoverUrl"
@@ -126,6 +127,7 @@
           :books="books"
           title="最近添加的书籍"
           icon="mdi-history"
+          :api="props.api"
           :favorite-book-ids="favoriteBookIds"
           :downloading-book-id="downloadingBook"
           :loading="loading"
@@ -151,6 +153,7 @@
           :books="favoriteBooks"
           title="我的收藏"
           icon="mdi-heart"
+          :api="props.api"
           :favorite-book-ids="favoriteBookIds"
           :loading="loadingFavorites"
           show-refresh
@@ -215,6 +218,7 @@
           :books="readingBooks"
           title="正在阅读"
           icon="mdi-book-open-variant"
+          :api="props.api"
           :favorite-book-ids="favoriteBookIds"
           :loading="loadingReading"
           show-refresh

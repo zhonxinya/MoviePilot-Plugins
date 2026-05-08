@@ -5,11 +5,7 @@ const {ref: ref$3,onMounted: onMounted$2,onUnmounted} = await importShared('vue'
 
 const imageCache = /* @__PURE__ */ new Map();
 const loadingImages = /* @__PURE__ */ new Map();
-function getAuthToken() {
-  const token = localStorage.getItem("token") || document.cookie.match(/token=([^;]+)/)?.[1];
-  return token || null;
-}
-async function loadImage(imageUrl, useCache = true) {
+async function loadImage(imageUrl, _api, useCache = true) {
   if (!imageUrl) {
     console.warn("[ImageLoader] 图片 URL 为空");
     return "";
@@ -35,16 +31,11 @@ async function loadImage(imageUrl, useCache = true) {
       if (imageUrl.startsWith("/")) {
         fullUrl = `${window.location.origin}${imageUrl}`;
       }
-      const token = getAuthToken();
-      const headers = {
-        "Accept": "image/jpeg,image/png,image/webp,*/*"
-      };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
       const response = await fetch(fullUrl, {
         method: "GET",
-        headers,
+        headers: {
+          "Accept": "image/jpeg,image/png,image/webp,*/*"
+        },
         credentials: "include"
         // 包含 cookie
       });
@@ -68,17 +59,17 @@ async function loadImage(imageUrl, useCache = true) {
   loadingImages.set(imageUrl, loadPromise);
   return loadPromise;
 }
-function useImageLoader(imageUrl) {
+function useImageLoader(imageUrl, _api) {
   const loadedUrl = ref$3("");
   const loading = ref$3(false);
   const error = ref$3("");
   let cancelled = false;
   const load = async () => {
-    if (!imageUrl || cancelled) return;
+    if (!imageUrl || !_api || cancelled) return;
     loading.value = true;
     error.value = "";
     try {
-      const url = await loadImage(imageUrl);
+      const url = await loadImage(imageUrl, _api);
       if (!cancelled) {
         loadedUrl.value = url;
         if (!url) {
@@ -117,6 +108,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   props: {
     book: {},
     coverUrl: {},
+    api: {},
     isFavorited: { type: Boolean, default: false },
     isDownloading: { type: Boolean, default: false },
     showFavorite: { type: Boolean, default: true }
@@ -124,7 +116,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   emits: ["detail", "toggle-favorite", "download"],
   setup(__props) {
     const props = __props;
-    const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl);
+    const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl, props.api);
     return (_ctx, _cache) => {
       const _component_v_progress_circular = _resolveComponent$6("v-progress-circular");
       const _component_v_row = _resolveComponent$6("v-row");
@@ -277,7 +269,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   }
 });
 
-const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-db77d501"]]);
+const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-cab198da"]]);
 
 const {defineComponent:_defineComponent$5} = await importShared('vue');
 
@@ -288,6 +280,7 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
     books: {},
     title: {},
     icon: {},
+    api: {},
     favoriteBookIds: {},
     downloadingBookId: { default: null },
     loading: { type: Boolean, default: false },
@@ -360,6 +353,7 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
                         _createVNode$5(BookCard, {
                           book,
                           "cover-url": __props.getCoverUrl(book),
+                          api: __props.api,
                           "is-favorited": __props.favoriteBookIds.has(book.id),
                           "is-downloading": __props.downloadingBookId === book.id,
                           "show-favorite": __props.showFavorite,
@@ -374,7 +368,7 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
                             _renderSlot(_ctx.$slots, "actions", { book: book2 })
                           ]),
                           _: 2
-                        }, 1032, ["book", "cover-url", "is-favorited", "is-downloading", "show-favorite"])
+                        }, 1032, ["book", "cover-url", "api", "is-favorited", "is-downloading", "show-favorite"])
                       ]),
                       _: 2
                     }, 1024);
@@ -1698,10 +1692,11 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                               _createVNode$1(BookCard, {
                                 book,
                                 "cover-url": getCoverUrl(book),
+                                api: props.api,
                                 "is-favorited": false,
                                 "is-downloading": false,
                                 onDetail: handleBookDetail
-                              }, null, 8, ["book", "cover-url"])
+                              }, null, 8, ["book", "cover-url", "api"])
                             ]),
                             _: 2
                           }, 1024);
@@ -1737,7 +1732,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-1da4bcd3"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-c36881a9"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -2550,13 +2545,14 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     books: books.value,
                     title: listTitle.value,
                     icon: "mdi-bookshelf",
+                    api: props.api,
                     "favorite-book-ids": favoriteBookIds.value,
                     "downloading-book-id": downloadingBook.value,
                     "get-cover-url": getCoverUrl,
                     onDetail: showBookDetail,
                     onToggleFavorite: toggleFavorite,
                     onDownload: downloadBook
-                  }, null, 8, ["books", "title", "favorite-book-ids", "downloading-book-id"])) : !loading.value && searched.value ? (_openBlock(), _createBlock(_component_v_empty_state, {
+                  }, null, 8, ["books", "title", "api", "favorite-book-ids", "downloading-book-id"])) : !loading.value && searched.value ? (_openBlock(), _createBlock(_component_v_empty_state, {
                     key: 1,
                     icon: "mdi-book-off-outline",
                     title: "没有找到书籍",
@@ -2572,6 +2568,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     books: books.value,
                     title: "最近添加的书籍",
                     icon: "mdi-history",
+                    api: props.api,
                     "favorite-book-ids": favoriteBookIds.value,
                     "downloading-book-id": downloadingBook.value,
                     loading: loading.value,
@@ -2579,7 +2576,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     onDetail: showBookDetail,
                     onToggleFavorite: toggleFavorite,
                     onDownload: downloadBook
-                  }, null, 8, ["books", "favorite-book-ids", "downloading-book-id", "loading"]),
+                  }, null, 8, ["books", "api", "favorite-book-ids", "downloading-book-id", "loading"]),
                   !loading.value && books.value.length === 0 ? (_openBlock(), _createBlock(_component_v_empty_state, {
                     key: 0,
                     icon: "mdi-book-off-outline",
@@ -2596,6 +2593,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     books: favoriteBooks.value,
                     title: "我的收藏",
                     icon: "mdi-heart",
+                    api: props.api,
                     "favorite-book-ids": favoriteBookIds.value,
                     loading: loadingFavorites.value,
                     "show-refresh": "",
@@ -2649,7 +2647,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                       }, 8, ["onClick"])
                     ]),
                     _: 1
-                  }, 8, ["books", "favorite-book-ids", "loading"]),
+                  }, 8, ["books", "api", "favorite-book-ids", "loading"]),
                   !loadingFavorites.value && favoriteBooks.value.length === 0 ? (_openBlock(), _createBlock(_component_v_empty_state, {
                     key: 0,
                     icon: "mdi-heart-off-outline",
@@ -2666,6 +2664,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     books: readingBooks.value,
                     title: "正在阅读",
                     icon: "mdi-book-open-variant",
+                    api: props.api,
                     "favorite-book-ids": favoriteBookIds.value,
                     loading: loadingReading.value,
                     "show-refresh": "",
@@ -2719,7 +2718,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                       }, 8, ["onClick"])
                     ]),
                     _: 1
-                  }, 8, ["books", "favorite-book-ids", "loading"]),
+                  }, 8, ["books", "api", "favorite-book-ids", "loading"]),
                   !loadingReading.value && readingBooks.value.length === 0 ? (_openBlock(), _createBlock(_component_v_empty_state, {
                     key: 0,
                     icon: "mdi-book-off-outline",
@@ -2757,6 +2756,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-7f870e1f"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-5e1b3c75"]]);
 
 export { Page as default };

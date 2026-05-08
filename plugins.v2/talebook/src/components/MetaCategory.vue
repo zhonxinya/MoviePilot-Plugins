@@ -188,6 +188,7 @@
               <BookCard
                 :book="book"
                 :cover-url="getCoverUrl(book)"
+                :api="props.api"
                 :is-favorited="false"
                 :is-downloading="false"
                 @detail="handleBookDetail"

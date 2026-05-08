@@ -29,6 +29,7 @@
           <BookCard
             :book="book"
             :cover-url="getCoverUrl(book)"
+            :api="api"
             :is-favorited="favoriteBookIds.has(book.id)"
             :is-downloading="downloadingBookId === book.id"
             :show-favorite="showFavorite"
@@ -57,6 +58,7 @@ interface Props {
   books: any[]
   title: string
   icon: string
+  api: any
   favoriteBookIds: Set<number>
   downloadingBookId?: number | null
   loading?: boolean

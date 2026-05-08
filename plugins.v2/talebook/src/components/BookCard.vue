@@ -84,6 +84,7 @@ import { useImageLoader } from '../utils/imageLoader'
 interface Props {
   book: any
   coverUrl: string
+  api: any
   isFavorited?: boolean
   isDownloading?: boolean
   showFavorite?: boolean
@@ -96,7 +97,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 使用图片加载器异步加载图片
-const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl)
+const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl, props.api)
 
 defineEmits<{
   detail: [bookId: number]
