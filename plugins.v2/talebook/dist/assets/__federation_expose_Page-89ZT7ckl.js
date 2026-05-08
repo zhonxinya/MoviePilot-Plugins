@@ -16,14 +16,8 @@ async function loadImage(imageUrl, api, useCache = true) {
   }
   if (useCache && imageCache.has(imageUrl)) {
     const cachedUrl = imageCache.get(imageUrl);
-    try {
-      const response = await fetch(cachedUrl);
-      if (response.ok) {
-        return cachedUrl;
-      }
-    } catch {
-      imageCache.delete(imageUrl);
-    }
+    console.log("[ImageLoader] 使用缓存图片:", imageUrl);
+    return cachedUrl;
   }
   if (loadingImages.has(imageUrl)) {
     return loadingImages.get(imageUrl);
@@ -1286,29 +1280,14 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       return iconMap[type] || "mdi-book";
     }
     function getCoverUrl(book) {
-      if (!book) return "";
-      if (book.thumb) {
-        if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
-          return book.thumb;
-        }
-        const serverUrl = getServerUrl();
-        if (serverUrl) {
-          return `${serverUrl}${book.thumb}`;
-        }
+      if (!book || !book.id) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
       }
-      if (book.img) {
-        if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
-          return book.img;
-        }
-        const serverUrl = getServerUrl();
-        if (serverUrl) {
-          return `${serverUrl}${book.img}`;
-        }
+      const imageUrl = book.thumb || book.img;
+      if (!imageUrl) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
       }
-      if (book.id) {
-        return `/api/v1/plugin/Talebook/image/thumb/${book.id}`;
-      }
-      return "";
+      return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`);
     }
     async function loadConfig() {
       if (!props.api) return;
@@ -1320,12 +1299,6 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       } catch (error) {
         console.error("[MetaCategory] 加载配置失败:", error);
       }
-    }
-    function getServerUrl() {
-      if (talebookServerUrl.value) {
-        return talebookServerUrl.value;
-      }
-      return "";
     }
     async function loadMetaList() {
       loading.value = true;
@@ -1792,7 +1765,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-4aa0f376"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-090a132c"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -1889,82 +1862,24 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       }
     };
     const getCoverUrl = (book) => {
-      if (book.thumb) {
-        if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
-          return book.thumb;
-        }
-        if (talebookServerUrl.value) {
-          return `${talebookServerUrl.value}${book.thumb}`;
-        }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
-        }
+      if (!book || !book.id) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
       }
-      if (book.img) {
-        if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
-          return book.img;
-        }
-        if (talebookServerUrl.value) {
-          return `${talebookServerUrl.value}${book.img}`;
-        }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
-        }
+      const imageUrl = book.thumb || book.img;
+      if (!imageUrl) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
       }
-      if (book.cover_url) {
-        if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
-          return book.cover_url;
-        }
-        if (talebookServerUrl.value) {
-          return `${talebookServerUrl.value}${book.cover_url}`;
-        }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
-        }
-      }
-      return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+      return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`);
     };
     const getDetailCoverUrl = (book) => {
-      if (book.img) {
-        if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
-          return book.img;
-        }
-        if (talebookServerUrl.value) {
-          return `${talebookServerUrl.value}${book.img}`;
-        }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
-        }
+      if (!book || !book.id) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
       }
-      if (book.thumb) {
-        if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
-          return book.thumb;
-        }
-        if (talebookServerUrl.value) {
-          return `${talebookServerUrl.value}${book.thumb}`;
-        }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
-        }
+      const imageUrl = book.img || book.thumb;
+      if (!imageUrl) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
       }
-      if (book.cover_url) {
-        if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
-          return book.cover_url;
-        }
-        if (talebookServerUrl.value) {
-          return `${talebookServerUrl.value}${book.cover_url}`;
-        }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
-        }
-      }
-      return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+      return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`);
     };
     async function safeApiCall(apiCall, retries = 2, delay = 1e3, timeout = 3e4) {
       let lastError = null;
@@ -2880,6 +2795,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-3df07e99"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-97cfc346"]]);
 
 export { Page as default };

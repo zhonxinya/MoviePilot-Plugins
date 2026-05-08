@@ -310,45 +310,22 @@ function getMetaTypeIcon(type: string): string {
 }
 
 /**
- * 获取封面 URL
+ * 获取封面图 URL
  */
 function getCoverUrl(book: any): string {
-  if (!book) return ''
-  
-  // 优先使用 thumb 字段(缩略图)
-  if (book.thumb) {
-    // 如果是完整 URL,直接返回
-    if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
-      return book.thumb
-    }
-    // 如果是相对路径,与 Talebook 服务器地址拼接
-    const serverUrl = getServerUrl()
-    if (serverUrl) {
-      // 直接拼接,利用浏览器默认缓存机制
-      return `${serverUrl}${book.thumb}`
-    }
+  if (!book || !book.id) {
+    // 如果没有书籍信息,返回占位图
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
   }
   
-  // 其次使用 img 字段(大图)
-  if (book.img) {
-    // 如果是完整 URL,直接返回
-    if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
-      return book.img
-    }
-    // 如果是相对路径,与 Talebook 服务器地址拼接
-    const serverUrl = getServerUrl()
-    if (serverUrl) {
-      // 直接拼接,利用浏览器默认缓存机制
-      return `${serverUrl}${book.img}`
-    }
+  // 优先使用 thumb 字段(缩略图),其次使用 img 字段
+  const imageUrl = book.thumb || book.img
+  if (!imageUrl) {
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
   }
   
-  // 最后使用插件 API 代理（仅在没有配置服务器地址时使用）
-  if (book.id) {
-    return `/api/v1/plugin/Talebook/image/thumb/${book.id}`
-  }
-  
-  return ''
+  // 统一使用后端代理 API
+  return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`)
 }
 
 /**
@@ -365,19 +342,6 @@ async function loadConfig() {
   } catch (error) {
     console.error('[MetaCategory] 加载配置失败:', error)
   }
-}
-
-/**
- * 获取 Talebook 服务器地址
- */
-function getServerUrl(): string {
-  // 优先使用缓存的服务器地址
-  if (talebookServerUrl.value) {
-    return talebookServerUrl.value
-  }
-  
-  // 如果没有配置，返回空字符串
-  return ''
 }
 
 /**

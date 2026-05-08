@@ -41,16 +41,9 @@ export async function loadImage(
   // 检查缓存
   if (useCache && imageCache.has(imageUrl)) {
     const cachedUrl = imageCache.get(imageUrl)!
-    // 验证 Blob URL 是否仍然有效
-    try {
-      const response = await fetch(cachedUrl)
-      if (response.ok) {
-        return cachedUrl
-      }
-    } catch {
-      // Blob URL 失效,清除缓存
-      imageCache.delete(imageUrl)
-    }
+    // Blob URL 可以直接使用,无需验证
+    console.log('[ImageLoader] 使用缓存图片:', imageUrl)
+    return cachedUrl
   }
 
   // 检查是否正在加载中

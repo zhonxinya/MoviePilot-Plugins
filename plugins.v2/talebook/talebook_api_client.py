@@ -1284,3 +1284,34 @@ class TalebookApiClient:
             logger.error(f"{'=' * 80}\n")
             logger.error(f"堆栈跟踪:", exc_info=True)
             return {"code": 500, "message": f"扫描导入失败: {str(e)}"}
+    
+    def download_image(self, url: str) -> Optional[bytes]:
+        """
+        下载图片
+        
+        :param url: 图片 URL
+        :return: 图片二进制数据或 None
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                logger.error("无法获取认证会话")
+                return None
+            
+            logger.debug(f"下载图片: {url}")
+            response = session.get(url, timeout=10)
+            response.raise_for_status()
+            
+            # 验证是否为图片
+            content_type = response.headers.get('Content-Type', '')
+            if not content_type.startswith('image/'):
+                logger.warning(f"URL 不是图片: {url}, Content-Type: {content_type}")
+                return None
+            
+            image_data = response.content
+            logger.debug(f"图片下载成功: size={len(image_data)} bytes")
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"下载图片失败: url={url}, error={str(e)}")
+            return None
