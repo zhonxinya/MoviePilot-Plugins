@@ -1,0 +1,7 @@
+
+.v-card[data-v-10d901c0] {
+  transition: transform 0.2s;
+}
+.v-card[data-v-10d901c0]:hover {
+  transform: translateY(-4px);
+}
