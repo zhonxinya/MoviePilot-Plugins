@@ -41,8 +41,7 @@ class TalebookApiClient:
         self._session_timeout = 30 * 60  # 30 分钟
         
         # Cookie 持久化缓存（用于快速恢复会话）
-        # 缓存键格式: talebook_session:{server_url}:{username}
-        cache_key = f"talebook_session:{self._server_url}:{self._username}"
+        # 缓存键格式: talebook_session:{server_url}:{username}:{verify_ssl}
         self._session_cache = TTLCache(
             region="talebook_auth",
             maxsize=10,
@@ -50,7 +49,51 @@ class TalebookApiClient:
         )
         
         # 尝试从缓存恢复会话
-        self._restore_session_from_cache(cache_key)
+        self._restore_session_from_cache(self._get_session_cache_key())
+
+    def _get_session_cache_key(self) -> str:
+        """
+        生成会话缓存键。
+
+        将 verify_ssl 纳入键的一部分，避免不同 TLS 策略下复用同一份会话缓存。
+        """
+        return f"talebook_session:{self._server_url}:{self._username}:{int(self._verify_ssl)}"
+
+    @staticmethod
+    def _first_non_empty(*values):
+        for value in values:
+            if value not in (None, "", [], {}, ()):
+                return value
+        return None
+
+    def _normalize_book(self, book: Optional[dict]) -> dict:
+        """
+        规范化单本书的数据契约。
+
+        统一以 cover_url 作为封面字段出口，同时保留 coverUrl 作为过渡兼容别名。
+        """
+        if not isinstance(book, dict):
+            return {}
+
+        normalized_book = dict(book)
+        cover_url = self._first_non_empty(
+            normalized_book.get("cover_url"),
+            normalized_book.get("coverUrl"),
+            normalized_book.get("thumb"),
+            normalized_book.get("img"),
+        )
+
+        if cover_url:
+            normalized_book["cover_url"] = cover_url
+            normalized_book["coverUrl"] = cover_url
+
+        return normalized_book
+
+    def _normalize_books(self, books: Optional[List[dict]]) -> List[dict]:
+        if not books:
+            return []
+
+        return [self._normalize_book(book) for book in books if isinstance(book, dict)]
     
     def _restore_session_from_cache(self, cache_key: str):
         """
@@ -217,7 +260,7 @@ class TalebookApiClient:
             self._session_expiry = current_time + self._session_timeout
             
             # 保存到持久化缓存
-            cache_key = f"talebook_session:{self._server_url}:{self._username}"
+            cache_key = self._get_session_cache_key()
             self._save_session_to_cache(cache_key, session)
             
             logger.info(f"✅ 登录成功! 会话有效期: {self._session_timeout} 秒")
@@ -252,7 +295,7 @@ class TalebookApiClient:
         
         # 清除持久化缓存
         try:
-            cache_key = f"talebook_session:{self._server_url}:{self._username}"
+            cache_key = self._get_session_cache_key()
             self._session_cache.delete(cache_key)
             logger.debug("🗑️ 持久化缓存已清除")
         except Exception:
@@ -284,6 +327,7 @@ class TalebookApiClient:
             data = book_response.json()
             if data.get("err") == "ok":
                 book = data.get("book", {})
+                book = self._normalize_book(book)
                 logger.info(f"获取书籍详情成功: {book.get('title')}")
                 return {"code": 200, "data": book}
             else:
@@ -320,6 +364,7 @@ class TalebookApiClient:
             data = response.json()
             if data.get("err") == "ok":
                 books = data.get("books", [])
+                books = self._normalize_books(books)
                 logger.info(f"搜索成功: {keyword}, 找到 {len(books)} 本书")
                 return books
             else:
@@ -350,6 +395,7 @@ class TalebookApiClient:
             data = response.json()
             if data.get("err") == "ok":
                 books = data.get("books", [])
+                books = self._normalize_books(books)
                 logger.info(f"获取外部元数据成功: {len(books)} 条")
                 return {"code": 200, "data": books}
             else:
@@ -590,6 +636,7 @@ class TalebookApiClient:
             
             if is_success:
                 books = data.get("books", [])
+                books = self._normalize_books(books)
                 total = data.get("total", len(books))
                 title = data.get("title", "")
                 logger.info(f"获取{meta_type}='{name}'的书籍成功: {total} 本")
@@ -627,6 +674,7 @@ class TalebookApiClient:
             data = response.json()
             if data.get("err") == "ok":
                 books = data.get("books", [])
+                books = self._normalize_books(books)
                 return books[:limit]
             return []
             
@@ -657,6 +705,7 @@ class TalebookApiClient:
             data = response.json()
             if data.get("err") == "ok":
                 books = data.get("books", [])
+                books = self._normalize_books(books)
                 return books[:limit]
             return []
             

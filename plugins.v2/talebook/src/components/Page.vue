@@ -320,7 +320,7 @@ import ScanPanel from './ScanPanel.vue'
 import ToastNotification from './ToastNotification.vue'
 import MetaCategory from './MetaCategory.vue'
 import { useToast } from '../composables/useToast'
-import { buildProxyImageUrl, NO_COVER_PLACEHOLDER } from '../utils/coverProxy'
+import { buildBookCoverUrl } from '../utils/coverProxy'
 
 // Props - 接收 MoviePilot-Frontend 传递的 api 对象和 model(配置)
 const props = defineProps({
@@ -444,35 +444,9 @@ const loadConfig = async () => {
   }
 }
 
-// 获取封面图 URL (用于卡片显示)
-const getCoverUrl = (book: any) => {
-  if (!book || !book.id) {
-    return NO_COVER_PLACEHOLDER
-  }
-  
-  // 优先使用 cover_url，其次使用 thumb/img 字段
-  const imageUrl = book.cover_url || book.coverUrl || book.thumb || book.img
-  if (!imageUrl) {
-    return NO_COVER_PLACEHOLDER
-  }
+const getCoverUrl = (book: any) => buildBookCoverUrl(book, talebookServerUrl.value, getApiUrl('/image/proxy'), 'card')
 
-  return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl('/image/proxy'))
-}
-
-// 获取高清封面图 URL (用于详情页显示)
-const getDetailCoverUrl = (book: any) => {
-  if (!book || !book.id) {
-    return NO_COVER_PLACEHOLDER
-  }
-  
-  // 详情页优先使用 cover_url，其次使用大图 img，再回退到 thumb
-  const imageUrl = book.cover_url || book.coverUrl || book.img || book.thumb
-  if (!imageUrl) {
-    return NO_COVER_PLACEHOLDER
-  }
-
-  return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl('/image/proxy'))
-}
+const getDetailCoverUrl = (book: any) => buildBookCoverUrl(book, talebookServerUrl.value, getApiUrl('/image/proxy'), 'detail')
 
 // API 错误处理工具函数(参考 Sonovel 插件)
 async function safeApiCall<T = any>(

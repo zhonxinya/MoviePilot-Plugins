@@ -72,7 +72,7 @@ class TalebookSearchTool(MoviePilotTool):
         "- author: 作者\n"
         "- rating: 评分（0-5分）\n"
         "- timestamp: 添加时间戳\n"
-        "- cover_url: 封面图片 URL（相对路径）\n"
+        "- cover_url: 封面图片 URL（标准字段；兼容 coverUrl/thumb/img）\n"
         "\n"
         "✅ 使用示例：\n"
         "```python\n"

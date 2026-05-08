@@ -98,7 +98,7 @@
 import { ref, onMounted, watch } from 'vue'
 import BookGrid from './BookGrid.vue'
 import BookDetailDialog from './BookDetailDialog.vue'
-import { buildProxyImageUrl, NO_COVER_PLACEHOLDER } from '../utils/coverProxy'
+import { buildBookCoverUrl } from '../utils/coverProxy'
 
 interface Props {
   metaType?: string  // tag/author/series/rating/publisher/language
@@ -160,21 +160,8 @@ function getMetaTypeName(type: string): string {
   return typeMap[type] || type
 }
 
-/**
- * 获取封面图 URL
- */
 function getCoverUrl(book: any): string {
-  if (!book || !book.id) {
-    return NO_COVER_PLACEHOLDER
-  }
-  
-  // 优先使用 cover_url，其次使用 thumb/img 字段
-  const imageUrl = book.cover_url || book.coverUrl || book.thumb || book.img
-  if (!imageUrl) {
-    return NO_COVER_PLACEHOLDER
-  }
-
-  return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl('/image/proxy'))
+  return buildBookCoverUrl(book, talebookServerUrl.value, getApiUrl('/image/proxy'), 'card')
 }
 
 /**

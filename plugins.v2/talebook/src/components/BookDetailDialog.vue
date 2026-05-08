@@ -20,8 +20,15 @@
                 class="bg-grey-lighten-3"
               >
                 <template v-slot:placeholder>
-                  <v-row class="fill-height ma-0" align="center" justify="center">
-                    <v-progress-circular indeterminate color="primary" />
+                  <v-row class="fill-height ma-0 pa-4 text-center" align="center" justify="center">
+                    <div v-if="loading" class="d-flex flex-column align-center justify-center">
+                      <v-progress-circular indeterminate color="primary" />
+                      <div class="text-caption text-medium-emphasis mt-2">加载封面中</div>
+                    </div>
+                    <div v-else class="d-flex flex-column align-center justify-center">
+                      <v-icon color="primary" size="large">mdi-image-off-outline</v-icon>
+                      <div class="text-caption text-medium-emphasis mt-2">{{ imageError || '暂无封面' }}</div>
+                    </div>
                   </v-row>
                 </template>
               </v-img>
@@ -185,7 +192,7 @@ const resolvedCoverUrl = computed(() => {
 })
 
 // 使用图片加载器异步加载封面图
-const { imageUrl: loadedCoverUrl } = useImageLoader(resolvedCoverUrl, props.api)
+const { imageUrl: loadedCoverUrl, loading, error: imageError } = useImageLoader(resolvedCoverUrl, props.api)
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]

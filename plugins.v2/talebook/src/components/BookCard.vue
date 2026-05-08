@@ -9,8 +9,15 @@
       gradient="to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.2)"
     >
       <template v-slot:placeholder>
-        <v-row class="fill-height ma-0" align="center" justify="center">
-          <v-progress-circular indeterminate color="grey-lighten-5" />
+        <v-row class="fill-height ma-0 pa-4 text-center" align="center" justify="center">
+          <div v-if="loading" class="d-flex flex-column align-center justify-center">
+            <v-progress-circular indeterminate color="grey-lighten-5" />
+            <div class="text-caption text-grey-lighten-4 mt-2">加载封面中</div>
+          </div>
+          <div v-else class="d-flex flex-column align-center justify-center">
+            <v-icon color="grey-lighten-4" size="large">mdi-image-off-outline</v-icon>
+            <div class="text-caption text-grey-lighten-4 mt-2">{{ imageError || '暂无封面' }}</div>
+          </div>
         </v-row>
       </template>
       
@@ -97,7 +104,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 使用图片加载器异步加载图片
-const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl, props.api)
+const { imageUrl: loadedImageUrl, loading, error: imageError } = useImageLoader(props.coverUrl, props.api)
 
 defineEmits<{
   detail: [bookId: number]

@@ -15,6 +15,17 @@ const imageCache = new Map<string, string>()
 // 正在加载的图片 Promise Map: URL -> Promise<Blob URL>
 const loadingImages = new Map<string, Promise<string>>()
 
+export type ImageLoadStatus = 'idle' | 'loading' | 'loaded' | 'error'
+
+interface LoadImageOptions {
+  useCache?: boolean
+}
+
+interface LoadedImageResult {
+  url: string
+  fromCache: boolean
+}
+
 async function readBlobPreview(blob: Blob, maxLength: number = 200): Promise<string> {
   try {
     const text = await blob.text()
@@ -48,16 +59,18 @@ function isImageBlob(blob: Blob): boolean {
 export async function loadImage(
   imageUrl: string,
   api: any,
-  useCache: boolean = true
-): Promise<string> {
+  options: LoadImageOptions = {}
+): Promise<LoadedImageResult> {
+  const useCache = options.useCache ?? true
+
   if (!imageUrl) {
     console.warn('[ImageLoader] 图片 URL 为空')
-    return ''
+    return { url: '', fromCache: false }
   }
 
   if (!api || typeof api.get !== 'function') {
     console.error('[ImageLoader] API 对象无效:', api)
-    return ''
+    return { url: '', fromCache: false }
   }
 
   // 检查缓存
@@ -65,12 +78,13 @@ export async function loadImage(
     const cachedUrl = imageCache.get(imageUrl)!
     // Blob URL 可以直接使用,无需验证
     console.log('[ImageLoader] 使用缓存图片:', imageUrl)
-    return cachedUrl
+    return { url: cachedUrl, fromCache: true }
   }
 
   // 检查是否正在加载中
   if (loadingImages.has(imageUrl)) {
-    return loadingImages.get(imageUrl)!
+    const url = await loadingImages.get(imageUrl)!
+    return { url, fromCache: useCache && imageCache.has(imageUrl) }
   }
 
   // 开始加载
@@ -114,7 +128,7 @@ export async function loadImage(
           responseType: typeof response,
           responseKeys: response && typeof response === 'object' ? Object.keys(response) : []
         })
-        throw new Error('响应数据为空')
+        return ''
       }
 
       const responseStatus = response?.status ?? 200
@@ -135,7 +149,7 @@ export async function loadImage(
             console.error('[ImageLoader] 无法解析错误响应')
           }
         }
-        throw new Error('响应数据格式错误')
+        return ''
       }
 
       if (!isImageBlob(blob)) {
@@ -147,13 +161,13 @@ export async function loadImage(
           size: blob.size,
           preview
         })
-        throw new Error('代理返回的不是图片数据')
+        return ''
       }
       
       // 检查 Blob 是否为空
       if (blob.size === 0) {
         console.error('[ImageLoader] Blob 数据为空')
-        throw new Error('图片数据为空')
+        return ''
       }
       
       // 创建 Blob URL
@@ -177,8 +191,12 @@ export async function loadImage(
 
   // 记录加载状态
   loadingImages.set(imageUrl, loadPromise)
-  
-  return loadPromise
+
+  const url = await loadPromise
+  return {
+    url,
+    fromCache: false
+  }
 }
 
 /**
@@ -189,9 +207,10 @@ export async function loadImage(
  */
 export async function preloadImages(
   imageUrls: string[],
-  useCache: boolean = true
+  api: any,
+  options: LoadImageOptions = {}
 ): Promise<void> {
-  const promises = imageUrls.map(url => loadImage(url, useCache))
+  const promises = imageUrls.map(url => loadImage(url, api, options))
   await Promise.allSettled(promises)
 }
 
@@ -248,34 +267,56 @@ export function useImageLoader(imageSource: MaybeRefOrGetter<string>, api: any) 
   const loadedUrl = ref<string>('')
   const loading = ref<boolean>(false)
   const error = ref<string>('')
+  const status = ref<ImageLoadStatus>('idle')
 
   let cancelled = false
   let requestVersion = 0
+  let currentUrl = ''
+  let currentFromCache = true
+
+  const revokeCurrentUrl = () => {
+    if (currentUrl && !currentFromCache) {
+      URL.revokeObjectURL(currentUrl)
+    }
+
+    currentUrl = ''
+    currentFromCache = true
+  }
 
   const runLoad = async (currentImageUrl: string) => {
     const currentRequest = ++requestVersion
 
     if (!currentImageUrl || !api || cancelled) {
+      revokeCurrentUrl()
       loadedUrl.value = ''
       error.value = ''
       loading.value = false
+      status.value = 'idle'
       return
     }
 
     loading.value = true
     error.value = ''
+    status.value = 'loading'
 
     try {
-      const url = await loadImage(currentImageUrl, api)
+      const { url, fromCache } = await loadImage(currentImageUrl, api)
       if (!cancelled && currentRequest === requestVersion) {
+        revokeCurrentUrl()
         loadedUrl.value = url
+        currentUrl = url
+        currentFromCache = fromCache
         if (!url) {
           error.value = '加载失败'
+          status.value = 'error'
+        } else {
+          status.value = 'loaded'
         }
       }
     } catch (e) {
       if (!cancelled && currentRequest === requestVersion) {
         error.value = String(e)
+        status.value = 'error'
       }
     } finally {
       if (!cancelled && currentRequest === requestVersion) {
@@ -293,12 +334,14 @@ export function useImageLoader(imageSource: MaybeRefOrGetter<string>, api: any) 
   onUnmounted(() => {
     cancelled = true
     stop()
+    revokeCurrentUrl()
   })
 
   return {
     imageUrl: loadedUrl,
     loading,
     error,
+    status,
     reload: () => runLoad(resolveImageSource(imageSource))
   }
 }
