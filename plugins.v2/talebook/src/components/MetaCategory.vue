@@ -142,11 +142,86 @@
         <div class="mt-4 text-body-1">加载中...</div>
       </v-card-text>
     </v-card>
+
+    <!-- 书籍列表对话框 -->
+    <v-dialog
+      v-model="showBooksDialog"
+      max-width="1200"
+      scrollable
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center pa-4">
+          <v-icon color="primary" class="mr-2">{{ getMetaTypeIcon(selectedMetaType) }}</v-icon>
+          <span class="text-h5 font-weight-bold">{{ currentMetaName }}</span>
+          <v-spacer />
+          <v-chip color="primary" variant="elevated">
+            <v-icon start>mdi-book-multiple</v-icon>
+            {{ dialogBooks.length }} 本
+          </v-chip>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="showBooksDialog = false"
+            class="ml-2"
+          />
+        </v-card-title>
+        
+        <v-divider />
+        
+        <v-card-text class="pa-4">
+          <!-- 加载中 -->
+          <div v-if="dialogLoading" class="text-center py-8">
+            <v-progress-circular indeterminate color="primary" size="48" />
+            <div class="mt-4 text-body-1">加载书籍中...</div>
+          </div>
+          
+          <!-- 书籍网格 -->
+          <v-row v-else-if="dialogBooks.length > 0" dense>
+            <v-col
+              v-for="book in dialogBooks"
+              :key="book.id"
+              cols="6"
+              sm="4"
+              md="3"
+              lg="2"
+            >
+              <BookCard
+                :book="book"
+                :cover-url="getCoverUrl(book)"
+                :is-favorited="false"
+                :is-downloading="false"
+                @detail="handleBookDetail"
+              />
+            </v-col>
+          </v-row>
+          
+          <!-- 空状态 -->
+          <v-empty-state
+            v-else
+            icon="mdi-book-off-outline"
+            title="暂无书籍"
+            text="该分类下还没有书籍"
+            class="py-8"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 书籍详情对话框 -->
+    <BookDetailDialog
+      v-model="showDetailDialog"
+      :book="selectedBook"
+      :cover-url="selectedBook ? getCoverUrl(selectedBook) : ''"
+      @toggle-favorite="handleToggleFavorite"
+      @download="handleDownload"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import BookCard from './BookCard.vue'
+import BookDetailDialog from './BookDetailDialog.vue'
 
 interface Props {
   api?: any  // MoviePilot-Frontend 提供的 API 对象
@@ -165,6 +240,14 @@ const selectedMetaType = ref('tag')
 const metaList = ref<MetaItem[]>([])
 const loading = ref(false)
 const searchKeyword = ref('')
+
+// 对话框相关
+const showBooksDialog = ref(false)
+const dialogLoading = ref(false)
+const dialogBooks = ref<any[]>([])
+const currentMetaName = ref('')
+const showDetailDialog = ref(false)
+const selectedBook = ref<any | null>(null)
 
 // 过滤后的列表(支持搜索)
 const filteredList = computed(() => {
@@ -200,6 +283,29 @@ function getMetaTypeName(type: string): string {
     language: '语言'
   }
   return typeMap[type] || type
+}
+
+/**
+ * 获取元数据类型图标
+ */
+function getMetaTypeIcon(type: string): string {
+  const iconMap: Record<string, string> = {
+    tag: 'mdi-tag',
+    author: 'mdi-account',
+    series: 'mdi-bookshelf',
+    rating: 'mdi-star',
+    publisher: 'mdi-domain',
+    language: 'mdi-translate'
+  }
+  return iconMap[type] || 'mdi-book'
+}
+
+/**
+ * 获取封面 URL
+ */
+function getCoverUrl(book: any): string {
+  if (!book.id) return ''
+  return `/api/v1/plugin/Talebook/book/${book.id}/cover`
 }
 
 /**
@@ -266,10 +372,76 @@ async function loadMetaList() {
 /**
  * 查看指定元数据的书籍
  */
-function viewMetaBooks(name: string) {
-  // 跳转到书籍浏览页面,并带上筛选条件
-  const encodedName = encodeURIComponent(name)
-  window.location.href = `#/browse?meta=${selectedMetaType.value}&name=${encodedName}`
+async function viewMetaBooks(name: string) {
+  currentMetaName.value = name
+  showBooksDialog.value = true
+  dialogLoading.value = true
+  dialogBooks.value = []
+  
+  try {
+    let data
+    if (props.api) {
+      const response = await props.api.get(`/plugin/Talebook/meta/${selectedMetaType.value}/${encodeURIComponent(name)}`, {
+        params: { page: 1, num: 50 }
+      })
+      data = response
+    } else {
+      const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}/${encodeURIComponent(name)}?page=1&num=50`)
+      data = await response.json()
+    }
+    
+    if (data.code === 200) {
+      dialogBooks.value = data.data || []
+    } else {
+      console.error('加载书籍失败:', data.message)
+    }
+  } catch (error) {
+    console.error('加载书籍异常:', error)
+  } finally {
+    dialogLoading.value = false
+  }
+}
+
+/**
+ * 处理书籍详情点击
+ */
+async function handleBookDetail(bookId: number) {
+  // 获取书籍详情
+  try {
+    let data
+    if (props.api) {
+      const response = await props.api.get(`/plugin/Talebook/book/detail/${bookId}`)
+      data = response
+    } else {
+      const response = await fetch(`/plugin/Talebook/book/detail/${bookId}`)
+      data = await response.json()
+    }
+    
+    if (data.code === 200) {
+      selectedBook.value = data.data
+      showDetailDialog.value = true
+    } else {
+      console.error('获取书籍详情失败:', data.message)
+    }
+  } catch (error) {
+    console.error('获取书籍详情异常:', error)
+  }
+}
+
+/**
+ * 处理收藏切换
+ */
+function handleToggleFavorite(bookId: number) {
+  console.log('切换收藏状态:', bookId)
+  // TODO: 实现收藏功能
+}
+
+/**
+ * 处理下载
+ */
+function handleDownload(bookId: number) {
+  console.log('下载书籍:', bookId)
+  // TODO: 实现下载功能
 }
 
 // 组件挂载时加载数据

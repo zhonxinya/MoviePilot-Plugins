@@ -297,7 +297,7 @@ const _hoisted_7$1 = {
   key: 0,
   class: "mt-4"
 };
-const _hoisted_8 = {
+const _hoisted_8$1 = {
   class: "line-clamp-8",
   style: { "line-height": "1.8" }
 };
@@ -660,7 +660,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                               }),
                               _createVNode$4(_component_v_card_text, { class: "text-body-2 text-medium-emphasis pt-0" }, {
                                 default: _withCtx$4(() => [
-                                  _createElementVNode$4("div", _hoisted_8, _toDisplayString$3(__props.book.comments), 1)
+                                  _createElementVNode$4("div", _hoisted_8$1, _toDisplayString$3(__props.book.comments), 1)
                                 ]),
                                 _: 1
                               })
@@ -1084,8 +1084,12 @@ const _hoisted_4 = { class: "text-subtitle-1 font-weight-bold text-truncate mb-1
 const _hoisted_5 = { class: "d-flex align-center" };
 const _hoisted_6 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_7 = { class: "card-footer pa-2 d-flex justify-space-between align-center" };
+const _hoisted_8 = { class: "text-h5 font-weight-bold" };
+const _hoisted_9 = {
+  key: 0,
+  class: "text-center py-8"
+};
 const {ref: ref$1,computed: computed$1,onMounted: onMounted$1} = await importShared('vue');
-
 const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   __name: "MetaCategory",
   props: {
@@ -1097,6 +1101,12 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     const metaList = ref$1([]);
     const loading = ref$1(false);
     const searchKeyword = ref$1("");
+    const showBooksDialog = ref$1(false);
+    const dialogLoading = ref$1(false);
+    const dialogBooks = ref$1([]);
+    const currentMetaName = ref$1("");
+    const showDetailDialog = ref$1(false);
+    const selectedBook = ref$1(null);
     const filteredList = computed$1(() => {
       if (!searchKeyword.value) {
         return metaList.value;
@@ -1124,6 +1134,21 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         language: "语言"
       };
       return typeMap[type] || type;
+    }
+    function getMetaTypeIcon(type) {
+      const iconMap = {
+        tag: "mdi-tag",
+        author: "mdi-account",
+        series: "mdi-bookshelf",
+        rating: "mdi-star",
+        publisher: "mdi-domain",
+        language: "mdi-translate"
+      };
+      return iconMap[type] || "mdi-book";
+    }
+    function getCoverUrl(book) {
+      if (!book.id) return "";
+      return `/api/v1/plugin/Talebook/book/${book.id}/cover`;
     }
     async function loadMetaList() {
       loading.value = true;
@@ -1171,9 +1196,58 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         loading.value = false;
       }
     }
-    function viewMetaBooks(name) {
-      const encodedName = encodeURIComponent(name);
-      window.location.href = `#/browse?meta=${selectedMetaType.value}&name=${encodedName}`;
+    async function viewMetaBooks(name) {
+      currentMetaName.value = name;
+      showBooksDialog.value = true;
+      dialogLoading.value = true;
+      dialogBooks.value = [];
+      try {
+        let data;
+        if (props.api) {
+          const response = await props.api.get(`/plugin/Talebook/meta/${selectedMetaType.value}/${encodeURIComponent(name)}`, {
+            params: { page: 1, num: 50 }
+          });
+          data = response;
+        } else {
+          const response = await fetch(`/plugin/Talebook/meta/${selectedMetaType.value}/${encodeURIComponent(name)}?page=1&num=50`);
+          data = await response.json();
+        }
+        if (data.code === 200) {
+          dialogBooks.value = data.data || [];
+        } else {
+          console.error("加载书籍失败:", data.message);
+        }
+      } catch (error) {
+        console.error("加载书籍异常:", error);
+      } finally {
+        dialogLoading.value = false;
+      }
+    }
+    async function handleBookDetail(bookId) {
+      try {
+        let data;
+        if (props.api) {
+          const response = await props.api.get(`/plugin/Talebook/book/detail/${bookId}`);
+          data = response;
+        } else {
+          const response = await fetch(`/plugin/Talebook/book/detail/${bookId}`);
+          data = await response.json();
+        }
+        if (data.code === 200) {
+          selectedBook.value = data.data;
+          showDetailDialog.value = true;
+        } else {
+          console.error("获取书籍详情失败:", data.message);
+        }
+      } catch (error) {
+        console.error("获取书籍详情异常:", error);
+      }
+    }
+    function handleToggleFavorite(bookId) {
+      console.log("切换收藏状态:", bookId);
+    }
+    function handleDownload(bookId) {
+      console.log("下载书籍:", bookId);
     }
     onMounted$1(() => {
       loadMetaList();
@@ -1194,6 +1268,9 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       const _component_v_btn = _resolveComponent$1("v-btn");
       const _component_v_empty_state = _resolveComponent$1("v-empty-state");
       const _component_v_progress_circular = _resolveComponent$1("v-progress-circular");
+      const _component_v_spacer = _resolveComponent$1("v-spacer");
+      const _component_v_card_title = _resolveComponent$1("v-card-title");
+      const _component_v_dialog = _resolveComponent$1("v-dialog");
       return _openBlock$1(), _createElementBlock("div", _hoisted_1, [
         _createVNode$1(_component_v_card, {
           class: "mb-4 elevation-2",
@@ -1265,7 +1342,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         }, {
           prepend: _withCtx$1(() => [
             _createVNode$1(_component_v_icon, null, {
-              default: _withCtx$1(() => [..._cache[3] || (_cache[3] = [
+              default: _withCtx$1(() => [..._cache[6] || (_cache[6] = [
                 _createTextVNode$1("mdi-information-outline", -1)
               ])]),
               _: 1
@@ -1319,13 +1396,13 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                                               color: "primary",
                                               class: "mr-1"
                                             }, {
-                                              default: _withCtx$1(() => [..._cache[4] || (_cache[4] = [
+                                              default: _withCtx$1(() => [..._cache[7] || (_cache[7] = [
                                                 _createTextVNode$1("mdi-book-multiple", -1)
                                               ])]),
                                               _: 1
                                             }),
                                             _createElementVNode$1("span", _hoisted_6, _toDisplayString(item.count), 1),
-                                            _cache[5] || (_cache[5] = _createElementVNode$1("span", { class: "text-caption text-grey ml-1" }, "本", -1))
+                                            _cache[8] || (_cache[8] = _createElementVNode$1("span", { class: "text-caption text-grey ml-1" }, "本", -1))
                                           ])
                                         ]),
                                         _createVNode$1(_component_v_icon, {
@@ -1333,7 +1410,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                                           size: isHovering ? "large" : "default",
                                           class: "transition-swing"
                                         }, {
-                                          default: _withCtx$1(() => [..._cache[6] || (_cache[6] = [
+                                          default: _withCtx$1(() => [..._cache[9] || (_cache[9] = [
                                             _createTextVNode$1(" mdi-chevron-right ", -1)
                                           ])]),
                                           _: 1
@@ -1358,7 +1435,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                                       size: "small",
                                       color: "grey-lighten-1"
                                     }, {
-                                      default: _withCtx$1(() => [..._cache[7] || (_cache[7] = [
+                                      default: _withCtx$1(() => [..._cache[10] || (_cache[10] = [
                                         _createTextVNode$1("mdi-arrow-right-circle", -1)
                                       ])]),
                                       _: 1
@@ -1392,7 +1469,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                       "prepend-icon": "mdi-close",
                       onClick: _cache[2] || (_cache[2] = ($event) => searchKeyword.value = "")
                     }, {
-                      default: _withCtx$1(() => [..._cache[8] || (_cache[8] = [
+                      default: _withCtx$1(() => [..._cache[11] || (_cache[11] = [
                         _createTextVNode$1(" 清除搜索 ", -1)
                       ])]),
                       _: 1
@@ -1417,19 +1494,126 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                   color: "primary",
                   size: "64"
                 }),
-                _cache[9] || (_cache[9] = _createElementVNode$1("div", { class: "mt-4 text-body-1" }, "加载中...", -1))
+                _cache[12] || (_cache[12] = _createElementVNode$1("div", { class: "mt-4 text-body-1" }, "加载中...", -1))
               ]),
               _: 1
             })
           ]),
           _: 1
-        }))
+        })),
+        _createVNode$1(_component_v_dialog, {
+          modelValue: showBooksDialog.value,
+          "onUpdate:modelValue": _cache[4] || (_cache[4] = ($event) => showBooksDialog.value = $event),
+          "max-width": "1200",
+          scrollable: ""
+        }, {
+          default: _withCtx$1(() => [
+            _createVNode$1(_component_v_card, null, {
+              default: _withCtx$1(() => [
+                _createVNode$1(_component_v_card_title, { class: "d-flex align-center pa-4" }, {
+                  default: _withCtx$1(() => [
+                    _createVNode$1(_component_v_icon, {
+                      color: "primary",
+                      class: "mr-2"
+                    }, {
+                      default: _withCtx$1(() => [
+                        _createTextVNode$1(_toDisplayString(getMetaTypeIcon(selectedMetaType.value)), 1)
+                      ]),
+                      _: 1
+                    }),
+                    _createElementVNode$1("span", _hoisted_8, _toDisplayString(currentMetaName.value), 1),
+                    _createVNode$1(_component_v_spacer),
+                    _createVNode$1(_component_v_chip, {
+                      color: "primary",
+                      variant: "elevated"
+                    }, {
+                      default: _withCtx$1(() => [
+                        _createVNode$1(_component_v_icon, { start: "" }, {
+                          default: _withCtx$1(() => [..._cache[13] || (_cache[13] = [
+                            _createTextVNode$1("mdi-book-multiple", -1)
+                          ])]),
+                          _: 1
+                        }),
+                        _createTextVNode$1(" " + _toDisplayString(dialogBooks.value.length) + " 本 ", 1)
+                      ]),
+                      _: 1
+                    }),
+                    _createVNode$1(_component_v_btn, {
+                      icon: "mdi-close",
+                      variant: "text",
+                      onClick: _cache[3] || (_cache[3] = ($event) => showBooksDialog.value = false),
+                      class: "ml-2"
+                    })
+                  ]),
+                  _: 1
+                }),
+                _createVNode$1(_component_v_divider),
+                _createVNode$1(_component_v_card_text, { class: "pa-4" }, {
+                  default: _withCtx$1(() => [
+                    dialogLoading.value ? (_openBlock$1(), _createElementBlock("div", _hoisted_9, [
+                      _createVNode$1(_component_v_progress_circular, {
+                        indeterminate: "",
+                        color: "primary",
+                        size: "48"
+                      }),
+                      _cache[14] || (_cache[14] = _createElementVNode$1("div", { class: "mt-4 text-body-1" }, "加载书籍中...", -1))
+                    ])) : dialogBooks.value.length > 0 ? (_openBlock$1(), _createBlock$1(_component_v_row, {
+                      key: 1,
+                      dense: ""
+                    }, {
+                      default: _withCtx$1(() => [
+                        (_openBlock$1(true), _createElementBlock(_Fragment, null, _renderList(dialogBooks.value, (book) => {
+                          return _openBlock$1(), _createBlock$1(_component_v_col, {
+                            key: book.id,
+                            cols: "6",
+                            sm: "4",
+                            md: "3",
+                            lg: "2"
+                          }, {
+                            default: _withCtx$1(() => [
+                              _createVNode$1(BookCard, {
+                                book,
+                                "cover-url": getCoverUrl(book),
+                                "is-favorited": false,
+                                "is-downloading": false,
+                                onDetail: handleBookDetail
+                              }, null, 8, ["book", "cover-url"])
+                            ]),
+                            _: 2
+                          }, 1024);
+                        }), 128))
+                      ]),
+                      _: 1
+                    })) : (_openBlock$1(), _createBlock$1(_component_v_empty_state, {
+                      key: 2,
+                      icon: "mdi-book-off-outline",
+                      title: "暂无书籍",
+                      text: "该分类下还没有书籍",
+                      class: "py-8"
+                    }))
+                  ]),
+                  _: 1
+                })
+              ]),
+              _: 1
+            })
+          ]),
+          _: 1
+        }, 8, ["modelValue"]),
+        _createVNode$1(BookDetailDialog, {
+          modelValue: showDetailDialog.value,
+          "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => showDetailDialog.value = $event),
+          book: selectedBook.value,
+          "cover-url": selectedBook.value ? getCoverUrl(selectedBook.value) : "",
+          onToggleFavorite: handleToggleFavorite,
+          onDownload: handleDownload
+        }, null, 8, ["modelValue", "book", "cover-url"])
       ]);
     };
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-e80bb2b0"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ba937747"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 

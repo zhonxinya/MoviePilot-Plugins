@@ -31,24 +31,24 @@ to {
 }
 }
 
-.meta-category-page[data-v-e80bb2b0] {
+.meta-category-page[data-v-ba937747] {
   min-height: 100%;
 }
-.meta-card[data-v-e80bb2b0] {
+.meta-card[data-v-ba937747] {
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
 }
-.meta-card[data-v-e80bb2b0]:hover {
+.meta-card[data-v-ba937747]:hover {
   transform: translateY(-4px);
 }
-.card-footer[data-v-e80bb2b0] {
+.card-footer[data-v-ba937747] {
   background: linear-gradient(to right, rgba(var(--v-theme-primary), 0.05), transparent);
 }
-.on-hover[data-v-e80bb2b0] {
+.on-hover[data-v-ba937747] {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.transition-swing[data-v-e80bb2b0] {
+.transition-swing[data-v-ba937747] {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
