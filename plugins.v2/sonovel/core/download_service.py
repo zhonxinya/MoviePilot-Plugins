@@ -79,18 +79,24 @@ class DownloadService:
         Returns:
             任务ID和状态
         """
-        logger.info('========== 提交下载任务 ==========')
-        logger.info(f'📥 接收到的下载数据: {book_data}')
+        import time as time_module
+        start_time = time_module.time()
+        
+        logger.info('========== [下载服务] 提交下载任务 ==========')
+        logger.info(f'📥 [下载服务] 接收到的下载数据: {book_data}')
         
         if not book_data:
-            logger.error('❌ 缺少书籍信息')
+            logger.error('❌ [下载服务] 缺少书籍信息')
             return {"code": 400, "message": "缺少书籍信息"}
         
         try:
             # 确保线程池已初始化
             if not self._executor:
-                logger.warning('⚠️ 线程池未初始化,尝试重新初始化...')
+                logger.warning('⚠️ [下载服务] 线程池未初始化,尝试重新初始化...')
+                init_start = time_module.time()
                 self.initialize()
+                init_elapsed = time_module.time() - init_start
+                logger.info(f'✅ [下载服务] 线程池初始化完成 (耗时: {init_elapsed:.3f}s)')
             
             # 生成任务ID
             task_id = str(uuid.uuid4())[:8]
@@ -109,14 +115,17 @@ class DownloadService:
             with self._lock:
                 self._tasks[task_id] = task_info
             
-            logger.info(f'✅ 创建下载任务: {task_id}')
-            logger.info(f'📚 书名: {book_data.get("bookName")}')
-            logger.info(f'👤 作者: {book_data.get("author")}')
+            total_elapsed = time_module.time() - start_time
+            logger.info(f'✅ [下载服务] 创建下载任务: {task_id} (耗时: {total_elapsed:.3f}s)')
+            logger.info(f'📚 [下载服务] 书名: {book_data.get("bookName")}')
+            logger.info(f'👤 [下载服务] 作者: {book_data.get("author")}')
             
             # 提交到线程池执行
+            submit_start = time_module.time()
             self._executor.submit(self._execute_download, task_id, book_data)
+            submit_elapsed = time_module.time() - submit_start
             
-            logger.info(f'🚀 任务已提交到后台执行')
+            logger.info(f'🚀 [下载服务] 任务已提交到后台执行 (提交耗时: {submit_elapsed:.3f}s)')
             
             return {
                 "code": 200,
@@ -129,9 +138,8 @@ class DownloadService:
             }
             
         except Exception as e:
-            logger.error(f'❌ 提交任务失败: {str(e)}')
-            import traceback
-            logger.info(f'堆栈跟踪:\n{traceback.format_exc()}')
+            total_elapsed = time_module.time() - start_time
+            logger.error(f'❌ [下载服务] 提交任务失败: {str(e)} (耗时: {total_elapsed:.3f}s)', exc_info=True)
             return {"code": 500, "message": str(e)}
     
     def _execute_download(self, task_id: str, book_data: dict):

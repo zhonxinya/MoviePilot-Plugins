@@ -58,36 +58,62 @@ class SearchService:
         Returns:
             搜索结果字典 {code, message, data}
         """
+        import time
+        start_time = time.time()
+        
         try:
+            logger.info(f'🔍 [搜索服务] 开始搜索: keyword="{keyword}"')
+            
             # 首次搜索时恢复缓存(延迟加载)
             if not self._cache.is_restored:
+                logger.info('📦 [搜索服务] 正在从存储恢复缓存...')
+                restore_start = time.time()
                 restored_count = self._cache.restore_from_storage(self._get_data)
-                logger.info(f'📦 已恢复 {restored_count} 条缓存记录')
+                restore_elapsed = time.time() - restore_start
+                logger.info(f'✅ [搜索服务] 已恢复 {restored_count} 条缓存记录 (耗时: {restore_elapsed:.2f}秒)')
             
             # 尝试从缓存获取
+            cache_check_start = time.time()
             cached_results = self._cache.get(keyword)
+            cache_check_elapsed = time.time() - cache_check_start
+            
             if cached_results is not None:
                 results = cached_results
-                logger.info(f'✅ 使用缓存结果: {keyword}')
+                total_elapsed = time.time() - start_time
+                logger.info(f'✅ [搜索服务] 使用缓存结果: "{keyword}" (缓存检查: {cache_check_elapsed:.3f}s, 总耗时: {total_elapsed:.3f}s, 结果数: {len(results)})')
             else:
                 # 执行搜索
-                logger.info(f'🔍 执行搜索: {keyword}')
+                logger.info(f'🌐 [搜索服务] 缓存未命中,执行远程搜索: "{keyword}"')
+                api_start = time.time()
                 results = self._client.search_aggregated(keyword)
+                api_elapsed = time.time() - api_start
                 
                 # 保存到缓存
                 if results:
+                    cache_set_start = time.time()
                     self._cache.set(keyword, results)
+                    cache_set_elapsed = time.time() - cache_set_start
+                    logger.info(f'💾 [搜索服务] 搜索结果已缓存 (API耗时: {api_elapsed:.2f}s, 缓存写入: {cache_set_elapsed:.3f}s, 结果数: {len(results)})')
+                else:
+                    logger.warning(f'⚠️ [搜索服务] 搜索无结果: "{keyword}" (API耗时: {api_elapsed:.2f}s)')
             
             # 保存搜索历史
+            history_save_start = time.time()
             self._save_search_history(keyword, len(results))
+            history_save_elapsed = time.time() - history_save_start
             
             # 发送通知
             if results:
+                total_elapsed = time.time() - start_time
+                logger.info(f'✅ [搜索服务] 搜索完成: "{keyword}" (总耗时: {total_elapsed:.3f}s, 结果数: {len(results)}, 历史保存: {history_save_elapsed:.3f}s)')
                 self._post_message(
                     mtype=NotificationType.Plugin,
                     title=f"🔍 Sonovel 搜索完成:{keyword}",
                     text=f"找到 {len(results)} 本相关书籍"
                 )
+            else:
+                total_elapsed = time.time() - start_time
+                logger.warning(f'⚠️ [搜索服务] 搜索无结果: "{keyword}" (总耗时: {total_elapsed:.3f}s)')
             
             return {
                 "code": 200,
@@ -95,7 +121,8 @@ class SearchService:
                 "data": [result.model_dump() for result in results]
             }
         except Exception as e:
-            logger.error(f'❌ 搜索失败: {str(e)}')
+            total_elapsed = time.time() - start_time
+            logger.error(f'❌ [搜索服务] 搜索失败: keyword="{keyword}", 错误: {str(e)} (耗时: {total_elapsed:.3f}s)', exc_info=True)
             return {"code": 500, "message": str(e)}
     
     def _save_search_history(self, keyword: str, count: int):
