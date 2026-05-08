@@ -5,7 +5,6 @@
 from typing import Dict, List, Optional, Tuple, Any
 from app.plugins import _PluginBase
 from app.log import logger
-from app.core.security import verify_password, get_password_hash
 from .xunlei_api_client import XunleiApiClient
 
 
@@ -23,7 +22,7 @@ class XunleiPan(_PluginBase):
     plugin_name = "迅雷网盘"
     plugin_desc = "迅雷网盘文件浏览和离线下载管理"
     plugin_icon = "Thunder_A.png"
-    plugin_version = "1.0.3"
+    plugin_version = "1.0.5"
     plugin_author = "trient"
     author_url = "https://github.com/jxxghp/MoviePilot-Plugins"
     plugin_config_prefix = "xunleipan_"
@@ -35,7 +34,8 @@ class XunleiPan(_PluginBase):
         super().__init__()
         self._enabled = False
         self._username = ""
-        self._password = ""
+        self._cookie = ""
+        self._user_agent = ""
         
         # API 客户端实例
         self._api_client: Optional[XunleiApiClient] = None
@@ -59,10 +59,15 @@ class XunleiPan(_PluginBase):
         
         self._enabled = bool(config.get("enabled", False))
         self._username = config.get("username", "")
-        
-        # 解密密码（如果是哈希值则直接使用，否则可能是明文）
-        password = config.get("password", "")
-        self._password = password
+        cookie = str(config.get("cookie", "") or "").strip()
+        self._user_agent = str(config.get("user_agent", "") or "").strip()
+        legacy_password = str(config.get("password", "") or "").strip()
+
+        if not cookie and legacy_password and legacy_password != "********":
+            cookie = legacy_password
+            logger.warning("⚠️ 检测到旧版 password 配置，已作为 Cookie 会话兼容加载，请尽快迁移到 cookie 字段")
+
+        self._cookie = cookie
         
         if self._enabled:
             logger.info(f"✅ 正在启用迅雷网盘插件...")
@@ -80,23 +85,17 @@ class XunleiPan(_PluginBase):
                 self._api_client = None
         
         # 创建新的 API 客户端
-        if self._enabled and self._username and self._password:
+        if self._enabled and self._cookie:
             self._api_client = XunleiApiClient(
+                cookie=self._cookie,
                 username=self._username,
-                password=self._password
+                user_agent=self._user_agent,
             )
             logger.info(f"✅ 迅雷网盘插件已启用，API 客户端已创建")
         elif not self._enabled:
             logger.debug("⏸️ 插件未启用，跳过初始化")
         else:
-            missing = []
-            if not self._username:
-                missing.append("username")
-            if not self._password:
-                missing.append("password")
-            
-            if missing:
-                logger.warning(f"⚠️ 插件已启用但配置不完整，缺失: {', '.join(missing)}")
+            logger.warning("⚠️ 插件已启用但未配置 Cookie, 请先从浏览器登录迅雷网盘后导入会话")
     
     def get_state(self) -> bool:
         """返回插件运行状态"""
@@ -201,6 +200,30 @@ class XunleiPan(_PluginBase):
                 "auth": "bear",
                 "summary": "保存配置",
                 "description": "保存插件配置信息"
+            },
+            {
+                "path": "/login_guide",
+                "endpoint": self.api_login_guide,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取登录指引",
+                "description": "返回迅雷登录页地址与浏览器辅助登录说明"
+            },
+            {
+                "path": "/browser_login",
+                "endpoint": self.api_browser_login,
+                "methods": ["POST"],
+                "auth": "bear",
+                "summary": "浏览器登录并采集会话",
+                "description": "打开迅雷登录页，等待用户手动完成登录后采集 Cookie 和 User-Agent"
+            },
+            {
+                "path": "/capture_session",
+                "endpoint": self.api_capture_session,
+                "methods": ["POST"],
+                "auth": "bear",
+                "summary": "采集浏览器会话",
+                "description": "与 browser_login 相同，保留兼容别名"
             },
             {
                 "path": "/test_connection",
@@ -363,8 +386,9 @@ class XunleiPan(_PluginBase):
             "data": {
                 "enabled": config.get("enabled", False),
                 "username": config.get("username", ""),
-                # 不返回密码，前端显示为占位符
-                "password": "********" if config.get("password") else "",
+                "cookie": "********" if config.get("cookie") else "",
+                "user_agent": config.get("user_agent", ""),
+                "password": "",
                 "timeout": config.get("timeout", 10),
                 "max_retries": config.get("max_retries", 3),
                 "auto_refresh": config.get("auto_refresh", False)
@@ -388,29 +412,38 @@ class XunleiPan(_PluginBase):
                 new_config["enabled"] = bool(config_data["enabled"])
             if "username" in config_data:
                 new_config["username"] = str(config_data["username"]).strip()
+            if "user_agent" in config_data:
+                new_config["user_agent"] = str(config_data["user_agent"]).strip()
+            if "cookie" in config_data:
+                cookie_value = str(config_data["cookie"]).strip()
+                if cookie_value and cookie_value != "********":
+                    new_config["cookie"] = cookie_value
+                elif cookie_value == "********":
+                    logger.debug("🔐 Cookie 未变更，保持现有会话")
+                else:
+                    new_config["cookie"] = ""
+            elif "password" in config_data:
+                legacy_cookie = str(config_data["password"]).strip()
+                if legacy_cookie and legacy_cookie != "********":
+                    new_config["cookie"] = legacy_cookie
+                    logger.warning("⚠️ 已通过旧 password 字段接收 Cookie，会话字段已迁移到 cookie")
             if "timeout" in config_data:
                 new_config["timeout"] = int(config_data["timeout"])
             if "max_retries" in config_data:
                 new_config["max_retries"] = int(config_data["max_retries"])
             if "auto_refresh" in config_data:
                 new_config["auto_refresh"] = bool(config_data["auto_refresh"])
-            
-            # 处理密码：只有当密码不是占位符且不为空时才更新
-            if "password" in config_data:
-                password = config_data["password"]
-                if password and password != "********":
-                    # 检查密码是否已经是哈希值（bcrypt 哈希以 $2b$ 开头）
-                    if not password.startswith("$2b$"):
-                        new_config["password"] = get_password_hash(password)
-                        logger.info("🔒 密码已加密存储")
-                    else:
-                        new_config["password"] = password
-                        logger.debug("🔒 使用已加密的密码")
-                # 如果密码是占位符或空，保持原密码不变
-            
-            # 验证必要字段
-            if new_config.get("enabled") and (not new_config.get("username") or not new_config.get("password")):
-                return {"code": 400, "message": "启用插件时必须提供用户名和密码"}
+
+            if new_config.get("enabled") and not new_config.get("cookie"):
+                return {"code": 400, "message": "启用插件时必须提供浏览器 Cookie 会话"}
+
+            # 清理旧的 password 字段，避免继续误导为登录凭证
+            if "password" in new_config:
+                new_config.pop("password", None)
+
+            # 保留旧配置兼容时的空值字段，不影响现有 Cookie 会话逻辑
+            if not new_config.get("user_agent"):
+                new_config.pop("user_agent", None)
             
             # 保存配置
             self.update_config(new_config)
@@ -424,24 +457,77 @@ class XunleiPan(_PluginBase):
             logger.error(f"❌ 保存配置异常: {str(e)}")
             return {"code": 500, "message": f"保存失败: {str(e)}"}
     
-    def api_test_connection(self, username: str = "", password: str = "") -> Dict[str, Any]:
+    def api_test_connection(self, cookie: str = "", username: str = "", password: str = "", user_agent: str = "") -> Dict[str, Any]:
         """API: 测试连接"""
-        if not username or not password:
-            return {"code": 400, "message": "请提供账号和密码"}
-        
         try:
-            logger.info(f"🔍 测试连接: username={username}")
-            test_client = XunleiApiClient(username=username, password=password)
-            login_result = test_client.login()
+            current_config = self.get_config() or {}
+            cookie_value = str(cookie or "").strip()
+            if not cookie_value or cookie_value == "********":
+                cookie_value = str(current_config.get("cookie", "") or "").strip()
+            if not cookie_value:
+                legacy_cookie = str(password or current_config.get("password", "") or "").strip()
+                if legacy_cookie and legacy_cookie != "********":
+                    cookie_value = legacy_cookie
+            user_agent_value = str(user_agent or current_config.get("user_agent", "") or "").strip()
+
+            if not cookie_value:
+                return {"code": 400, "message": "请先粘贴浏览器 Cookie 后再测试连接"}
+
+            logger.info(f"🔍 测试连接: username={username or self._username}")
+            test_client = XunleiApiClient(
+                cookie=cookie_value,
+                username=username or self._username,
+                user_agent=user_agent_value,
+            )
+            login_result = test_client.validate_session()
             test_client.close()
             
             if login_result.get("code") == 200:
-                return {"code": 200, "message": "连接测试成功"}
+                return {
+                    "code": 200,
+                    "message": "Cookie 会话测试成功",
+                    "data": login_result.get("data", {}),
+                }
             else:
-                return {"code": 401, "message": login_result.get("message", "登录失败")}
+                return {
+                    "code": 401,
+                    "message": login_result.get("message", "登录失败"),
+                    "data": login_result.get("data", {}),
+                }
         except Exception as e:
             logger.error(f"❌ 连接测试异常: {str(e)}")
             return {"code": 500, "message": f"测试失败: {str(e)}"}
+
+    def api_login_guide(self) -> Dict[str, Any]:
+        """API: 获取迅雷登录指引"""
+        client = self._api_client or XunleiApiClient(username=self._username, user_agent=self._user_agent)
+        return client.get_login_guide()
+
+    def api_browser_login(self, wait_seconds: int = 180, login_url: str = "https://pan.xunlei.com") -> Dict[str, Any]:
+        """API: 打开迅雷登录页并在用户完成登录后采集会话"""
+        client = XunleiApiClient(username=self._username, user_agent=self._user_agent)
+        result = client.capture_browser_session(login_url=login_url, wait_seconds=wait_seconds)
+
+        if result.get("code") == 200:
+            data = result.get("data", {}) or {}
+            self._cookie = str(data.get("cookie", "") or "").strip()
+            self._user_agent = str(data.get("user_agent", "") or "").strip()
+            if self._api_client:
+                try:
+                    self._api_client.close()
+                except Exception:
+                    pass
+            self._api_client = XunleiApiClient(
+                cookie=self._cookie,
+                username=self._username,
+                user_agent=self._user_agent,
+            )
+
+        return result
+
+    def api_capture_session(self, wait_seconds: int = 180, login_url: str = "https://pan.xunlei.com") -> Dict[str, Any]:
+        """API: 采集浏览器会话,与 browser_login 保持兼容"""
+        return self.api_browser_login(wait_seconds=wait_seconds, login_url=login_url)
     
     def get_render_mode(self) -> Tuple[str, str]:
         """使用 Vue 联邦渲染模式"""
@@ -476,7 +562,8 @@ class XunleiPan(_PluginBase):
         return None, {
             'enabled': False,
             'username': '',
-            'password': ''
+              'cookie': '',
+              'user_agent': ''
         }
     
     def get_page(self) -> List[dict]:
