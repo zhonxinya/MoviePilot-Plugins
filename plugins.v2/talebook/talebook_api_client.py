@@ -1279,3 +1279,59 @@ class TalebookApiClient:
             logger.error(f"{'=' * 80}\n")
             logger.error(f"堆栈跟踪:", exc_info=True)
             return {"code": 500, "message": f"扫描导入失败: {str(e)}"}
+    
+    def get_book_cover(self, book_id: int) -> Optional[bytes]:
+        """
+        获取书籍封面图片
+        
+        :param book_id: 书籍 ID
+        :return: 图片二进制数据(bytes) 或 None
+        """
+        try:
+            session = self._ensure_session()
+            if not session:
+                logger.error("无法建立会话")
+                return None
+            
+            # 构建封面 URL
+            url = f"{self._server_url}/get/cover/{book_id}.jpg"
+            logger.debug(f"获取封面图片: {url}")
+            
+            response = session.get(url, timeout=30)
+            response.raise_for_status()
+            
+            logger.debug(f"成功获取封面图片: size={len(response.content)} bytes")
+            return response.content
+            
+        except Exception as e:
+            logger.error(f"获取封面图片异常: book_id={book_id}, error={str(e)}")
+            return None
+    
+    def get_book_thumb(self, book_id: int, width: int = 240, height: int = 320) -> Optional[bytes]:
+        """
+        获取书籍缩略图
+        
+        :param book_id: 书籍 ID
+        :param width: 缩略图宽度
+        :param height: 缩略图高度
+        :return: 图片二进制数据(bytes) 或 None
+        """
+        try:
+            session = self._ensure_session()
+            if not session:
+                logger.error("无法建立会话")
+                return None
+            
+            # 构建缩略图 URL
+            url = f"{self._server_url}/get/thumb_{width}_{height}/{book_id}.jpg"
+            logger.debug(f"获取缩略图: {url}")
+            
+            response = session.get(url, timeout=30)
+            response.raise_for_status()
+            
+            logger.debug(f"成功获取缩略图: size={len(response.content)} bytes")
+            return response.content
+            
+        except Exception as e:
+            logger.error(f"获取缩略图异常: book_id={book_id}, size={width}x{height}, error={str(e)}")
+            return None

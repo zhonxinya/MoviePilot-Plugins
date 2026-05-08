@@ -1152,24 +1152,18 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
-        return getApiUrl(book.thumb);
+        return `/api/v1/plugin/Talebook${book.thumb}`;
       }
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
-        return getApiUrl(book.img);
+        return `/api/v1/plugin/Talebook${book.img}`;
       }
       if (book.id) {
         return `/api/v1/plugin/Talebook/book/${book.id}/cover`;
       }
       return "";
-    }
-    function getApiUrl(path) {
-      if (path.startsWith("http://") || path.startsWith("https://")) {
-        return path;
-      }
-      return `/api/v1/plugin/Talebook${path}`;
     }
     async function loadMetaList() {
       loading.value = true;
@@ -1634,7 +1628,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-4fd598be"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-1da4bcd3"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -1727,82 +1721,45 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         log.error("Config", "❌ 加载配置异常", error);
       }
     };
-    const getServerUrl = () => {
-      if (talebookServerUrl.value) {
-        log.debug("Server", "使用缓存的服务器地址:", talebookServerUrl.value);
-        return talebookServerUrl.value;
-      }
-      if (props.model && props.model.server_url) {
-        talebookServerUrl.value = props.model.server_url;
-        log.info("Server", "✅ 从 props.model 获取服务器地址:", talebookServerUrl.value);
-        return talebookServerUrl.value;
-      }
-      log.warn("Server", "⚠️ 未配置 Talebook 服务器地址");
-      log.warn("Server", "请确保:");
-      log.warn("Server", "  1. 已在插件设置中配置 Talebook 服务器");
-      log.warn("Server", "  2. 已启用插件并保存配置");
-      log.warn("Server", "  3. 刷新页面后重试");
-      return "";
-    };
     const getCoverUrl = (book) => {
-      const serverUrl = getServerUrl();
       if (book.thumb) {
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
-        } else if (serverUrl) {
-          return `${serverUrl}${book.thumb}`;
-        } else {
-          return getApiUrl(book.thumb);
         }
+        return `/api/v1/plugin/Talebook${book.thumb}`;
       }
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
-        } else if (serverUrl) {
-          return `${serverUrl}${book.img}`;
-        } else {
-          return getApiUrl(book.img);
         }
+        return `/api/v1/plugin/Talebook${book.img}`;
       }
       if (book.cover_url) {
         if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
           return book.cover_url;
-        } else if (serverUrl) {
-          return `${serverUrl}${book.cover_url}`;
-        } else {
-          return getApiUrl(book.cover_url);
         }
+        return `/api/v1/plugin/Talebook${book.cover_url}`;
       }
       return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
     };
     const getDetailCoverUrl = (book) => {
-      const serverUrl = getServerUrl();
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
-        } else if (serverUrl) {
-          return `${serverUrl}${book.img}`;
-        } else {
-          return getApiUrl(book.img);
         }
+        return `/api/v1/plugin/Talebook${book.img}`;
       }
       if (book.thumb) {
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
-        } else if (serverUrl) {
-          return `${serverUrl}${book.thumb}`;
-        } else {
-          return getApiUrl(book.thumb);
         }
+        return `/api/v1/plugin/Talebook${book.thumb}`;
       }
       if (book.cover_url) {
         if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
           return book.cover_url;
-        } else if (serverUrl) {
-          return `${serverUrl}${book.cover_url}`;
-        } else {
-          return getApiUrl(book.cover_url);
         }
+        return `/api/v1/plugin/Talebook${book.cover_url}`;
       }
       return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
     };
@@ -2691,6 +2648,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-d9695abd"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-7f870e1f"]]);
 
 export { Page as default };

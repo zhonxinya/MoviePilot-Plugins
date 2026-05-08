@@ -423,46 +423,17 @@ const loadConfig = async () => {
   }
 }
 
-// 获取 Talebook 服务器地址
-const getServerUrl = () => {
-  // 优先使用缓存的服务器地址
-  if (talebookServerUrl.value) {
-    log.debug('Server', '使用缓存的服务器地址:', talebookServerUrl.value)
-    return talebookServerUrl.value
-  }
-  
-  // 其次从 props.model 获取（兼容旧方式）
-  if (props.model && props.model.server_url) {
-    talebookServerUrl.value = props.model.server_url
-    log.info('Server', '✅ 从 props.model 获取服务器地址:', talebookServerUrl.value)
-    return talebookServerUrl.value
-  }
-  
-  // 如果没有配置,返回空字符串
-  log.warn('Server', '⚠️ 未配置 Talebook 服务器地址')
-  log.warn('Server', '请确保:')
-  log.warn('Server', '  1. 已在插件设置中配置 Talebook 服务器')
-  log.warn('Server', '  2. 已启用插件并保存配置')
-  log.warn('Server', '  3. 刷新页面后重试')
-  return ''
-}
-
 // 获取封面图 URL (用于卡片显示 - 优先使用缩略图)
 const getCoverUrl = (book: any) => {
-  const serverUrl = getServerUrl()
-  
   // 优先使用 thumb 字段作为缩略图（适用于卡片显示）
   if (book.thumb) {
     // 检查是否为绝对 URL
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
-    } else if (serverUrl) {
-      // 如果是相对路径,与 Talebook 服务器地址拼接
-      return `${serverUrl}${book.thumb}`
-    } else {
-      // 如果没有配置服务器地址,尝试通过插件 API 代理
-      return getApiUrl(book.thumb)
     }
+    // 通过插件 API 代理访问(带缓存)
+    // 格式: /api/v1/plugin/Talebook/get/thumb_240_320/{id}.jpg
+    return `/api/v1/plugin/Talebook${book.thumb}`
   }
   
   // 其次使用 img 字段（适用于详情页显示）
@@ -470,26 +441,19 @@ const getCoverUrl = (book: any) => {
     // 检查是否为绝对 URL
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
-    } else if (serverUrl) {
-      // 如果是相对路径,与 Talebook 服务器地址拼接
-      return `${serverUrl}${book.img}`
-    } else {
-      // 如果没有配置服务器地址,尝试通过插件 API 代理
-      return getApiUrl(book.img)
     }
+    // 通过插件 API 代理访问(带缓存)
+    // 格式: /api/v1/plugin/Talebook/get/cover/{id}.jpg
+    return `/api/v1/plugin/Talebook${book.img}`
   }
   
   if (book.cover_url) {
     // 检查是否为绝对 URL
     if (book.cover_url.startsWith('http://') || book.cover_url.startsWith('https://')) {
       return book.cover_url
-    } else if (serverUrl) {
-      // 如果是相对路径,与 Talebook 服务器地址拼接
-      return `${serverUrl}${book.cover_url}`
-    } else {
-      // 如果没有配置服务器地址,尝试通过插件 API 代理
-      return getApiUrl(book.cover_url)
     }
+    // 通过插件 API 代理访问
+    return `/api/v1/plugin/Talebook${book.cover_url}`
   }
   
   // 如果没有封面,返回占位图
@@ -498,20 +462,15 @@ const getCoverUrl = (book: any) => {
 
 // 获取高清封面图 URL (用于详情页显示 - 优先使用高质量图片)
 const getDetailCoverUrl = (book: any) => {
-  const serverUrl = getServerUrl()
-  
   // 优先使用 img 字段（高质量图片）
   if (book.img) {
     // 检查是否为绝对 URL
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
-    } else if (serverUrl) {
-      // 如果是相对路径,与 Talebook 服务器地址拼接
-      return `${serverUrl}${book.img}`
-    } else {
-      // 如果没有配置服务器地址,尝试通过插件 API 代理
-      return getApiUrl(book.img)
     }
+    // 通过插件 API 代理访问(带缓存)
+    // 格式: /api/v1/plugin/Talebook/get/cover/{id}.jpg
+    return `/api/v1/plugin/Talebook${book.img}`
   }
   
   // 其次使用 thumb 字段
@@ -519,26 +478,19 @@ const getDetailCoverUrl = (book: any) => {
     // 检查是否为绝对 URL
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
-    } else if (serverUrl) {
-      // 如果是相对路径,与 Talebook 服务器地址拼接
-      return `${serverUrl}${book.thumb}`
-    } else {
-      // 如果没有配置服务器地址,尝试通过插件 API 代理
-      return getApiUrl(book.thumb)
     }
+    // 通过插件 API 代理访问(带缓存)
+    // 格式: /api/v1/plugin/Talebook/get/thumb_240_320/{id}.jpg
+    return `/api/v1/plugin/Talebook${book.thumb}`
   }
   
   if (book.cover_url) {
     // 检查是否为绝对 URL
     if (book.cover_url.startsWith('http://') || book.cover_url.startsWith('https://')) {
       return book.cover_url
-    } else if (serverUrl) {
-      // 如果是相对路径,与 Talebook 服务器地址拼接
-      return `${serverUrl}${book.cover_url}`
-    } else {
-      // 如果没有配置服务器地址,尝试通过插件 API 代理
-      return getApiUrl(book.cover_url)
     }
+    // 通过插件 API 代理访问
+    return `/api/v1/plugin/Talebook${book.cover_url}`
   }
   
   // 如果没有封面,返回占位图

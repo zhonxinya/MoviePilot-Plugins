@@ -365,6 +365,23 @@ class Talebook(_PluginBase):
                 "summary": "保存插件配置",
                 "description": "保存插件配置并重新初始化",
             },
+            # 图片代理 API
+            {
+                "path": "/get/cover/{book_id}.jpg",
+                "endpoint": self.api_proxy_cover_image,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "代理书籍封面图片",
+                "description": "通过插件代理获取 Talebook 书籍封面图片(带缓存)",
+            },
+            {
+                "path": "/get/thumb_{width}_{height}/{book_id}.jpg",
+                "endpoint": self.api_proxy_thumb_image,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "代理书籍缩略图",
+                "description": "通过插件代理获取 Talebook 书籍缩略图(带缓存)",
+            },
         ]
     
     def _ensure_api_client(self) -> bool:
@@ -1271,3 +1288,123 @@ class Talebook(_PluginBase):
         except Exception as e:
             logger.error(f"处理操作异常: action={action}, error={str(e)}")
             return {"code": 500, "message": f"操作失败: {str(e)}"}
+    
+    def api_proxy_cover_image(self, book_id: int):
+        """
+        API: 代理书籍封面图片(带缓存)
+        
+        :param book_id: 书籍 ID
+        :return: 图片二进制数据或错误响应
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        try:
+            # 使用带缓存的方法获取封面
+            image_data = self._cached_get_cover_image(book_id)
+            
+            if image_data is None:
+                return {"code": 404, "message": "封面图片不存在"}
+            
+            # 返回图片二进制数据
+            from fastapi.responses import Response
+            return Response(
+                content=image_data,
+                media_type="image/jpeg",
+                headers={
+                    "Cache-Control": "public, max-age=86400",  # 缓存 24 小时
+                }
+            )
+        except Exception as e:
+            logger.error(f"获取封面图片异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    @cached(
+        region="talebook_images",
+        maxsize=1000,
+        ttl=86400,  # 24小时(图片变化较少)
+        skip_none=True
+    )
+    def _cached_get_cover_image(self, book_id: int):
+        """
+        获取书籍封面图片(带缓存)
+        
+        缓存策略:
+        - 缓存时间: 24小时
+        - 最大缓存数: 1000张图片
+        - 跳过 None 值(不缓存失败的请求)
+        
+        :param book_id: 书籍 ID
+        :return: 图片二进制数据(bytes) 或 None
+        """
+        if not self._api_client:
+            logger.error("API 客户端在缓存方法中为 None")
+            return None
+        
+        logger.debug(f"从 API 获取封面图片: book_id={book_id}")
+        return self._api_client.get_book_cover(book_id)
+    
+    def api_proxy_thumb_image(self, book_id: int, width: int = 240, height: int = 320):
+        """
+        API: 代理书籍缩略图(带缓存)
+        
+        :param book_id: 书籍 ID
+        :param width: 缩略图宽度
+        :param height: 缩略图高度
+        :return: 图片二进制数据或错误响应
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        try:
+            # 使用带缓存的方法获取缩略图
+            image_data = self._cached_get_thumb_image(book_id, width, height)
+            
+            if image_data is None:
+                return {"code": 404, "message": "缩略图不存在"}
+            
+            # 返回图片二进制数据
+            from fastapi.responses import Response
+            return Response(
+                content=image_data,
+                media_type="image/jpeg",
+                headers={
+                    "Cache-Control": "public, max-age=86400",  # 缓存 24 小时
+                }
+            )
+        except Exception as e:
+            logger.error(f"获取缩略图异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    @cached(
+        region="talebook_images",
+        maxsize=1000,
+        ttl=86400,  # 24小时(图片变化较少)
+        skip_none=True
+    )
+    def _cached_get_thumb_image(self, book_id: int, width: int = 240, height: int = 320):
+        """
+        获取书籍缩略图(带缓存)
+        
+        缓存策略:
+        - 缓存时间: 24小时
+        - 最大缓存数: 1000张图片
+        - 跳过 None 值(不缓存失败的请求)
+        
+        :param book_id: 书籍 ID
+        :param width: 缩略图宽度
+        :param height: 缩略图高度
+        :return: 图片二进制数据(bytes) 或 None
+        """
+        if not self._api_client:
+            logger.error("API 客户端在缓存方法中为 None")
+            return None
+        
+        logger.debug(f"从 API 获取缩略图: book_id={book_id}, size={width}x{height}")
+        return self._api_client.get_book_thumb(book_id, width, height)
