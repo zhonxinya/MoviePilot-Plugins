@@ -1,19 +1,20 @@
 
-.line-clamp-2[data-v-df18d645] {
+.line-clamp-2[data-v-b9a710d6] {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.line-clamp-1[data-v-df18d645] {
+.line-clamp-1[data-v-b9a710d6] {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.line-clamp-8[data-v-2405e7d7] {
+.line-clamp-8[data-v-af962e48] {
   display: -webkit-box;
+  line-clamp: 8;
   -webkit-line-clamp: 8;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -31,36 +32,36 @@ to {
 }
 }
 
-.meta-category-page[data-v-7fbfbd5d] {
+.meta-category-page[data-v-0544a106] {
   min-height: 100%;
 }
-.meta-card[data-v-7fbfbd5d] {
+.meta-card[data-v-0544a106] {
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
 }
-.meta-card[data-v-7fbfbd5d]:hover {
+.meta-card[data-v-0544a106]:hover {
   transform: translateY(-4px);
 }
-.card-footer[data-v-7fbfbd5d] {
+.card-footer[data-v-0544a106] {
   background: linear-gradient(to right, rgba(var(--v-theme-primary), 0.05), transparent);
 }
-.on-hover[data-v-7fbfbd5d] {
+.on-hover[data-v-0544a106] {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.transition-swing[data-v-7fbfbd5d] {
+.transition-swing[data-v-0544a106] {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.v-card[data-v-ba5495f0] {
+.v-card[data-v-965e314e] {
   transition: transform 0.2s;
 }
-.v-card[data-v-ba5495f0]:hover {
+.v-card[data-v-965e314e]:hover {
   transform: translateY(-2px);
 }
 
 /* 文本截断样式 */
-.line-clamp-1[data-v-ba5495f0] {
+.line-clamp-1[data-v-965e314e] {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   line-clamp: 1;
@@ -68,7 +69,7 @@ to {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.line-clamp-2[data-v-ba5495f0] {
+.line-clamp-2[data-v-965e314e] {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -78,10 +79,10 @@ to {
 }
 
 /* 旋转动画 */
-.animate-spin[data-v-ba5495f0] {
-  animation: spin-ba5495f0 1s linear infinite;
+.animate-spin[data-v-965e314e] {
+  animation: spin-965e314e 1s linear infinite;
 }
-@keyframes spin-ba5495f0 {
+@keyframes spin-965e314e {
 from {
     transform: rotate(0deg);
 }

@@ -1,7 +1,7 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
 import { _ as _export_sfc } from './_plugin-vue_export-helper-pcqpp-6-.js';
 
-const {ref: ref$3,onMounted: onMounted$2,onUnmounted} = await importShared('vue');
+const {ref: ref$3,watch: watch$1,onUnmounted,unref} = await importShared('vue');
 
 const imageCache = /* @__PURE__ */ new Map();
 const loadingImages = /* @__PURE__ */ new Map();
@@ -24,22 +24,24 @@ async function parseBlobError(blob) {
 function isImageBlob(blob) {
   return blob instanceof Blob && blob.size > 0 && blob.type.startsWith("image/");
 }
-async function loadImage(imageUrl, api, useCache = true) {
+async function loadImage(imageUrl, api, options = {}) {
+  const useCache = options.useCache ?? true;
   if (!imageUrl) {
     console.warn("[ImageLoader] 图片 URL 为空");
-    return "";
+    return { url: "", fromCache: false };
   }
   if (!api || typeof api.get !== "function") {
     console.error("[ImageLoader] API 对象无效:", api);
-    return "";
+    return { url: "", fromCache: false };
   }
   if (useCache && imageCache.has(imageUrl)) {
     const cachedUrl = imageCache.get(imageUrl);
     console.log("[ImageLoader] 使用缓存图片:", imageUrl);
-    return cachedUrl;
+    return { url: cachedUrl, fromCache: true };
   }
   if (loadingImages.has(imageUrl)) {
-    return loadingImages.get(imageUrl);
+    const url2 = await loadingImages.get(imageUrl);
+    return { url: url2, fromCache: useCache && imageCache.has(imageUrl) };
   }
   const loadPromise = (async () => {
     try {
@@ -67,7 +69,7 @@ async function loadImage(imageUrl, api, useCache = true) {
           responseType: typeof response,
           responseKeys: response && typeof response === "object" ? Object.keys(response) : []
         });
-        throw new Error("响应数据为空");
+        return "";
       }
       const responseStatus = response?.status ?? 200;
       const responseHeaders = response?.headers ?? {};
@@ -84,7 +86,7 @@ async function loadImage(imageUrl, api, useCache = true) {
             console.error("[ImageLoader] 无法解析错误响应");
           }
         }
-        throw new Error("响应数据格式错误");
+        return "";
       }
       if (!isImageBlob(blob)) {
         const parsedError = await parseBlobError(blob);
@@ -95,11 +97,11 @@ async function loadImage(imageUrl, api, useCache = true) {
           size: blob.size,
           preview
         });
-        throw new Error("代理返回的不是图片数据");
+        return "";
       }
       if (blob.size === 0) {
         console.error("[ImageLoader] Blob 数据为空");
-        throw new Error("图片数据为空");
+        return "";
       }
       const blobUrl = URL.createObjectURL(blob);
       if (useCache) {
@@ -115,52 +117,104 @@ async function loadImage(imageUrl, api, useCache = true) {
     }
   })();
   loadingImages.set(imageUrl, loadPromise);
-  return loadPromise;
+  const url = await loadPromise;
+  return {
+    url,
+    fromCache: false
+  };
 }
-function useImageLoader(imageUrl, api) {
+function resolveImageSource(imageSource) {
+  if (typeof imageSource === "function") {
+    return imageSource();
+  }
+  return unref(imageSource);
+}
+function useImageLoader(imageSource, api) {
   const loadedUrl = ref$3("");
   const loading = ref$3(false);
   const error = ref$3("");
+  const status = ref$3("idle");
   let cancelled = false;
-  const load = async () => {
-    if (!imageUrl || !api || cancelled) return;
+  let requestVersion = 0;
+  let currentUrl = "";
+  let currentFromCache = true;
+  const revokeCurrentUrl = () => {
+    if (currentUrl && !currentFromCache) {
+      URL.revokeObjectURL(currentUrl);
+    }
+    currentUrl = "";
+    currentFromCache = true;
+  };
+  const runLoad = async (currentImageUrl) => {
+    const currentRequest = ++requestVersion;
+    if (!currentImageUrl || !api || cancelled) {
+      revokeCurrentUrl();
+      loadedUrl.value = "";
+      error.value = "";
+      loading.value = false;
+      status.value = "idle";
+      return;
+    }
     loading.value = true;
     error.value = "";
+    status.value = "loading";
     try {
-      const url = await loadImage(imageUrl, api);
-      if (!cancelled) {
+      const { url, fromCache } = await loadImage(currentImageUrl, api);
+      if (!cancelled && currentRequest === requestVersion) {
+        revokeCurrentUrl();
         loadedUrl.value = url;
+        currentUrl = url;
+        currentFromCache = fromCache;
         if (!url) {
           error.value = "加载失败";
+          status.value = "error";
+        } else {
+          status.value = "loaded";
         }
       }
     } catch (e) {
-      if (!cancelled) {
+      if (!cancelled && currentRequest === requestVersion) {
         error.value = String(e);
+        status.value = "error";
       }
     } finally {
-      if (!cancelled) {
+      if (!cancelled && currentRequest === requestVersion) {
         loading.value = false;
       }
     }
   };
-  onMounted$2(() => {
-    load();
-  });
+  const stop = watch$1(
+    () => resolveImageSource(imageSource),
+    runLoad,
+    { immediate: true }
+  );
   onUnmounted(() => {
     cancelled = true;
+    stop();
+    revokeCurrentUrl();
   });
   return {
     imageUrl: loadedUrl,
     loading,
     error,
-    reload: load
+    status,
+    reload: () => runLoad(resolveImageSource(imageSource))
   };
 }
 
 const {defineComponent:_defineComponent$6} = await importShared('vue');
 
-const {unref:_unref$2,resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,withCtx:_withCtx$6,renderSlot:_renderSlot$1,toDisplayString:_toDisplayString$5,createTextVNode:_createTextVNode$6,openBlock:_openBlock$6,createBlock:_createBlock$6,createCommentVNode:_createCommentVNode$5} = await importShared('vue');
+const {unref:_unref$2,resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,createElementVNode:_createElementVNode$5,openBlock:_openBlock$6,createElementBlock:_createElementBlock$4,createCommentVNode:_createCommentVNode$5,createTextVNode:_createTextVNode$6,withCtx:_withCtx$6,toDisplayString:_toDisplayString$5,renderSlot:_renderSlot$1,createBlock:_createBlock$6} = await importShared('vue');
+
+const _hoisted_1$5 = {
+  key: 0,
+  class: "d-flex flex-column align-center justify-center"
+};
+const _hoisted_2$3 = {
+  key: 1,
+  class: "d-flex flex-column align-center justify-center"
+};
+const _hoisted_3$3 = { class: "text-caption text-grey-lighten-4 mt-2" };
 const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   __name: "BookCard",
   props: {
@@ -174,9 +228,10 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   emits: ["detail", "toggle-favorite", "download"],
   setup(__props) {
     const props = __props;
-    const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl, props.api);
+    const { imageUrl: loadedImageUrl, loading, error: imageError } = useImageLoader(props.coverUrl, props.api);
     return (_ctx, _cache) => {
       const _component_v_progress_circular = _resolveComponent$6("v-progress-circular");
+      const _component_v_icon = _resolveComponent$6("v-icon");
       const _component_v_row = _resolveComponent$6("v-row");
       const _component_v_img = _resolveComponent$6("v-img");
       const _component_v_card_title = _resolveComponent$6("v-card-title");
@@ -205,15 +260,29 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
           }, {
             placeholder: _withCtx$6(() => [
               _createVNode$6(_component_v_row, {
-                class: "fill-height ma-0",
+                class: "fill-height ma-0 pa-4 text-center",
                 align: "center",
                 justify: "center"
               }, {
                 default: _withCtx$6(() => [
-                  _createVNode$6(_component_v_progress_circular, {
-                    indeterminate: "",
-                    color: "grey-lighten-5"
-                  })
+                  _unref$2(loading) ? (_openBlock$6(), _createElementBlock$4("div", _hoisted_1$5, [
+                    _createVNode$6(_component_v_progress_circular, {
+                      indeterminate: "",
+                      color: "grey-lighten-5"
+                    }),
+                    _cache[3] || (_cache[3] = _createElementVNode$5("div", { class: "text-caption text-grey-lighten-4 mt-2" }, "加载封面中", -1))
+                  ])) : (_openBlock$6(), _createElementBlock$4("div", _hoisted_2$3, [
+                    _createVNode$6(_component_v_icon, {
+                      color: "grey-lighten-4",
+                      size: "large"
+                    }, {
+                      default: _withCtx$6(() => [..._cache[4] || (_cache[4] = [
+                        _createTextVNode$6("mdi-image-off-outline", -1)
+                      ])]),
+                      _: 1
+                    }),
+                    _createElementVNode$5("div", _hoisted_3$3, _toDisplayString$5(_unref$2(imageError) || "暂无封面"), 1)
+                  ]))
                 ]),
                 _: 1
               })
@@ -289,7 +358,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
                   "prepend-icon": "mdi-information-outline",
                   onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("detail", __props.book.id))
                 }, {
-                  default: _withCtx$6(() => [..._cache[3] || (_cache[3] = [
+                  default: _withCtx$6(() => [..._cache[5] || (_cache[5] = [
                     _createTextVNode$6(" 详情 ", -1)
                   ])]),
                   _: 1
@@ -311,7 +380,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
                   loading: __props.isDownloading,
                   onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("download", __props.book.id))
                 }, {
-                  default: _withCtx$6(() => [..._cache[4] || (_cache[4] = [
+                  default: _withCtx$6(() => [..._cache[6] || (_cache[6] = [
                     _createTextVNode$6(" 下载 ", -1)
                   ])]),
                   _: 1
@@ -327,7 +396,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   }
 });
 
-const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-df18d645"]]);
+const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-b9a710d6"]]);
 
 const {defineComponent:_defineComponent$5} = await importShared('vue');
 
@@ -446,19 +515,28 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
 
 const {defineComponent:_defineComponent$4} = await importShared('vue');
 
-const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,unref:_unref$1,createElementVNode:_createElementVNode$4,renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$4,createElementBlock:_createElementBlock$2,createBlock:_createBlock$4,createCommentVNode:_createCommentVNode$3} = await importShared('vue');
+const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,unref:_unref$1,createElementVNode:_createElementVNode$4,openBlock:_openBlock$4,createElementBlock:_createElementBlock$2,createCommentVNode:_createCommentVNode$3,renderList:_renderList$1,Fragment:_Fragment$1,createBlock:_createBlock$4} = await importShared('vue');
 
-const _hoisted_1$4 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_2$2 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_3$2 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_1$4 = {
+  key: 0,
+  class: "d-flex flex-column align-center justify-center"
+};
+const _hoisted_2$2 = {
+  key: 1,
+  class: "d-flex flex-column align-center justify-center"
+};
+const _hoisted_3$2 = { class: "text-caption text-medium-emphasis mt-2" };
 const _hoisted_4$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_5$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_6$1 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_7$1 = {
+const _hoisted_7$1 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_8$1 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_9$1 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_10 = {
   key: 0,
   class: "mt-4"
 };
-const _hoisted_8$1 = {
+const _hoisted_11 = {
   class: "line-clamp-8",
   style: { "line-height": "1.8" }
 };
@@ -476,7 +554,10 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   emits: ["update:modelValue", "toggle-favorite", "download"],
   setup(__props, { emit: __emit }) {
     const props = __props;
-    const { imageUrl: loadedCoverUrl } = useImageLoader(props.coverUrl, props.api);
+    const resolvedCoverUrl = computed$2(() => {
+      return props.coverUrl || props.book?.cover_url || props.book?.coverUrl || props.book?.img || props.book?.thumb || "";
+    });
+    const { imageUrl: loadedCoverUrl, loading, error: imageError } = useImageLoader(resolvedCoverUrl, props.api);
     const emit = __emit;
     const dialogVisible = computed$2({
       get: () => props.modelValue,
@@ -499,13 +580,13 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
       const _component_v_btn = _resolveComponent$4("v-btn");
       const _component_v_toolbar = _resolveComponent$4("v-toolbar");
       const _component_v_progress_circular = _resolveComponent$4("v-progress-circular");
+      const _component_v_icon = _resolveComponent$4("v-icon");
       const _component_v_row = _resolveComponent$4("v-row");
       const _component_v_img = _resolveComponent$4("v-img");
       const _component_v_card_actions = _resolveComponent$4("v-card-actions");
       const _component_v_card = _resolveComponent$4("v-card");
       const _component_v_col = _resolveComponent$4("v-col");
       const _component_v_card_title = _resolveComponent$4("v-card-title");
-      const _component_v_icon = _resolveComponent$4("v-icon");
       const _component_v_card_subtitle = _resolveComponent$4("v-card-subtitle");
       const _component_v_divider = _resolveComponent$4("v-divider");
       const _component_v_chip = _resolveComponent$4("v-chip");
@@ -567,15 +648,29 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                               }, {
                                 placeholder: _withCtx$4(() => [
                                   _createVNode$4(_component_v_row, {
-                                    class: "fill-height ma-0",
+                                    class: "fill-height ma-0 pa-4 text-center",
                                     align: "center",
                                     justify: "center"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _createVNode$4(_component_v_progress_circular, {
-                                        indeterminate: "",
-                                        color: "primary"
-                                      })
+                                      _unref$1(loading) ? (_openBlock$4(), _createElementBlock$2("div", _hoisted_1$4, [
+                                        _createVNode$4(_component_v_progress_circular, {
+                                          indeterminate: "",
+                                          color: "primary"
+                                        }),
+                                        _cache[4] || (_cache[4] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mt-2" }, "加载封面中", -1))
+                                      ])) : (_openBlock$4(), _createElementBlock$2("div", _hoisted_2$2, [
+                                        _createVNode$4(_component_v_icon, {
+                                          color: "primary",
+                                          size: "large"
+                                        }, {
+                                          default: _withCtx$4(() => [..._cache[5] || (_cache[5] = [
+                                            _createTextVNode$4("mdi-image-off-outline", -1)
+                                          ])]),
+                                          _: 1
+                                        }),
+                                        _createElementVNode$4("div", _hoisted_3$2, _toDisplayString$3(_unref$1(imageError) || "暂无封面"), 1)
+                                      ]))
                                     ]),
                                     _: 1
                                   })
@@ -627,7 +722,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     start: "",
                                     size: "small"
                                   }, {
-                                    default: _withCtx$4(() => [..._cache[4] || (_cache[4] = [
+                                    default: _withCtx$4(() => [..._cache[6] || (_cache[6] = [
                                       _createTextVNode$4("mdi-account", -1)
                                     ])]),
                                     _: 1
@@ -644,14 +739,14 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     sm: "4"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _cache[6] || (_cache[6] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版社", -1)),
-                                      _createElementVNode$4("div", _hoisted_1$4, [
+                                      _cache[8] || (_cache[8] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版社", -1)),
+                                      _createElementVNode$4("div", _hoisted_4$2, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "info"
                                         }, {
-                                          default: _withCtx$4(() => [..._cache[5] || (_cache[5] = [
+                                          default: _withCtx$4(() => [..._cache[7] || (_cache[7] = [
                                             _createTextVNode$4("mdi-bookshelf", -1)
                                           ])]),
                                           _: 1
@@ -666,14 +761,14 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     sm: "4"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _cache[8] || (_cache[8] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版日期", -1)),
-                                      _createElementVNode$4("div", _hoisted_2$2, [
+                                      _cache[10] || (_cache[10] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版日期", -1)),
+                                      _createElementVNode$4("div", _hoisted_5$2, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "success"
                                         }, {
-                                          default: _withCtx$4(() => [..._cache[7] || (_cache[7] = [
+                                          default: _withCtx$4(() => [..._cache[9] || (_cache[9] = [
                                             _createTextVNode$4("mdi-calendar", -1)
                                           ])]),
                                           _: 1
@@ -688,14 +783,14 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     sm: "4"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _cache[10] || (_cache[10] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "语言", -1)),
-                                      _createElementVNode$4("div", _hoisted_3$2, [
+                                      _cache[12] || (_cache[12] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "语言", -1)),
+                                      _createElementVNode$4("div", _hoisted_6$1, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "warning"
                                         }, {
-                                          default: _withCtx$4(() => [..._cache[9] || (_cache[9] = [
+                                          default: _withCtx$4(() => [..._cache[11] || (_cache[11] = [
                                             _createTextVNode$4("mdi-translate", -1)
                                           ])]),
                                           _: 1
@@ -710,14 +805,14 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     sm: "4"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _cache[12] || (_cache[12] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件格式", -1)),
-                                      _createElementVNode$4("div", _hoisted_4$2, [
+                                      _cache[14] || (_cache[14] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件格式", -1)),
+                                      _createElementVNode$4("div", _hoisted_7$1, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "purple"
                                         }, {
-                                          default: _withCtx$4(() => [..._cache[11] || (_cache[11] = [
+                                          default: _withCtx$4(() => [..._cache[13] || (_cache[13] = [
                                             _createTextVNode$4("mdi-file-document", -1)
                                           ])]),
                                           _: 1
@@ -732,14 +827,14 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     sm: "4"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _cache[14] || (_cache[14] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件大小", -1)),
-                                      _createElementVNode$4("div", _hoisted_5$2, [
+                                      _cache[16] || (_cache[16] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件大小", -1)),
+                                      _createElementVNode$4("div", _hoisted_8$1, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "teal"
                                         }, {
-                                          default: _withCtx$4(() => [..._cache[13] || (_cache[13] = [
+                                          default: _withCtx$4(() => [..._cache[15] || (_cache[15] = [
                                             _createTextVNode$4("mdi-database", -1)
                                           ])]),
                                           _: 1
@@ -754,14 +849,14 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     sm: "4"
                                   }, {
                                     default: _withCtx$4(() => [
-                                      _cache[16] || (_cache[16] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "ISBN", -1)),
-                                      _createElementVNode$4("div", _hoisted_6$1, [
+                                      _cache[18] || (_cache[18] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "ISBN", -1)),
+                                      _createElementVNode$4("div", _hoisted_9$1, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "deep-purple"
                                         }, {
-                                          default: _withCtx$4(() => [..._cache[15] || (_cache[15] = [
+                                          default: _withCtx$4(() => [..._cache[17] || (_cache[17] = [
                                             _createTextVNode$4("mdi-barcode", -1)
                                           ])]),
                                           _: 1
@@ -774,8 +869,8 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                 ]),
                                 _: 1
                               }),
-                              __props.book.tags || __props.book.tag ? (_openBlock$4(), _createElementBlock$2("div", _hoisted_7$1, [
-                                _cache[17] || (_cache[17] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-2" }, "标签", -1)),
+                              __props.book.tags || __props.book.tag ? (_openBlock$4(), _createElementBlock$2("div", _hoisted_10, [
+                                _cache[19] || (_cache[19] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-2" }, "标签", -1)),
                                 _createVNode$4(_component_v_chip_group, { column: "" }, {
                                   default: _withCtx$4(() => [
                                     (_openBlock$4(true), _createElementBlock$2(_Fragment$1, null, _renderList$1(__props.book.tags || [__props.book.tag], (tag) => {
@@ -811,18 +906,18 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     start: "",
                                     color: "primary"
                                   }, {
-                                    default: _withCtx$4(() => [..._cache[18] || (_cache[18] = [
+                                    default: _withCtx$4(() => [..._cache[20] || (_cache[20] = [
                                       _createTextVNode$4("mdi-text-box-outline", -1)
                                     ])]),
                                     _: 1
                                   }),
-                                  _cache[19] || (_cache[19] = _createTextVNode$4(" 内容简介 ", -1))
+                                  _cache[21] || (_cache[21] = _createTextVNode$4(" 内容简介 ", -1))
                                 ]),
                                 _: 1
                               }),
                               _createVNode$4(_component_v_card_text, { class: "text-body-2 text-medium-emphasis pt-0" }, {
                                 default: _withCtx$4(() => [
-                                  _createElementVNode$4("div", _hoisted_8$1, _toDisplayString$3(__props.book.comments), 1)
+                                  _createElementVNode$4("div", _hoisted_11, _toDisplayString$3(__props.book.comments), 1)
                                 ]),
                                 _: 1
                               })
@@ -843,7 +938,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                     onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("download", __props.book.id)),
                                     class: "elevation-2"
                                   }, {
-                                    default: _withCtx$4(() => [..._cache[20] || (_cache[20] = [
+                                    default: _withCtx$4(() => [..._cache[22] || (_cache[22] = [
                                       _createTextVNode$4(" 下载图书 ", -1)
                                     ])]),
                                     _: 1
@@ -873,7 +968,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   }
 });
 
-const BookDetailDialog = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-2405e7d7"]]);
+const BookDetailDialog = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-af962e48"]]);
 
 const {defineComponent:_defineComponent$3} = await importShared('vue');
 
@@ -1236,8 +1331,28 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
 });
 
 const NO_COVER_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+const COVER_FIELD_PRIORITIES = {
+  card: ["cover_url", "coverUrl", "thumb", "img"],
+  detail: ["cover_url", "coverUrl", "img", "thumb"]
+};
+function isBookLike(book) {
+  return !!book && typeof book === "object";
+}
 function isAbsoluteUrl(url) {
   return url.startsWith("http://") || url.startsWith("https://");
+}
+function resolveCoverSource(book, variant = "card") {
+  if (!isBookLike(book)) {
+    return { url: "", field: null };
+  }
+  const fields = COVER_FIELD_PRIORITIES[variant];
+  for (const field of fields) {
+    const value = book[field];
+    if (typeof value === "string" && value.trim()) {
+      return { url: value.trim(), field };
+    }
+  }
+  return { url: "", field: null };
 }
 function buildProxyImageUrl(imageUrl, serverUrl, apiBasePath) {
   if (!imageUrl) {
@@ -1248,6 +1363,13 @@ function buildProxyImageUrl(imageUrl, serverUrl, apiBasePath) {
     resolvedUrl = `${serverUrl}${resolvedUrl}`;
   }
   return `${apiBasePath}?url=${encodeURIComponent(resolvedUrl)}`;
+}
+function buildBookCoverUrl(book, serverUrl, apiBasePath, variant = "card") {
+  const { url } = resolveCoverSource(book, variant);
+  if (!url) {
+    return NO_COVER_PLACEHOLDER;
+  }
+  return buildProxyImageUrl(url, serverUrl, apiBasePath);
 }
 
 const {defineComponent:_defineComponent$1} = await importShared('vue');
@@ -1328,14 +1450,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       return iconMap[type] || "mdi-book";
     }
     function getCoverUrl(book) {
-      if (!book || !book.id) {
-        return NO_COVER_PLACEHOLDER;
-      }
-      const imageUrl = book.thumb || book.img;
-      if (!imageUrl) {
-        return NO_COVER_PLACEHOLDER;
-      }
-      return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl("/image/proxy"));
+      return buildBookCoverUrl(book, talebookServerUrl.value, getApiUrl("/image/proxy"), "card");
     }
     async function loadConfig() {
       if (!props.api) return;
@@ -1814,7 +1929,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-7fbfbd5d"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-0544a106"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -1910,26 +2025,8 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         log.error("Config", "❌ 加载配置异常", error);
       }
     };
-    const getCoverUrl = (book) => {
-      if (!book || !book.id) {
-        return NO_COVER_PLACEHOLDER;
-      }
-      const imageUrl = book.thumb || book.img;
-      if (!imageUrl) {
-        return NO_COVER_PLACEHOLDER;
-      }
-      return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl("/image/proxy"));
-    };
-    const getDetailCoverUrl = (book) => {
-      if (!book || !book.id) {
-        return NO_COVER_PLACEHOLDER;
-      }
-      const imageUrl = book.img || book.thumb;
-      if (!imageUrl) {
-        return NO_COVER_PLACEHOLDER;
-      }
-      return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl("/image/proxy"));
-    };
+    const getCoverUrl = (book) => buildBookCoverUrl(book, talebookServerUrl.value, getApiUrl("/image/proxy"), "card");
+    const getDetailCoverUrl = (book) => buildBookCoverUrl(book, talebookServerUrl.value, getApiUrl("/image/proxy"), "detail");
     async function safeApiCall(apiCall, retries = 2, delay = 1e3, timeout = 3e4) {
       let lastError = null;
       for (let i = 0; i <= retries; i++) {
@@ -2845,6 +2942,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-ba5495f0"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-965e314e"]]);
 
 export { Page as default };
