@@ -534,14 +534,16 @@ class TalebookApiClient:
             response.raise_for_status()
             
             data = response.json()
+            logger.debug(f"Talebook API 原始响应: {data}")
             if data.get("err") == "ok":
                 items = data.get("items", [])
                 total = data.get("total", len(items))
                 logger.info(f"获取{meta_type}列表成功: {total} 条")
                 return {"code": 200, "data": items, "total": total}
             else:
-                logger.error(f"获取{meta_type}列表失败: {data.get('msg')}")
-                return {"code": 400, "message": data.get("msg", "获取失败")}
+                error_msg = data.get("msg") or data.get("err") or "未知错误"
+                logger.error(f"获取{meta_type}列表失败: err={data.get('err')}, msg={error_msg}, 完整响应: {data}")
+                return {"code": 400, "message": f"获取失败: {error_msg}"}
                 
         except Exception as e:
             logger.error(f"获取{meta_type}列表失败: {str(e)}")
@@ -573,6 +575,7 @@ class TalebookApiClient:
             response.raise_for_status()
             
             data = response.json()
+            logger.debug(f"Talebook API 原始响应: {data}")
             if data.get("err") == "ok":
                 books = data.get("books", [])
                 total = data.get("total", len(books))
@@ -580,8 +583,9 @@ class TalebookApiClient:
                 logger.info(f"获取{meta_type}='{name}'的书籍成功: {total} 本")
                 return {"code": 200, "data": books, "total": total, "title": title}
             else:
-                logger.error(f"获取{meta_type}='{name}'的书籍失败: {data.get('msg')}")
-                return {"code": 400, "message": data.get("msg", "获取失败")}
+                error_msg = data.get("msg") or data.get("err") or "未知错误"
+                logger.error(f"获取{meta_type}='{name}'的书籍失败: err={data.get('err')}, msg={error_msg}, 完整响应: {data}")
+                return {"code": 400, "message": f"获取失败: {error_msg}"}
                 
         except Exception as e:
             logger.error(f"获取{meta_type}='{name}'的书籍失败: {str(e)}")
