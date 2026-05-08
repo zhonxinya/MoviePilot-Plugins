@@ -118,8 +118,21 @@ const loadConfig = async () => {
 
 const saveConfig = async () => {
   // 验证必填字段
-  if (!config.value.username || !config.value.password || config.value.password === '********') {
-    toast.error('请填写完整的账号信息')
+  if (!config.value.username) {
+    toast.error('请填写用户名')
+    return
+  }
+  
+  // 如果是首次设置（密码为空或占位符），需要填写密码
+  const isFirstSetup = !passwordChanged.value && (!config.value.password || config.value.password === '********')
+  if (isFirstSetup && config.value.enabled) {
+    toast.error('启用插件时必须填写密码')
+    return
+  }
+  
+  // 如果密码被修改过，验证新密码
+  if (passwordChanged.value && (!config.value.password || config.value.password === '********')) {
+    toast.error('请填写新密码')
     return
   }
   
