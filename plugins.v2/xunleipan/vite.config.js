@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     vue(),
     federation({
-      name: 'XunleiPanPlugin',
+      name: 'XunleiPan',  // 与 Python 类名保持一致
       filename: 'remoteEntry.js',
       exposes: {
         './Page': './src/components/Page.vue',

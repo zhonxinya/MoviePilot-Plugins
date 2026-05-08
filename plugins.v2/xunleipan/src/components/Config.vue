@@ -3,13 +3,17 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 
 const props = defineProps({
+  model: {
+    type: Object,
+    default: () => ({})
+  },
   api: {
     type: Object,
     default: () => ({})
   }
 })
 
-const emit = defineEmits(['action', 'switch', 'close'])
+const emit = defineEmits(['update:model', 'action', 'switch', 'close'])
 
 // 调试信息
 console.log('[XunleiPan Config] ========== 组件加载 ==========')
@@ -17,11 +21,12 @@ console.log('[XunleiPan Config] Props:', props)
 
 const toast = useToast()
 
-// 插件 ID
+// 插件 ID (使用类名动态获取,分身友好)
 const pluginId = 'XunleiPan'
 
 // ===== 配置数据 =====
 const config = ref({
+  enabled: false,
   username: '',
   password: '',
   timeout: 10,
@@ -29,25 +34,23 @@ const config = ref({
   auto_refresh: false
 })
 
+// 标记密码是否被修改过
+const passwordChanged = ref(false)
+
 const saving = ref(false)
 const testing = ref(false)
 
 // ===== API 调用 =====
 const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
   try {
-    const response = await fetch(`/api/v1/plugin/XunleiPan${endpoint}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: data ? JSON.stringify(data) : undefined
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    let response
+    if (method === 'GET') {
+      response = await props.api.get(`plugin/${pluginId}${endpoint}`)
+    } else if (method === 'POST') {
+      response = await props.api.post(`plugin/${pluginId}${endpoint}`, data)
     }
     
-    return await response.json()
+    return response
   } catch (error: any) {
     toast.error(`API 调用失败: ${error.message}`)
     throw error
@@ -57,11 +60,35 @@ const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => 
 // ===== 配置操作 =====
 const loadConfig = async () => {
   try {
-    const result = await apiCall('/config')
-    if (result.code === 200 && result.data) {
-      config.value = {
-        ...config.value,
-        ...result.data
+    // 优先从 props.model 加载
+    if (props.model && Object.keys(props.model).length > 0) {
+      config.value = { ...config.value, ...props.model }
+      console.log('[Config] 从 props.model 加载配置')
+      
+      // 如果密码是哈希值，显示为占位符
+      if (config.value.password && config.value.password.startsWith('$2b$')) {
+        config.value.password = '********'  // 不显示真实密码
+        console.log('[Config] 密码已加密存储')
+      }
+    } else {
+      // 尝试从 API 获取最新配置
+      try {
+        const result = await apiCall('/config')
+        if (result.code === 200 && result.data) {
+          config.value = {
+            ...config.value,
+            ...result.data
+          }
+          console.log('[Config] 从 API 加载配置')
+          
+          // 如果密码是哈希值，显示为占位符
+          if (config.value.password && config.value.password.startsWith('$2b$')) {
+            config.value.password = '********'
+            console.log('[Config] 密码已加密存储')
+          }
+        }
+      } catch (apiError) {
+        console.warn('[Config] API 获取配置失败，使用默认值:', apiError)
       }
     }
   } catch (error) {
@@ -78,14 +105,42 @@ const saveConfig = async () => {
   
   saving.value = true
   try {
-    const result = await apiCall('/config', 'POST', config.value)
-    if (result.code === 200) {
-      toast.success('配置保存成功')
-    } else {
-      toast.error(result.message || '保存失败')
+    // 准备要保存的配置
+    const configToSave: any = {
+      enabled: config.value.enabled,
+      username: config.value.username,
+      timeout: config.value.timeout,
+      max_retries: config.value.max_retries,
+      auto_refresh: config.value.auto_refresh
     }
-  } catch (error) {
-    console.error('保存配置失败:', error)
+    
+    // 只有当密码被修改过且不是占位符时才发送密码
+    if (passwordChanged.value && config.value.password !== '********') {
+      configToSave.password = config.value.password
+      console.log('[Config] 密码已修改，将更新密码')
+    } else if (config.value.password !== '********') {
+      // 第一次设置密码
+      configToSave.password = config.value.password
+      console.log('[Config] 设置新密码')
+    } else {
+      console.log('[Config] 密码未修改，保持原密码')
+    }
+    
+    const result = await apiCall('/config', 'POST', configToSave)
+    if (result.code === 200) {
+      toast.success('✅ 配置保存成功')
+      console.log('[Config] 配置保存成功')
+      // 通知父组件配置已更新
+      emit('update:model', config.value)
+      // 重置密码修改标记
+      passwordChanged.value = false
+    } else {
+      toast.error(result.message || '❌ 保存失败')
+      console.error('[Config] 保存失败:', result.message)
+    }
+  } catch (error: any) {
+    console.error('[Config] 保存配置异常:', error)
+    toast.error(error.message || '❌ 保存失败，请检查网络连接')
   } finally {
     saving.value = false
   }
@@ -152,6 +207,7 @@ onMounted(() => {
                 prepend-icon="mdi-lock"
                 :rules="[v => !!v || '请输入密码']"
                 required
+                @input="passwordChanged = true"
               />
             </v-col>
           </v-row>

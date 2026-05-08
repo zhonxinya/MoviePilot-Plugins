@@ -17,7 +17,7 @@ console.log('[XunleiPan Page] Props:', props)
 
 const toast = useToast()
 
-// 插件 ID
+// 插件 ID (使用类名动态获取,分身友好)
 const pluginId = 'XunleiPan'
 
 // ===== 状态管理 =====
@@ -59,19 +59,14 @@ const taskHeaders = [
 // ===== API 调用 =====
 const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
   try {
-    const response = await fetch(`/api/v1/plugin/XunleiPan${endpoint}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: data ? JSON.stringify(data) : undefined
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    let response
+    if (method === 'GET') {
+      response = await props.api.get(`plugin/${pluginId}${endpoint}`)
+    } else if (method === 'POST') {
+      response = await props.api.post(`plugin/${pluginId}${endpoint}`, data)
     }
     
-    return await response.json()
+    return response
   } catch (error: any) {
     toast.error(`API 调用失败: ${error.message}`)
     throw error
@@ -82,7 +77,7 @@ const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => 
 const loadFiles = async () => {
   loading.value = true
   try {
-    const result = await apiCall(`/files?path=${encodeURIComponent(currentPath.value)}`)
+    const result = await apiCall(`/files?parent_id=${encodeURIComponent(currentPath.value)}&page=1&limit=50`)
     if (result.code === 200) {
       fileList.value = result.data.files || []
     } else {

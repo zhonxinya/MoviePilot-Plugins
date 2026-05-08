@@ -5,6 +5,7 @@
 from typing import Dict, List, Optional, Tuple, Any
 from app.plugins import _PluginBase
 from app.log import logger
+from app.core.security import verify_password, get_password_hash
 from .xunlei_api_client import XunleiApiClient
 
 
@@ -57,9 +58,15 @@ class XunleiPan(_PluginBase):
         
         self._enabled = bool(config.get("enabled", False))
         self._username = config.get("username", "")
-        self._password = config.get("password", "")
         
-        logger.info(f"🔄 初始化迅雷网盘插件, enabled={self._enabled}")
+        # 解密密码（如果是哈希值则直接使用，否则可能是明文）
+        password = config.get("password", "")
+        self._password = password
+        
+        if self._enabled:
+            logger.info(f"✅ 正在启用迅雷网盘插件...")
+        else:
+            logger.info(f"⏸️ 迅雷网盘插件已禁用")
         
         # 关闭旧的 API 客户端
         if self._api_client:
@@ -77,7 +84,7 @@ class XunleiPan(_PluginBase):
                 username=self._username,
                 password=self._password
             )
-            logger.info(f"✅ 迅雷网盘 API 客户端已创建")
+            logger.info(f"✅ 迅雷网盘插件已启用，API 客户端已创建")
         else:
             missing = []
             if not self._enabled:
@@ -88,9 +95,7 @@ class XunleiPan(_PluginBase):
                 missing.append("password")
             
             if missing:
-                logger.warning(f"❌ 迅雷网盘插件配置不完整,缺失: {', '.join(missing)}")
-            else:
-                logger.info("迅雷网盘插件已禁用")
+                logger.warning(f"⚠️ 迅雷网盘插件配置不完整，缺失: {', '.join(missing)}")
     
     def get_state(self) -> bool:
         """返回插件运行状态"""
@@ -98,6 +103,8 @@ class XunleiPan(_PluginBase):
     
     def stop_service(self):
         """停用插件时清理资源"""
+        logger.info("🛑 正在停止迅雷网盘插件服务...")
+        
         if self._api_client:
             try:
                 self._api_client.close()
@@ -106,7 +113,7 @@ class XunleiPan(_PluginBase):
                 logger.error(f"❌ 关闭 API 客户端失败: {e}")
         
         self._api_client = None
-        logger.info("🛑 迅雷网盘插件服务已停止")
+        logger.info("✅ 迅雷网盘插件服务已停止")
     
     def get_api(self) -> List[Dict[str, Any]]:
         """声明插件 API"""
@@ -360,12 +367,27 @@ class XunleiPan(_PluginBase):
             }
         }
     
-    def api_save_config(self, **kwargs) -> Dict[str, Any]:
+    def api_save_config(self, config_data: dict = None) -> Dict[str, Any]:
         """API: 保存配置"""
+        if not config_data:
+            return {"code": 400, "message": "缺少配置数据"}
+        
         try:
             config = self.get_config() or {}
-            config.update(kwargs)
+            
+            # 如果密码被修改，则进行哈希加密
+            if "password" in config_data and config_data["password"]:
+                # 检查密码是否已经是哈希值（bcrypt 哈希以 $2b$ 开头）
+                if not config_data["password"].startswith("$2b$"):
+                    config_data["password"] = get_password_hash(config_data["password"])
+                    logger.info("🔒 密码已加密存储")
+            
+            config.update(config_data)
             self.update_config(config)
+            
+            # 重新初始化插件以应用新配置
+            self.init_plugin(config)
+            
             logger.info("✅ 配置已保存")
             return {"code": 200, "message": "配置保存成功"}
         except Exception as e:
@@ -395,39 +417,33 @@ class XunleiPan(_PluginBase):
         """使用 Vue 联邦渲染模式"""
         return "vue", "dist/assets"
     
-    def get_form(self) -> Tuple[Optional[List[dict]], Dict[str, Any]]:
-        """返回配置页 JSON 和默认配置模型(用于 Vuetify 兼容)"""
+    def get_sidebar_nav(self) -> List[Dict[str, Any]]:
+        """声明侧栏导航入口"""
         return [
             {
-                'component': 'VForm',
-                'content': [
-                    {
-                        'component': 'VSwitch',
-                        'props': {
-                            'model': 'enabled',
-                            'label': '启用插件'
-                        }
-                    },
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'username',
-                            'label': '迅雷账号',
-                            'placeholder': '手机号或邮箱'
-                        }
-                    },
-                    {
-                        'component': 'VTextField',
-                        'props': {
-                            'model': 'password',
-                            'label': '密码',
-                            'type': 'password',
-                            'placeholder': '请输入密码'
-                        }
-                    }
-                ]
-            }
-        ], {
+                "nav_key": "files",
+                "title": "文件浏览",
+                "icon": "mdi-folder-open",
+                "section": "discovery",
+                "permission": "manage",
+                "order": 10,
+            },
+            {
+                "nav_key": "download",
+                "title": "离线下载",
+                "icon": "mdi-download",
+                "section": "discovery",
+                "permission": "manage",
+                "order": 11,
+            },
+        ]
+    
+    def get_form(self) -> Tuple[Optional[List[dict]], Dict[str, Any]]:
+        """
+        返回配置页 JSON 和默认配置模型。
+        Vue 联邦模式下返回 None + 默认配置模型
+        """
+        return None, {
             'enabled': False,
             'username': '',
             'password': ''

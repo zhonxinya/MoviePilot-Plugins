@@ -8,6 +8,7 @@ const {createTextVNode:_createTextVNode,resolveComponent:_resolveComponent,withC
 const _hoisted_1 = { class: "d-flex align-center" };
 const _hoisted_2 = ["onClick"];
 const {ref,computed,onMounted} = await importShared('vue');
+const pluginId = "XunleiPan";
 const _sfc_main = /* @__PURE__ */ _defineComponent({
   __name: "Page",
   props: {
@@ -54,17 +55,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     ];
     const apiCall = async (endpoint, method = "GET", data) => {
       try {
-        const response = await fetch(`/api/v1/plugin/XunleiPan${endpoint}`, {
-          method,
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: data ? JSON.stringify(data) : void 0
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        let response;
+        if (method === "GET") {
+          response = await props.api.get(`plugin/${pluginId}${endpoint}`);
+        } else if (method === "POST") {
+          response = await props.api.post(`plugin/${pluginId}${endpoint}`, data);
         }
-        return await response.json();
+        return response;
       } catch (error) {
         toast.error(`API 调用失败: ${error.message}`);
         throw error;
@@ -73,7 +70,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     const loadFiles = async () => {
       loading.value = true;
       try {
-        const result = await apiCall(`/files?path=${encodeURIComponent(currentPath.value)}`);
+        const result = await apiCall(`/files?parent_id=${encodeURIComponent(currentPath.value)}&page=1&limit=50`);
         if (result.code === 200) {
           fileList.value = result.data.files || [];
         } else {
@@ -682,8 +679,8 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page_vue_vue_type_style_index_0_scoped_e28cc1b3_lang = '';
+const Page_vue_vue_type_style_index_0_scoped_003202f5_lang = '';
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-e28cc1b3"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-003202f5"]]);
 
 export { Page as default };
