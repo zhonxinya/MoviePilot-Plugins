@@ -535,7 +535,11 @@ class TalebookApiClient:
             
             data = response.json()
             logger.debug(f"Talebook API 原始响应: {data}")
-            if data.get("err") == "ok":
+            
+            # 判断是否成功: 有 err='ok' 或者有 items 字段
+            is_success = (data.get("err") == "ok") or ("items" in data and isinstance(data.get("items"), list))
+            
+            if is_success:
                 items = data.get("items", [])
                 total = data.get("total", len(items))
                 logger.info(f"获取{meta_type}列表成功: {total} 条")
@@ -576,7 +580,11 @@ class TalebookApiClient:
             
             data = response.json()
             logger.debug(f"Talebook API 原始响应: {data}")
-            if data.get("err") == "ok":
+            
+            # 判断是否成功: 有 err='ok' 或者有 books 字段
+            is_success = (data.get("err") == "ok") or ("books" in data and isinstance(data.get("books"), list))
+            
+            if is_success:
                 books = data.get("books", [])
                 total = data.get("total", len(books))
                 title = data.get("title", "")
