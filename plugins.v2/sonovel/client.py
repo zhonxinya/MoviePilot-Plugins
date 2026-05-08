@@ -48,29 +48,61 @@ class SoNovelClient:
         logger.info(f'🔍 开始搜索: {keyword}')
         logger.info(f'📡 请求 URL: {url}?kw={quote(keyword)}')
         
-        try:
-            response = self.session.get(url, params=params, timeout=30)
-            logger.info(f'📨 响应状态码: {response.status_code}')
-            
-            if response.status_code == 200:
-                data = response.json()
+        # 自动重试机制：最多重试 2 次
+        max_retries = 2
+        last_exception = None
+        
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.session.get(url, params=params, timeout=30)
+                logger.info(f'📨 响应状态码: {response.status_code}')
                 
-                if data.get('code') == 200:
-                    results = [SoNovelSearchResult(**item) for item in data.get('data', [])]
-                    logger.info(f'✅ 搜索成功, 结果数量: {len(results)}')
-                    return results
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    if data.get('code') == 200:
+                        results = [SoNovelSearchResult(**item) for item in data.get('data', [])]
+                        logger.info(f'✅ 搜索成功, 结果数量: {len(results)}')
+                        return results
+                    else:
+                        error_msg = data.get('message', '搜索失败')
+                        logger.info(f'❌ API 错误: {error_msg}')
+                        raise Exception(error_msg)
                 else:
-                    error_msg = data.get('message', '搜索失败')
-                    logger.info(f'❌ API 错误: {error_msg}')
-                    raise Exception(error_msg)
-            else:
-                logger.info(f'❌ HTTP 错误: {response.status_code}')
-                raise Exception(f'HTTP {response.status_code}')
+                    logger.info(f'❌ HTTP 错误: {response.status_code}')
+                    raise Exception(f'HTTP {response.status_code}')
+                    
+            except requests.exceptions.Timeout as e:
+                last_exception = e
+                if attempt < max_retries:
+                    logger.warning(f'⚠️ 搜索超时 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
+                    continue
+                else:
+                    logger.error(f'❌ 搜索超时，已重试 {max_retries} 次')
+                    raise Exception(f'搜索超时: {str(e)}')
+                    
+            except requests.exceptions.ConnectionError as e:
+                last_exception = e
+                if attempt < max_retries:
+                    logger.warning(f'⚠️ 连接错误 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
+                    continue
+                else:
+                    logger.error(f'❌ 连接失败，已重试 {max_retries} 次')
+                    raise Exception(f'连接失败: {str(e)}')
+                    
+            except requests.exceptions.SSLError as e:
+                # SSL 错误不重试
+                logger.error(f'❌ SSL 错误: {str(e)}')
+                raise Exception(f'SSL 错误: {str(e)}')
                 
-        except requests.exceptions.RequestException as e:
-            error_msg = str(e)
-            logger.info(f'❌ 搜索请求失败: {error_msg}')
-            raise Exception(f'搜索失败: {error_msg}')
+            except requests.exceptions.RequestException as e:
+                # 其他网络错误不重试
+                error_msg = str(e)
+                logger.info(f'❌ 搜索请求失败: {error_msg}')
+                raise Exception(f'搜索失败: {error_msg}')
+        
+        # 理论上不会到达这里
+        raise last_exception or Exception('搜索失败')
 
     def book_fetch(self, request: BookFetchRequest) -> bool:
         """
@@ -161,6 +193,21 @@ class SoNovelClient:
                 
                 raise Exception(f'远程 API 错误 {response.status_code}: {error_detail}')
                 
+        except requests.exceptions.Timeout as e:
+            error_msg = str(e)
+            logger.error(f'❌ 书籍获取超时: {error_msg}')
+            raise Exception(f'书籍获取超时: {error_msg}')
+            
+        except requests.exceptions.ConnectionError as e:
+            error_msg = str(e)
+            logger.error(f'❌ 书籍获取连接失败: {error_msg}')
+            raise Exception(f'书籍获取连接失败: {error_msg}')
+            
+        except requests.exceptions.SSLError as e:
+            error_msg = str(e)
+            logger.error(f'❌ 书籍获取 SSL 错误: {error_msg}')
+            raise Exception(f'书籍获取 SSL 错误: {error_msg}')
+            
         except requests.exceptions.RequestException as e:
             error_msg = str(e)
             logger.info(f'❌ 书籍获取请求失败: {error_msg}')

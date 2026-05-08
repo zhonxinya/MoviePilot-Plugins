@@ -99,6 +99,19 @@ class Sonovel(_PluginBase):
             self._initialize_services()
         else:
             self._clear_services()
+    
+    def __del__(self):
+        """
+        析构函数：确保资源被清理
+        
+        作为 stop_service() 的兜底，防止插件异常退出时资源泄漏
+        """
+        try:
+            if self._client:
+                self._client.close()
+                logger.debug("Sonovel 插件析构：API 客户端已清理")
+        except Exception:
+            pass  # 析构函数中不应抛出异常
 
     def get_state(self) -> bool:
         """返回插件当前是否启用。"""
@@ -188,6 +201,42 @@ class Sonovel(_PluginBase):
         self._clear_services()
         logger.info('🛑 插件服务已停止')
 
+    # ==================== 辅助方法 ====================
+    
+    def _check_plugin_ready(self) -> Optional[Dict[str, Any]]:
+        """
+        检查插件是否就绪（通用配置检查）
+        
+        统一的配置检查逻辑，避免在每个 API 方法中重复编写
+        
+        Returns:
+            None: 插件就绪，可以继续执行
+            Dict: 错误响应，包含 code 和 message
+        """
+        if not self._enabled:
+            logger.warning("Sonovel 插件未启用")
+            return {"code": 403, "message": "插件未启用"}
+        
+        if not self._client:
+            config = self.get_config() or {}
+            enabled = bool(config.get("enabled", False))
+            api_url = config.get("api_url", "")
+            
+            missing_fields = []
+            if not enabled:
+                missing_fields.append("enabled")
+            if not api_url:
+                missing_fields.append("api_url")
+            
+            error_msg = f"API 客户端未初始化，请检查配置"
+            if missing_fields:
+                error_msg += f" (缺失字段: {', '.join(missing_fields)})"
+            
+            logger.error(f"❌ {error_msg}")
+            return {"code": 500, "message": error_msg}
+        
+        return None
+
     # ==================== API 路由注册 ====================
     
     def get_api(self) -> List[Dict[str, Any]]:
@@ -263,8 +312,10 @@ class Sonovel(_PluginBase):
     
     def api_search(self, keyword: str = None) -> Dict[str, Any]:
         """API: 搜索图书"""
-        if not self._enabled:
-            return {"code": 403, "message": "插件未启用"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         if not self._search_api:
             return {"code": 500, "message": "搜索服务未初始化"}
@@ -273,8 +324,10 @@ class Sonovel(_PluginBase):
     
     def api_download(self, book_data: dict = None) -> Dict[str, Any]:
         """API: 提交下载任务"""
-        if not self._enabled:
-            return {"code": 403, "message": "插件未启用"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         if not self._download_api:
             return {"code": 500, "message": "下载服务未初始化"}
