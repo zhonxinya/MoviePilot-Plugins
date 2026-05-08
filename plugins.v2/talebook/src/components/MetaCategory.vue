@@ -312,9 +312,9 @@ function getCoverUrl(book: any): string {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 否则拼接 Talebook 服务器地址
-    // 注意:这里需要使用 props.api 来获取服务器地址,或者直接使用相对路径
-    return book.thumb
+    // 如果是相对路径,通过插件 API 代理访问
+    // 注意:不能直接拼接,因为需要认证
+    return getApiUrl(book.thumb)
   }
   
   // 其次使用 img 字段(大图)
@@ -322,7 +322,7 @@ function getCoverUrl(book: any): string {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
     }
-    return book.img
+    return getApiUrl(book.img)
   }
   
   // 最后使用插件 API
@@ -331,6 +331,18 @@ function getCoverUrl(book: any): string {
   }
   
   return ''
+}
+
+/**
+ * 获取插件 API URL
+ */
+function getApiUrl(path: string): string {
+  // 如果路径已经是完整 URL,直接返回
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  // 否则通过插件 API 代理
+  return `/api/v1/plugin/Talebook${path}`
 }
 
 /**
