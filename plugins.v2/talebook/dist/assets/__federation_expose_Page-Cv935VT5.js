@@ -1101,6 +1101,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     const metaList = ref$1([]);
     const loading = ref$1(false);
     const searchKeyword = ref$1("");
+    const talebookServerUrl = ref$1("");
     const showBooksDialog = ref$1(false);
     const dialogLoading = ref$1(false);
     const dialogBooks = ref$1([]);
@@ -1148,15 +1149,22 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     }
     function getCoverUrl(book) {
       if (!book) return "";
+      const serverUrl = getServerUrl();
       if (book.thumb) {
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
+        }
+        if (serverUrl) {
+          return `${serverUrl}${book.thumb}`;
         }
         return getApiUrl(book.thumb);
       }
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
+        }
+        if (serverUrl) {
+          return `${serverUrl}${book.img}`;
         }
         return getApiUrl(book.img);
       }
@@ -1170,6 +1178,25 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         return path;
       }
       return `/api/v1/plugin/Talebook${path}`;
+    }
+    async function loadConfig() {
+      try {
+        if (!props.api) return;
+        const response = await props.api.get(getApiUrl("/config"));
+        if (response && response.code === 200 && response.data) {
+          talebookServerUrl.value = response.data.server_url || "";
+          console.log("[MetaCategory] 配置加载成功, server_url:", talebookServerUrl.value);
+        }
+      } catch (error) {
+        console.error("[MetaCategory] 加载配置失败:", error);
+      }
+    }
+    function getServerUrl() {
+      if (talebookServerUrl.value) {
+        return talebookServerUrl.value;
+      }
+      console.warn("[MetaCategory] 未配置 Talebook 服务器地址");
+      return "";
     }
     async function loadMetaList() {
       loading.value = true;
@@ -1271,6 +1298,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       console.log("下载书籍:", bookId);
     }
     onMounted$1(() => {
+      loadConfig();
       loadMetaList();
     });
     return (_ctx, _cache) => {
@@ -1634,7 +1662,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-a13bde8a"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-bce67afe"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 

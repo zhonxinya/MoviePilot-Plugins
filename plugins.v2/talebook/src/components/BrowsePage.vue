@@ -119,6 +119,9 @@ const showDetailDialog = ref(false)
 const selectedBookId = ref<number | null>(null)
 const selectedBook = ref<any | null>(null)
 
+// Talebook 服务器地址（缓存）
+const talebookServerUrl = ref('')
+
 /**
  * 获取元数据类型图标
  */
@@ -155,12 +158,18 @@ function getMetaTypeName(type: string): string {
 function getCoverUrl(book: any): string {
   if (!book) return ''
   
+  const serverUrl = getServerUrl()
+  
   // 优先使用 thumb 字段(缩略图)
   if (book.thumb) {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 如果是相对路径,通过插件 API 代理访问
+    // 如果有服务器地址,拼接完整 URL
+    if (serverUrl) {
+      return `${serverUrl}${book.thumb}`
+    }
+    // 否则通过插件 API 代理访问
     return getApiUrl(book.thumb)
   }
   
@@ -168,6 +177,9 @@ function getCoverUrl(book: any): string {
   if (book.img) {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
+    }
+    if (serverUrl) {
+      return `${serverUrl}${book.img}`
     }
     return getApiUrl(book.img)
   }
@@ -190,6 +202,37 @@ function getApiUrl(path: string): string {
   }
   // 否则通过插件 API 代理
   return `/api/v1/plugin/Talebook${path}`
+}
+
+/**
+ * 加载配置
+ */
+async function loadConfig() {
+  try {
+    if (!props.api) return
+    
+    const response = await props.api.get(getApiUrl('/config'))
+    if (response && response.code === 200 && response.data) {
+      talebookServerUrl.value = response.data.server_url || ''
+      console.log('[BrowsePage] 配置加载成功, server_url:', talebookServerUrl.value)
+    }
+  } catch (error) {
+    console.error('[BrowsePage] 加载配置失败:', error)
+  }
+}
+
+/**
+ * 获取 Talebook 服务器地址
+ */
+function getServerUrl(): string {
+  // 优先使用缓存的服务器地址
+  if (talebookServerUrl.value) {
+    return talebookServerUrl.value
+  }
+  
+  // 如果没有配置,返回空字符串
+  console.warn('[BrowsePage] 未配置 Talebook 服务器地址')
+  return ''
 }
 
 /**
@@ -320,6 +363,7 @@ watch(() => [props.metaType, props.metaName], () => {
 
 // 组件挂载时加载数据
 onMounted(() => {
+  loadConfig()
   loadBooks()
 })
 </script>

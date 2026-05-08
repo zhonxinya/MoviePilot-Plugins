@@ -241,6 +241,9 @@ const metaList = ref<MetaItem[]>([])
 const loading = ref(false)
 const searchKeyword = ref('')
 
+// Talebook 服务器地址（缓存）
+const talebookServerUrl = ref('')
+
 // 对话框相关
 const showBooksDialog = ref(false)
 const dialogLoading = ref(false)
@@ -306,14 +309,19 @@ function getMetaTypeIcon(type: string): string {
 function getCoverUrl(book: any): string {
   if (!book) return ''
   
+  const serverUrl = getServerUrl()
+  
   // 优先使用 thumb 字段(缩略图)
   if (book.thumb) {
     // 如果是完整 URL,直接返回
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 如果是相对路径,通过插件 API 代理访问
-    // 注意:不能直接拼接,因为需要认证
+    // 如果有服务器地址,拼接完整 URL
+    if (serverUrl) {
+      return `${serverUrl}${book.thumb}`
+    }
+    // 否则通过插件 API 代理访问
     return getApiUrl(book.thumb)
   }
   
@@ -321,6 +329,9 @@ function getCoverUrl(book: any): string {
   if (book.img) {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
+    }
+    if (serverUrl) {
+      return `${serverUrl}${book.img}`
     }
     return getApiUrl(book.img)
   }
@@ -343,6 +354,37 @@ function getApiUrl(path: string): string {
   }
   // 否则通过插件 API 代理
   return `/api/v1/plugin/Talebook${path}`
+}
+
+/**
+ * 加载配置
+ */
+async function loadConfig() {
+  try {
+    if (!props.api) return
+    
+    const response = await props.api.get(getApiUrl('/config'))
+    if (response && response.code === 200 && response.data) {
+      talebookServerUrl.value = response.data.server_url || ''
+      console.log('[MetaCategory] 配置加载成功, server_url:', talebookServerUrl.value)
+    }
+  } catch (error) {
+    console.error('[MetaCategory] 加载配置失败:', error)
+  }
+}
+
+/**
+ * 获取 Talebook 服务器地址
+ */
+function getServerUrl(): string {
+  // 优先使用缓存的服务器地址
+  if (talebookServerUrl.value) {
+    return talebookServerUrl.value
+  }
+  
+  // 如果没有配置,返回空字符串
+  console.warn('[MetaCategory] 未配置 Talebook 服务器地址')
+  return ''
 }
 
 /**
@@ -483,6 +525,7 @@ function handleDownload(bookId: number) {
 
 // 组件挂载时加载数据
 onMounted(() => {
+  loadConfig()
   loadMetaList()
 })
 </script>
