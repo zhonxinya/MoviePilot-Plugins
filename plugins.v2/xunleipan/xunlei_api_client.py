@@ -60,39 +60,87 @@ class XunleiApiClient:
             # 创建新会话
             session = requests.Session()
             session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Content-Type': 'application/json'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json, text/plain, */*',
+                'Origin': 'https://pan.xunlei.com',
+                'Referer': 'https://pan.xunlei.com/'
             })
             
-            # 登录接口(需要根据实际迅雷API调整)
-            login_url = f"{self._base_url}/login"
-            login_data = {
-                "username": self._username,
-                "password": self._password
+            # 第一步：获取登录所需的参数（salt, nonce等）
+            pre_login_url = "https://xluser-ssl.xunlei.com/v1/shield/captcha/init"
+            pre_login_data = {
+                "client_id": "XUNLEI_WEB_CLIENT_ID",
+                "action": "POST:/v1/auth/signin"
             }
             
-            logger.info(f"   登录 URL: {login_url}")
+            logger.debug("   步骤1: 获取预登录参数...")
+            pre_response = session.post(pre_login_url, json=pre_login_data, timeout=10)
+            pre_response.raise_for_status()
+            pre_result = pre_response.json()
             
-            login_response = session.post(login_url, json=login_data, timeout=30)
+            if pre_result.get("code") != 0:
+                logger.error(f"❌ 预登录失败: {pre_result.get('message')}")
+                return None
+            
+            captcha_info = pre_result.get("data", {})
+            salt = captcha_info.get("salt", "")
+            nonce = captcha_info.get("nonce", "")
+            
+            logger.debug(f"   获取到 salt 和 nonce")
+            
+            # 第二步：执行登录
+            login_url = "https://xluser-ssl.xunlei.com/v1/auth/signin"
+            
+            # 注意：实际密码需要使用 RSA 加密，这里简化处理
+            # 生产环境需要集成 RSA 加密逻辑
+            login_data = {
+                "username": self._username,
+                "password": self._password,
+                "captcha_token": captcha_info.get("token", ""),
+                "client_id": "XUNLEI_WEB_CLIENT_ID"
+            }
+            
+            logger.debug("   步骤2: 执行登录...")
+            login_response = session.post(login_url, json=login_data, timeout=10)
             login_response.raise_for_status()
             
             login_result = login_response.json()
             
-            # 解析登录结果(根据实际API响应调整)
-            if login_result.get("code") == 0 or login_result.get("success"):
-                self._access_token = login_result.get("data", {}).get("access_token")
-                expires_in = login_result.get("data", {}).get("expires_in", 7200)
+            # 解析登录结果
+            if login_result.get("code") == 0:
+                auth_data = login_result.get("data", {})
+                self._access_token = auth_data.get("access_token")
+                refresh_token = auth_data.get("refresh_token")
+                expires_in = auth_data.get("expires_in", 7200)
                 
                 self._token_expiry = current_time + expires_in
                 self._session = session
                 
-                logger.info(f"✅ 登录成功,令牌有效期: {expires_in} 秒")
+                # 保存 refresh_token 用于后续刷新
+                if refresh_token:
+                    self._cookies['refresh_token'] = refresh_token
+                
+                logger.info(f"✅ 登录成功, 令牌有效期: {expires_in} 秒")
                 return session
             else:
                 error_msg = login_result.get("message", "登录失败")
-                logger.error(f"❌ 登录失败: {error_msg}")
+                error_code = login_result.get("code")
+                logger.error(f"❌ 登录失败 (code={error_code}): {error_msg}")
+                
+                # 提供友好的错误提示
+                if error_code == 1100:
+                    logger.error("   提示: 用户名或密码错误")
+                elif error_code == 1101:
+                    logger.error("   提示: 账号被锁定，请稍后重试")
+                elif error_code == 1102:
+                    logger.error("   提示: 验证码错误")
+                
                 return None
                 
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ 登录网络异常: {str(e)}")
+            return None
         except Exception as e:
             logger.error(f"❌ 登录异常: {str(e)}", exc_info=True)
             return None
@@ -434,3 +482,26 @@ class XunleiApiClient:
         if self._session:
             self._session.close()
             logger.info("🔒 迅雷网盘会话已关闭")
+    
+    def login(self) -> Dict:
+        """
+        执行登录操作（公开接口）
+        
+        :return: 登录结果
+        """
+        try:
+            session = self._get_authenticated_session()
+            if session:
+                return {
+                    "code": 200,
+                    "message": "登录成功",
+                    "data": {
+                        "username": self._username,
+                        "token_expiry": int(self._token_expiry - time.time())
+                    }
+                }
+            else:
+                return {"code": 401, "message": "登录失败"}
+        except Exception as e:
+            logger.error(f"❌ 登录异常: {str(e)}", exc_info=True)
+            return {"code": 500, "message": f"登录异常: {str(e)}"}
