@@ -23,7 +23,7 @@ class XunleiPan(_PluginBase):
     plugin_name = "迅雷网盘"
     plugin_desc = "迅雷网盘文件浏览和离线下载管理"
     plugin_icon = "Thunder_A.png"
-    plugin_version = "1.0.1"
+    plugin_version = "1.0.2"
     plugin_author = "trient"
     author_url = "https://github.com/jxxghp/MoviePilot-Plugins"
     plugin_config_prefix = "xunleipan_"
