@@ -34,6 +34,10 @@
           <v-icon start>mdi-book-open-variant</v-icon>
           正在阅读
         </v-tab>
+        <v-tab value="meta">
+          <v-icon start>mdi-tag-multiple</v-icon>
+          元数据分类
+        </v-tab>
       </v-tabs>
     </v-card>
 
@@ -234,7 +238,7 @@
               在读
             </v-chip>
           </template>
-                
+                      
           <!-- 自定义操作按钮 -->
           <template #actions="{ book }">
             <v-btn
@@ -258,15 +262,20 @@
             </v-btn>
           </template>
         </BookGrid>
-      
+            
         <!-- 空状态提示 -->
         <v-empty-state
           v-if="!loadingReading && readingBooks.length === 0"
           icon="mdi-book-off-outline"
           title="暂无在读"
-          text='浏览书籍并设置阅读状态为"在读"'
+          text='浏览书籍并设置阅读状态为“在读”'
           class="mt-8"
         />
+      </v-window-item>
+      
+      <!-- 元数据分类标签页 -->
+      <v-window-item value="meta">
+        <MetaCategory />
       </v-window-item>
     </v-window>
 
@@ -292,6 +301,7 @@ import BookGrid from './BookGrid.vue'
 import BookDetailDialog from './BookDetailDialog.vue'
 import ScanPanel from './ScanPanel.vue'
 import ToastNotification from './ToastNotification.vue'
+import MetaCategory from './MetaCategory.vue'
 import { useToast } from '../composables/useToast'
 
 // Props - 接收 MoviePilot-Frontend 传递的 api 对象和 model(配置)

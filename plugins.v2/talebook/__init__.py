@@ -25,7 +25,7 @@ class Talebook(_PluginBase):
     plugin_name = "Talebook"
     plugin_desc = "Talebook 本地书库管理，支持扫描目录批量导入小说（与 Sonovel 联动）"
     plugin_icon = "Calibre_B.png"
-    plugin_version = "1.0.2"
+    plugin_version = "1.0.3"
     plugin_author = "trient"
     author_url = "https://github.com/jxxghp/MoviePilot-Plugins"
     plugin_config_prefix = "talebook_"
@@ -297,6 +297,57 @@ class Talebook(_PluginBase):
                 "auth": "bear",
                 "summary": "获取收藏的书籍列表",
                 "description": "获取当前用户收藏的书籍",
+            },
+            # 元数据相关 API
+            {
+                "path": "/book/{book_id}/refer",
+                "endpoint": self.api_get_book_refer_meta,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取书籍外部元数据",
+                "description": "从豆瓣等外部源搜索书籍元数据",
+            },
+            {
+                "path": "/book/{book_id}/refer/apply",
+                "endpoint": self.api_apply_book_refer_meta,
+                "methods": ["POST"],
+                "auth": "bear",
+                "summary": "应用外部元数据",
+                "description": "将选中的外部元数据应用到书籍",
+            },
+            {
+                "path": "/book/{book_id}/related",
+                "endpoint": self.api_get_related_books,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取相关书籍",
+                "description": "根据作者、标签等获取相似书籍",
+            },
+            # 通用书籍列表 API
+            {
+                "path": "/books",
+                "endpoint": self.api_get_books,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取书籍列表",
+                "description": "分页获取书籍列表,支持搜索和筛选",
+            },
+            # 元数据分类 API
+            {
+                "path": "/meta/{meta_type}",
+                "endpoint": self.api_get_meta_list,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取元数据列表",
+                "description": "获取标签/作者/丛书/评分/出版社/语言列表",
+            },
+            {
+                "path": "/meta/{meta_type}/{name}",
+                "endpoint": self.api_get_meta_books,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取指定元数据的书籍",
+                "description": "获取包含指定标签/作者等的书籍列表",
             },
             {
                 "path": "/config",
@@ -793,6 +844,178 @@ class Talebook(_PluginBase):
             return self._api_client.get_user_info()
         except Exception as e:
             logger.error(f"获取用户信息异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def api_get_book_refer_meta(self, book_id: int):
+        """
+        API: 获取书籍的外部元数据
+        
+        :param book_id: 书籍 ID
+        :return: 外部元数据列表
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        try:
+            return self._api_client.get_book_refer_meta(book_id)
+        except Exception as e:
+            logger.error(f"获取外部元数据异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def api_apply_book_refer_meta(self, book_id: int, provider_key: str = "", 
+                                  provider_value: str = "", only_meta: bool = False, 
+                                  only_cover: bool = False):
+        """
+        API: 应用外部元数据到书籍
+        
+        :param book_id: 书籍 ID
+        :param provider_key: 元数据来源 (如 "douban")
+        :param provider_value: 元数据值 (如豆瓣 ID)
+        :param only_meta: 仅应用元数据
+        :param only_cover: 仅应用封面
+        :return: 操作结果
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        try:
+            return self._api_client.apply_book_refer_meta(
+                book_id, provider_key, provider_value, only_meta, only_cover
+            )
+        except Exception as e:
+            logger.error(f"应用外部元数据异常: {str(e)}")
+            return {"code": 500, "message": f"应用失败: {str(e)}"}
+    
+    def api_get_related_books(self, book_id: int, limit: int = 10):
+        """
+        API: 获取相关书籍
+        
+        :param book_id: 书籍 ID
+        :param limit: 返回数量限制
+        :return: 相关书籍列表
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        try:
+            books = self._api_client.get_related_books(book_id, limit)
+            return {"code": 200, "data": books}
+        except Exception as e:
+            logger.error(f"获取相关书籍异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def api_get_books(self, page: int = 1, limit: int = 20, search: str = ""):
+        """
+        API: 获取书籍列表(分页)
+        
+        :param page: 页码
+        :param limit: 每页数量
+        :param search: 搜索关键词(可选)
+        :return: 书籍列表和总数
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        try:
+            # 调用 Talebook API 获取书籍列表
+            result = self._api_client.get_recent_books(limit * page)  # 获取足够多的书籍
+            
+            if result.get("code") != 200:
+                return result
+            
+            books = result.get("data", [])
+            total = len(books)
+            
+            # 如果有搜索关键词,进行过滤
+            if search:
+                search_lower = search.lower()
+                books = [
+                    book for book in books
+                    if search_lower in book.get("title", "").lower()
+                    or search_lower in book.get("author", "").lower()
+                ]
+                total = len(books)
+            
+            # 分页处理
+            start = (page - 1) * limit
+            end = start + limit
+            paginated_books = books[start:end]
+            
+            return {
+                "code": 200,
+                "data": {
+                    "books": paginated_books,
+                    "total": total,
+                    "page": page,
+                    "limit": limit
+                }
+            }
+        except Exception as e:
+            logger.error(f"获取书籍列表异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def api_get_meta_list(self, meta_type: str, show_all: bool = False):
+        """
+        API: 获取元数据列表
+        
+        :param meta_type: 元数据类型 (tag/author/series/rating/publisher/language)
+        :param show_all: 是否显示所有条目
+        :return: 元数据列表
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        # 验证元数据类型
+        valid_types = ['tag', 'author', 'series', 'rating', 'publisher', 'language']
+        if meta_type not in valid_types:
+            return {"code": 400, "message": f"无效的元数据类型: {meta_type}, 支持: {', '.join(valid_types)}"}
+        
+        try:
+            return self._api_client.get_meta_list(meta_type, show_all)
+        except Exception as e:
+            logger.error(f"获取元数据列表异常: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def api_get_meta_books(self, meta_type: str, name: str, page: int = 1, num: int = 20):
+        """
+        API: 获取指定元数据的书籍列表
+        
+        :param meta_type: 元数据类型 (tag/author/series/rating/publisher/language)
+        :param name: 元数据名称
+        :param page: 页码
+        :param num: 每页数量
+        :return: 书籍列表
+        """
+        if not self._enabled:
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        
+        # 验证元数据类型
+        valid_types = ['tag', 'author', 'series', 'rating', 'publisher', 'language']
+        if meta_type not in valid_types:
+            return {"code": 400, "message": f"无效的元数据类型: {meta_type}, 支持: {', '.join(valid_types)}"}
+        
+        try:
+            return self._api_client.get_meta_books(meta_type, name, page, num)
+        except Exception as e:
+            logger.error(f"获取元数据书籍异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
     def api_add_favorite(self, book_id: int):

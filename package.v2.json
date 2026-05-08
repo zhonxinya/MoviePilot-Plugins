@@ -17,11 +17,12 @@
     "name": "Talebook",
     "description": "Talebook 插件",
     "labels": "",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "icon": "",
     "author": "",
     "level": 1,
     "history": {
+      "v1.0.3": "新增元数据分类功能(标签/作者/丛书/评分/出版社/语言)",
       "v1.0.2": "优化依赖管理和构建配置",
       "v1.0.1": "版本更新",
       "v1.0.0": "初始版本"

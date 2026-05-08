@@ -31,15 +31,25 @@ to {
 }
 }
 
-.v-card[data-v-29bde4f8] {
+.meta-category-page[data-v-55645d61] {
+  min-height: 100%;
+}
+.transition-swing[data-v-55645d61] {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.on-hover[data-v-55645d61] {
+  transform: translateY(-4px);
+}
+
+.v-card[data-v-e50a6aee] {
   transition: transform 0.2s;
 }
-.v-card[data-v-29bde4f8]:hover {
+.v-card[data-v-e50a6aee]:hover {
   transform: translateY(-2px);
 }
 
 /* 文本截断样式 */
-.line-clamp-1[data-v-29bde4f8] {
+.line-clamp-1[data-v-e50a6aee] {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   line-clamp: 1;
@@ -47,7 +57,7 @@ to {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.line-clamp-2[data-v-29bde4f8] {
+.line-clamp-2[data-v-e50a6aee] {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -57,10 +67,10 @@ to {
 }
 
 /* 旋转动画 */
-.animate-spin[data-v-29bde4f8] {
-  animation: spin-29bde4f8 1s linear infinite;
+.animate-spin[data-v-e50a6aee] {
+  animation: spin-e50a6aee 1s linear infinite;
 }
-@keyframes spin-29bde4f8 {
+@keyframes spin-e50a6aee {
 from {
     transform: rotate(0deg);
 }

@@ -1,11 +1,11 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
 import { _ as _export_sfc } from './_plugin-vue_export-helper-pcqpp-6-.js';
 
-const {defineComponent:_defineComponent$5} = await importShared('vue');
+const {defineComponent:_defineComponent$6} = await importShared('vue');
 
-const {resolveComponent:_resolveComponent$5,createVNode:_createVNode$5,withCtx:_withCtx$5,renderSlot:_renderSlot$1,toDisplayString:_toDisplayString$4,createTextVNode:_createTextVNode$5,openBlock:_openBlock$5,createBlock:_createBlock$5,createCommentVNode:_createCommentVNode$4} = await importShared('vue');
+const {resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,withCtx:_withCtx$6,renderSlot:_renderSlot$1,toDisplayString:_toDisplayString$5,createTextVNode:_createTextVNode$6,openBlock:_openBlock$6,createBlock:_createBlock$6,createCommentVNode:_createCommentVNode$5} = await importShared('vue');
 
-const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
+const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   __name: "BookCard",
   props: {
     book: {},
@@ -17,41 +17,41 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
   emits: ["detail", "toggle-favorite", "download"],
   setup(__props) {
     return (_ctx, _cache) => {
-      const _component_v_progress_circular = _resolveComponent$5("v-progress-circular");
-      const _component_v_row = _resolveComponent$5("v-row");
-      const _component_v_img = _resolveComponent$5("v-img");
-      const _component_v_card_title = _resolveComponent$5("v-card-title");
-      const _component_v_card_subtitle = _resolveComponent$5("v-card-subtitle");
-      const _component_v_card_item = _resolveComponent$5("v-card-item");
-      const _component_v_chip = _resolveComponent$5("v-chip");
-      const _component_v_chip_group = _resolveComponent$5("v-chip-group");
-      const _component_v_card_text = _resolveComponent$5("v-card-text");
-      const _component_v_btn = _resolveComponent$5("v-btn");
-      const _component_v_spacer = _resolveComponent$5("v-spacer");
-      const _component_v_card_actions = _resolveComponent$5("v-card-actions");
-      const _component_v_card = _resolveComponent$5("v-card");
-      return _openBlock$5(), _createBlock$5(_component_v_card, {
+      const _component_v_progress_circular = _resolveComponent$6("v-progress-circular");
+      const _component_v_row = _resolveComponent$6("v-row");
+      const _component_v_img = _resolveComponent$6("v-img");
+      const _component_v_card_title = _resolveComponent$6("v-card-title");
+      const _component_v_card_subtitle = _resolveComponent$6("v-card-subtitle");
+      const _component_v_card_item = _resolveComponent$6("v-card-item");
+      const _component_v_chip = _resolveComponent$6("v-chip");
+      const _component_v_chip_group = _resolveComponent$6("v-chip-group");
+      const _component_v_card_text = _resolveComponent$6("v-card-text");
+      const _component_v_btn = _resolveComponent$6("v-btn");
+      const _component_v_spacer = _resolveComponent$6("v-spacer");
+      const _component_v_card_actions = _resolveComponent$6("v-card-actions");
+      const _component_v_card = _resolveComponent$6("v-card");
+      return _openBlock$6(), _createBlock$6(_component_v_card, {
         hover: "",
         elevation: "3",
         class: "h-100 rounded-lg overflow-hidden",
         style: { "max-width": "280px" }
       }, {
-        default: _withCtx$5(() => [
-          _createVNode$5(_component_v_img, {
+        default: _withCtx$6(() => [
+          _createVNode$6(_component_v_img, {
             src: __props.coverUrl,
             height: "280",
             cover: "",
             class: "bg-grey-lighten-3",
             gradient: "to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.2)"
           }, {
-            placeholder: _withCtx$5(() => [
-              _createVNode$5(_component_v_row, {
+            placeholder: _withCtx$6(() => [
+              _createVNode$6(_component_v_row, {
                 class: "fill-height ma-0",
                 align: "center",
                 justify: "center"
               }, {
-                default: _withCtx$5(() => [
-                  _createVNode$5(_component_v_progress_circular, {
+                default: _withCtx$6(() => [
+                  _createVNode$6(_component_v_progress_circular, {
                     indeterminate: "",
                     color: "grey-lighten-5"
                   })
@@ -59,92 +59,92 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
                 _: 1
               })
             ]),
-            default: _withCtx$5(() => [
+            default: _withCtx$6(() => [
               _renderSlot$1(_ctx.$slots, "badge", { book: __props.book }, void 0, true)
             ]),
             _: 3
           }, 8, ["src"]),
-          _createVNode$5(_component_v_card_item, { class: "py-2 px-2" }, {
-            default: _withCtx$5(() => [
-              _createVNode$5(_component_v_card_title, {
+          _createVNode$6(_component_v_card_item, { class: "py-2 px-2" }, {
+            default: _withCtx$6(() => [
+              _createVNode$6(_component_v_card_title, {
                 class: "text-body-2 font-weight-bold line-clamp-2",
                 style: { "min-height": "40px" }
               }, {
-                default: _withCtx$5(() => [
-                  _createTextVNode$5(_toDisplayString$4(__props.book.title), 1)
+                default: _withCtx$6(() => [
+                  _createTextVNode$6(_toDisplayString$5(__props.book.title), 1)
                 ]),
                 _: 1
               }),
-              _createVNode$5(_component_v_card_subtitle, { class: "text-caption text-blue-accent-4 line-clamp-1 mt-1" }, {
-                default: _withCtx$5(() => [
-                  _createTextVNode$5(_toDisplayString$4(__props.book.author), 1)
+              _createVNode$6(_component_v_card_subtitle, { class: "text-caption text-blue-accent-4 line-clamp-1 mt-1" }, {
+                default: _withCtx$6(() => [
+                  _createTextVNode$6(_toDisplayString$5(__props.book.author), 1)
                 ]),
                 _: 1
               })
             ]),
             _: 1
           }),
-          _createVNode$5(_component_v_card_text, { class: "pb-1 px-2" }, {
-            default: _withCtx$5(() => [
-              _createVNode$5(_component_v_chip_group, {
+          _createVNode$6(_component_v_card_text, { class: "pb-1 px-2" }, {
+            default: _withCtx$6(() => [
+              _createVNode$6(_component_v_chip_group, {
                 column: "",
                 density: "compact"
               }, {
-                default: _withCtx$5(() => [
-                  __props.book.publisher ? (_openBlock$5(), _createBlock$5(_component_v_chip, {
+                default: _withCtx$6(() => [
+                  __props.book.publisher ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
                     key: 0,
                     size: "x-small",
                     variant: "tonal",
                     color: "info",
                     class: "mb-1"
                   }, {
-                    default: _withCtx$5(() => [
-                      _createTextVNode$5(_toDisplayString$4(__props.book.publisher), 1)
+                    default: _withCtx$6(() => [
+                      _createTextVNode$6(_toDisplayString$5(__props.book.publisher), 1)
                     ]),
                     _: 1
-                  })) : _createCommentVNode$4("", true),
-                  __props.book.tag ? (_openBlock$5(), _createBlock$5(_component_v_chip, {
+                  })) : _createCommentVNode$5("", true),
+                  __props.book.tag ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
                     key: 1,
                     size: "x-small",
                     variant: "tonal",
                     color: "success"
                   }, {
-                    default: _withCtx$5(() => [
-                      _createTextVNode$5(_toDisplayString$4(__props.book.tag), 1)
+                    default: _withCtx$6(() => [
+                      _createTextVNode$6(_toDisplayString$5(__props.book.tag), 1)
                     ]),
                     _: 1
-                  })) : _createCommentVNode$4("", true)
+                  })) : _createCommentVNode$5("", true)
                 ]),
                 _: 1
               })
             ]),
             _: 1
           }),
-          _createVNode$5(_component_v_card_actions, { class: "pb-2 px-2" }, {
-            default: _withCtx$5(() => [
+          _createVNode$6(_component_v_card_actions, { class: "pb-2 px-2" }, {
+            default: _withCtx$6(() => [
               _renderSlot$1(_ctx.$slots, "actions", { book: __props.book }, () => [
-                _createVNode$5(_component_v_btn, {
+                _createVNode$6(_component_v_btn, {
                   size: "x-small",
                   variant: "tonal",
                   color: "primary",
                   "prepend-icon": "mdi-information-outline",
                   onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("detail", __props.book.id))
                 }, {
-                  default: _withCtx$5(() => [..._cache[3] || (_cache[3] = [
-                    _createTextVNode$5(" 详情 ", -1)
+                  default: _withCtx$6(() => [..._cache[3] || (_cache[3] = [
+                    _createTextVNode$6(" 详情 ", -1)
                   ])]),
                   _: 1
                 }),
-                _createVNode$5(_component_v_spacer),
-                __props.showFavorite ? (_openBlock$5(), _createBlock$5(_component_v_btn, {
+                _createVNode$6(_component_v_spacer),
+                __props.showFavorite ? (_openBlock$6(), _createBlock$6(_component_v_btn, {
                   key: 0,
                   size: "x-small",
                   color: __props.isFavorited ? "red" : "grey",
                   variant: __props.isFavorited ? "flat" : "tonal",
                   icon: __props.isFavorited ? "mdi-heart" : "mdi-heart-outline",
                   onClick: _cache[1] || (_cache[1] = ($event) => _ctx.$emit("toggle-favorite", __props.book.id))
-                }, null, 8, ["color", "variant", "icon"])) : _createCommentVNode$4("", true),
-                _createVNode$5(_component_v_btn, {
+                }, null, 8, ["color", "variant", "icon"])) : _createCommentVNode$5("", true),
+                _createVNode$6(_component_v_btn, {
                   size: "x-small",
                   color: "success",
                   variant: "flat",
@@ -152,8 +152,8 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
                   loading: __props.isDownloading,
                   onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("download", __props.book.id))
                 }, {
-                  default: _withCtx$5(() => [..._cache[4] || (_cache[4] = [
-                    _createTextVNode$5(" 下载 ", -1)
+                  default: _withCtx$6(() => [..._cache[4] || (_cache[4] = [
+                    _createTextVNode$6(" 下载 ", -1)
                   ])]),
                   _: 1
                 }, 8, ["loading"])
@@ -168,12 +168,12 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
   }
 });
 
-const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-5553aa6b"]]);
+const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-5553aa6b"]]);
 
-const {defineComponent:_defineComponent$4} = await importShared('vue');
+const {defineComponent:_defineComponent$5} = await importShared('vue');
 
-const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,openBlock:_openBlock$4,createBlock:_createBlock$4,createCommentVNode:_createCommentVNode$3,renderList:_renderList$1,Fragment:_Fragment$1,createElementBlock:_createElementBlock$2,renderSlot:_renderSlot} = await importShared('vue');
-const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
+const {toDisplayString:_toDisplayString$4,createTextVNode:_createTextVNode$5,resolveComponent:_resolveComponent$5,withCtx:_withCtx$5,createVNode:_createVNode$5,openBlock:_openBlock$5,createBlock:_createBlock$5,createCommentVNode:_createCommentVNode$4,renderList:_renderList$2,Fragment:_Fragment$2,createElementBlock:_createElementBlock$3,renderSlot:_renderSlot} = await importShared('vue');
+const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
   __name: "BookGrid",
   props: {
     books: {},
@@ -189,40 +189,40 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   emits: ["detail", "toggle-favorite", "download", "refresh"],
   setup(__props) {
     return (_ctx, _cache) => {
-      const _component_v_icon = _resolveComponent$4("v-icon");
-      const _component_v_spacer = _resolveComponent$4("v-spacer");
-      const _component_v_chip = _resolveComponent$4("v-chip");
-      const _component_v_btn = _resolveComponent$4("v-btn");
-      const _component_v_card_title = _resolveComponent$4("v-card-title");
-      const _component_v_col = _resolveComponent$4("v-col");
-      const _component_v_row = _resolveComponent$4("v-row");
-      const _component_v_card_text = _resolveComponent$4("v-card-text");
-      const _component_v_card = _resolveComponent$4("v-card");
-      return _openBlock$4(), _createBlock$4(_component_v_card, { class: "elevation-4" }, {
-        default: _withCtx$4(() => [
-          _createVNode$4(_component_v_card_title, { class: "d-flex align-center py-3" }, {
-            default: _withCtx$4(() => [
-              _createVNode$4(_component_v_icon, {
+      const _component_v_icon = _resolveComponent$5("v-icon");
+      const _component_v_spacer = _resolveComponent$5("v-spacer");
+      const _component_v_chip = _resolveComponent$5("v-chip");
+      const _component_v_btn = _resolveComponent$5("v-btn");
+      const _component_v_card_title = _resolveComponent$5("v-card-title");
+      const _component_v_col = _resolveComponent$5("v-col");
+      const _component_v_row = _resolveComponent$5("v-row");
+      const _component_v_card_text = _resolveComponent$5("v-card-text");
+      const _component_v_card = _resolveComponent$5("v-card");
+      return _openBlock$5(), _createBlock$5(_component_v_card, { class: "elevation-4" }, {
+        default: _withCtx$5(() => [
+          _createVNode$5(_component_v_card_title, { class: "d-flex align-center py-3" }, {
+            default: _withCtx$5(() => [
+              _createVNode$5(_component_v_icon, {
                 start: "",
                 color: "primary"
               }, {
-                default: _withCtx$4(() => [
-                  _createTextVNode$4(_toDisplayString$3(__props.icon), 1)
+                default: _withCtx$5(() => [
+                  _createTextVNode$5(_toDisplayString$4(__props.icon), 1)
                 ]),
                 _: 1
               }),
-              _createTextVNode$4(" " + _toDisplayString$3(__props.title) + " ", 1),
-              _createVNode$4(_component_v_spacer),
-              _createVNode$4(_component_v_chip, {
+              _createTextVNode$5(" " + _toDisplayString$4(__props.title) + " ", 1),
+              _createVNode$5(_component_v_spacer),
+              _createVNode$5(_component_v_chip, {
                 color: "primary",
                 size: "small"
               }, {
-                default: _withCtx$4(() => [
-                  _createTextVNode$4(_toDisplayString$3(__props.books.length) + " 本", 1)
+                default: _withCtx$5(() => [
+                  _createTextVNode$5(_toDisplayString$4(__props.books.length) + " 本", 1)
                 ]),
                 _: 1
               }),
-              __props.showRefresh ? (_openBlock$4(), _createBlock$4(_component_v_btn, {
+              __props.showRefresh ? (_openBlock$5(), _createBlock$5(_component_v_btn, {
                 key: 0,
                 size: "small",
                 variant: "text",
@@ -230,16 +230,16 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                 onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("refresh")),
                 loading: __props.loading,
                 class: "ml-2"
-              }, null, 8, ["loading"])) : _createCommentVNode$3("", true)
+              }, null, 8, ["loading"])) : _createCommentVNode$4("", true)
             ]),
             _: 1
           }),
-          _createVNode$4(_component_v_card_text, { class: "pa-3" }, {
-            default: _withCtx$4(() => [
-              _createVNode$4(_component_v_row, { dense: "" }, {
-                default: _withCtx$4(() => [
-                  (_openBlock$4(true), _createElementBlock$2(_Fragment$1, null, _renderList$1(__props.books, (book) => {
-                    return _openBlock$4(), _createBlock$4(_component_v_col, {
+          _createVNode$5(_component_v_card_text, { class: "pa-3" }, {
+            default: _withCtx$5(() => [
+              _createVNode$5(_component_v_row, { dense: "" }, {
+                default: _withCtx$5(() => [
+                  (_openBlock$5(true), _createElementBlock$3(_Fragment$2, null, _renderList$2(__props.books, (book) => {
+                    return _openBlock$5(), _createBlock$5(_component_v_col, {
                       key: book.id,
                       cols: "6",
                       sm: "4",
@@ -247,8 +247,8 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                       lg: "2",
                       xl: "2"
                     }, {
-                      default: _withCtx$4(() => [
-                        _createVNode$4(BookCard, {
+                      default: _withCtx$5(() => [
+                        _createVNode$5(BookCard, {
                           book,
                           "cover-url": __props.getCoverUrl(book),
                           "is-favorited": __props.favoriteBookIds.has(book.id),
@@ -258,10 +258,10 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                           onToggleFavorite: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("toggle-favorite", $event)),
                           onDownload: _cache[3] || (_cache[3] = ($event) => _ctx.$emit("download", $event))
                         }, {
-                          badge: _withCtx$4(({ book: book2 }) => [
+                          badge: _withCtx$5(({ book: book2 }) => [
                             _renderSlot(_ctx.$slots, "badge", { book: book2 })
                           ]),
-                          actions: _withCtx$4(({ book: book2 }) => [
+                          actions: _withCtx$5(({ book: book2 }) => [
                             _renderSlot(_ctx.$slots, "actions", { book: book2 })
                           ]),
                           _: 2
@@ -283,15 +283,15 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   }
 });
 
-const {defineComponent:_defineComponent$3} = await importShared('vue');
+const {defineComponent:_defineComponent$4} = await importShared('vue');
 
-const {toDisplayString:_toDisplayString$2,createTextVNode:_createTextVNode$3,resolveComponent:_resolveComponent$3,withCtx:_withCtx$3,createVNode:_createVNode$3,createElementVNode:_createElementVNode$3,renderList:_renderList,Fragment:_Fragment,openBlock:_openBlock$3,createElementBlock:_createElementBlock$1,createBlock:_createBlock$3,createCommentVNode:_createCommentVNode$2} = await importShared('vue');
+const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,createElementVNode:_createElementVNode$4,renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$4,createElementBlock:_createElementBlock$2,createBlock:_createBlock$4,createCommentVNode:_createCommentVNode$3} = await importShared('vue');
 
-const _hoisted_1$2 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_2$1 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_3$1 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_4$1 = { class: "text-body-2 font-weight-medium" };
-const _hoisted_5$1 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_1$3 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_2$2 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_3$2 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_4$2 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_5$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_6 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_7 = {
   key: 0,
@@ -303,7 +303,7 @@ const _hoisted_8 = {
 };
 const {computed: computed$1} = await importShared('vue');
 
-const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
+const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   __name: "BookDetailDialog",
   props: {
     modelValue: { type: Boolean },
@@ -332,50 +332,50 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
       return `${size.toFixed(2)} ${units[unitIndex]}`;
     };
     return (_ctx, _cache) => {
-      const _component_v_toolbar_title = _resolveComponent$3("v-toolbar-title");
-      const _component_v_spacer = _resolveComponent$3("v-spacer");
-      const _component_v_btn = _resolveComponent$3("v-btn");
-      const _component_v_toolbar = _resolveComponent$3("v-toolbar");
-      const _component_v_progress_circular = _resolveComponent$3("v-progress-circular");
-      const _component_v_row = _resolveComponent$3("v-row");
-      const _component_v_img = _resolveComponent$3("v-img");
-      const _component_v_card_actions = _resolveComponent$3("v-card-actions");
-      const _component_v_card = _resolveComponent$3("v-card");
-      const _component_v_col = _resolveComponent$3("v-col");
-      const _component_v_card_title = _resolveComponent$3("v-card-title");
-      const _component_v_icon = _resolveComponent$3("v-icon");
-      const _component_v_card_subtitle = _resolveComponent$3("v-card-subtitle");
-      const _component_v_divider = _resolveComponent$3("v-divider");
-      const _component_v_chip = _resolveComponent$3("v-chip");
-      const _component_v_chip_group = _resolveComponent$3("v-chip-group");
-      const _component_v_card_text = _resolveComponent$3("v-card-text");
-      const _component_v_dialog = _resolveComponent$3("v-dialog");
-      return _openBlock$3(), _createBlock$3(_component_v_dialog, {
+      const _component_v_toolbar_title = _resolveComponent$4("v-toolbar-title");
+      const _component_v_spacer = _resolveComponent$4("v-spacer");
+      const _component_v_btn = _resolveComponent$4("v-btn");
+      const _component_v_toolbar = _resolveComponent$4("v-toolbar");
+      const _component_v_progress_circular = _resolveComponent$4("v-progress-circular");
+      const _component_v_row = _resolveComponent$4("v-row");
+      const _component_v_img = _resolveComponent$4("v-img");
+      const _component_v_card_actions = _resolveComponent$4("v-card-actions");
+      const _component_v_card = _resolveComponent$4("v-card");
+      const _component_v_col = _resolveComponent$4("v-col");
+      const _component_v_card_title = _resolveComponent$4("v-card-title");
+      const _component_v_icon = _resolveComponent$4("v-icon");
+      const _component_v_card_subtitle = _resolveComponent$4("v-card-subtitle");
+      const _component_v_divider = _resolveComponent$4("v-divider");
+      const _component_v_chip = _resolveComponent$4("v-chip");
+      const _component_v_chip_group = _resolveComponent$4("v-chip-group");
+      const _component_v_card_text = _resolveComponent$4("v-card-text");
+      const _component_v_dialog = _resolveComponent$4("v-dialog");
+      return _openBlock$4(), _createBlock$4(_component_v_dialog, {
         modelValue: dialogVisible.value,
         "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => dialogVisible.value = $event),
         "max-width": "900",
         transition: "dialog-bottom-transition"
       }, {
-        default: _withCtx$3(() => [
-          __props.book ? (_openBlock$3(), _createBlock$3(_component_v_card, {
+        default: _withCtx$4(() => [
+          __props.book ? (_openBlock$4(), _createBlock$4(_component_v_card, {
             key: 0,
             class: "rounded-xl overflow-hidden"
           }, {
-            default: _withCtx$3(() => [
-              _createVNode$3(_component_v_toolbar, {
+            default: _withCtx$4(() => [
+              _createVNode$4(_component_v_toolbar, {
                 density: "compact",
                 color: "primary",
                 dark: ""
               }, {
-                default: _withCtx$3(() => [
-                  _createVNode$3(_component_v_toolbar_title, { class: "text-h6 font-weight-bold" }, {
-                    default: _withCtx$3(() => [
-                      _createTextVNode$3(_toDisplayString$2(__props.book.title), 1)
+                default: _withCtx$4(() => [
+                  _createVNode$4(_component_v_toolbar_title, { class: "text-h6 font-weight-bold" }, {
+                    default: _withCtx$4(() => [
+                      _createTextVNode$4(_toDisplayString$3(__props.book.title), 1)
                     ]),
                     _: 1
                   }),
-                  _createVNode$3(_component_v_spacer),
-                  _createVNode$3(_component_v_btn, {
+                  _createVNode$4(_component_v_spacer),
+                  _createVNode$4(_component_v_btn, {
                     icon: "mdi-close",
                     onClick: _cache[0] || (_cache[0] = ($event) => dialogVisible.value = false),
                     variant: "text"
@@ -383,34 +383,34 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                 ]),
                 _: 1
               }),
-              _createVNode$3(_component_v_card_text, { class: "pa-6" }, {
-                default: _withCtx$3(() => [
-                  _createVNode$3(_component_v_row, null, {
-                    default: _withCtx$3(() => [
-                      _createVNode$3(_component_v_col, {
+              _createVNode$4(_component_v_card_text, { class: "pa-6" }, {
+                default: _withCtx$4(() => [
+                  _createVNode$4(_component_v_row, null, {
+                    default: _withCtx$4(() => [
+                      _createVNode$4(_component_v_col, {
                         cols: "12",
                         md: "4"
                       }, {
-                        default: _withCtx$3(() => [
-                          _createVNode$3(_component_v_card, {
+                        default: _withCtx$4(() => [
+                          _createVNode$4(_component_v_card, {
                             flat: "",
                             class: "elevation-3 rounded-xl overflow-hidden"
                           }, {
-                            default: _withCtx$3(() => [
-                              _createVNode$3(_component_v_img, {
+                            default: _withCtx$4(() => [
+                              _createVNode$4(_component_v_img, {
                                 src: __props.coverUrl,
                                 height: "400",
                                 cover: "",
                                 class: "bg-grey-lighten-3"
                               }, {
-                                placeholder: _withCtx$3(() => [
-                                  _createVNode$3(_component_v_row, {
+                                placeholder: _withCtx$4(() => [
+                                  _createVNode$4(_component_v_row, {
                                     class: "fill-height ma-0",
                                     align: "center",
                                     justify: "center"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _createVNode$3(_component_v_progress_circular, {
+                                    default: _withCtx$4(() => [
+                                      _createVNode$4(_component_v_progress_circular, {
                                         indeterminate: "",
                                         color: "primary"
                                       })
@@ -420,13 +420,13 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                                 ]),
                                 _: 1
                               }, 8, ["src"]),
-                              _createVNode$3(_component_v_card_actions, {
+                              _createVNode$4(_component_v_card_actions, {
                                 class: "position-absolute bottom-0 w-100",
                                 style: { "background": "linear-gradient(to top, rgba(0,0,0,0.7), transparent)" }
                               }, {
-                                default: _withCtx$3(() => [
-                                  _createVNode$3(_component_v_spacer),
-                                  _createVNode$3(_component_v_btn, {
+                                default: _withCtx$4(() => [
+                                  _createVNode$4(_component_v_spacer),
+                                  _createVNode$4(_component_v_btn, {
                                     size: "large",
                                     color: __props.isFavorited ? "red" : "white",
                                     variant: __props.isFavorited ? "flat" : "outlined",
@@ -443,168 +443,168 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                         ]),
                         _: 1
                       }),
-                      _createVNode$3(_component_v_col, {
+                      _createVNode$4(_component_v_col, {
                         cols: "12",
                         md: "8"
                       }, {
-                        default: _withCtx$3(() => [
-                          _createVNode$3(_component_v_card, {
+                        default: _withCtx$4(() => [
+                          _createVNode$4(_component_v_card, {
                             flat: "",
                             class: "mb-4"
                           }, {
-                            default: _withCtx$3(() => [
-                              _createVNode$3(_component_v_card_title, { class: "text-h5 font-weight-bold mb-2" }, {
-                                default: _withCtx$3(() => [
-                                  _createTextVNode$3(_toDisplayString$2(__props.book.title), 1)
+                            default: _withCtx$4(() => [
+                              _createVNode$4(_component_v_card_title, { class: "text-h5 font-weight-bold mb-2" }, {
+                                default: _withCtx$4(() => [
+                                  _createTextVNode$4(_toDisplayString$3(__props.book.title), 1)
                                 ]),
                                 _: 1
                               }),
-                              _createVNode$3(_component_v_card_subtitle, { class: "text-body-1 text-blue-accent-4 mb-3" }, {
-                                default: _withCtx$3(() => [
-                                  _createVNode$3(_component_v_icon, {
+                              _createVNode$4(_component_v_card_subtitle, { class: "text-body-1 text-blue-accent-4 mb-3" }, {
+                                default: _withCtx$4(() => [
+                                  _createVNode$4(_component_v_icon, {
                                     start: "",
                                     size: "small"
                                   }, {
-                                    default: _withCtx$3(() => [..._cache[4] || (_cache[4] = [
-                                      _createTextVNode$3("mdi-account", -1)
+                                    default: _withCtx$4(() => [..._cache[4] || (_cache[4] = [
+                                      _createTextVNode$4("mdi-account", -1)
                                     ])]),
                                     _: 1
                                   }),
-                                  _createTextVNode$3(" " + _toDisplayString$2(__props.book.author || "未知作者"), 1)
+                                  _createTextVNode$4(" " + _toDisplayString$3(__props.book.author || "未知作者"), 1)
                                 ]),
                                 _: 1
                               }),
-                              _createVNode$3(_component_v_divider, { class: "mb-3" }),
-                              _createVNode$3(_component_v_row, { dense: "" }, {
-                                default: _withCtx$3(() => [
-                                  _createVNode$3(_component_v_col, {
+                              _createVNode$4(_component_v_divider, { class: "mb-3" }),
+                              _createVNode$4(_component_v_row, { dense: "" }, {
+                                default: _withCtx$4(() => [
+                                  _createVNode$4(_component_v_col, {
                                     cols: "6",
                                     sm: "4"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _cache[6] || (_cache[6] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版社", -1)),
-                                      _createElementVNode$3("div", _hoisted_1$2, [
-                                        _createVNode$3(_component_v_icon, {
+                                    default: _withCtx$4(() => [
+                                      _cache[6] || (_cache[6] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版社", -1)),
+                                      _createElementVNode$4("div", _hoisted_1$3, [
+                                        _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "info"
                                         }, {
-                                          default: _withCtx$3(() => [..._cache[5] || (_cache[5] = [
-                                            _createTextVNode$3("mdi-bookshelf", -1)
+                                          default: _withCtx$4(() => [..._cache[5] || (_cache[5] = [
+                                            _createTextVNode$4("mdi-bookshelf", -1)
                                           ])]),
                                           _: 1
                                         }),
-                                        _createTextVNode$3(" " + _toDisplayString$2(__props.book.publisher || "未知"), 1)
+                                        _createTextVNode$4(" " + _toDisplayString$3(__props.book.publisher || "未知"), 1)
                                       ])
                                     ]),
                                     _: 1
                                   }),
-                                  _createVNode$3(_component_v_col, {
+                                  _createVNode$4(_component_v_col, {
                                     cols: "6",
                                     sm: "4"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _cache[8] || (_cache[8] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版日期", -1)),
-                                      _createElementVNode$3("div", _hoisted_2$1, [
-                                        _createVNode$3(_component_v_icon, {
+                                    default: _withCtx$4(() => [
+                                      _cache[8] || (_cache[8] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版日期", -1)),
+                                      _createElementVNode$4("div", _hoisted_2$2, [
+                                        _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "success"
                                         }, {
-                                          default: _withCtx$3(() => [..._cache[7] || (_cache[7] = [
-                                            _createTextVNode$3("mdi-calendar", -1)
+                                          default: _withCtx$4(() => [..._cache[7] || (_cache[7] = [
+                                            _createTextVNode$4("mdi-calendar", -1)
                                           ])]),
                                           _: 1
                                         }),
-                                        _createTextVNode$3(" " + _toDisplayString$2(__props.book.pubdate || "未知"), 1)
+                                        _createTextVNode$4(" " + _toDisplayString$3(__props.book.pubdate || "未知"), 1)
                                       ])
                                     ]),
                                     _: 1
                                   }),
-                                  _createVNode$3(_component_v_col, {
+                                  _createVNode$4(_component_v_col, {
                                     cols: "6",
                                     sm: "4"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _cache[10] || (_cache[10] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-1" }, "语言", -1)),
-                                      _createElementVNode$3("div", _hoisted_3$1, [
-                                        _createVNode$3(_component_v_icon, {
+                                    default: _withCtx$4(() => [
+                                      _cache[10] || (_cache[10] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "语言", -1)),
+                                      _createElementVNode$4("div", _hoisted_3$2, [
+                                        _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "warning"
                                         }, {
-                                          default: _withCtx$3(() => [..._cache[9] || (_cache[9] = [
-                                            _createTextVNode$3("mdi-translate", -1)
+                                          default: _withCtx$4(() => [..._cache[9] || (_cache[9] = [
+                                            _createTextVNode$4("mdi-translate", -1)
                                           ])]),
                                           _: 1
                                         }),
-                                        _createTextVNode$3(" " + _toDisplayString$2(__props.book.language || "中文"), 1)
+                                        _createTextVNode$4(" " + _toDisplayString$3(__props.book.language || "中文"), 1)
                                       ])
                                     ]),
                                     _: 1
                                   }),
-                                  _createVNode$3(_component_v_col, {
+                                  _createVNode$4(_component_v_col, {
                                     cols: "6",
                                     sm: "4"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _cache[12] || (_cache[12] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件格式", -1)),
-                                      _createElementVNode$3("div", _hoisted_4$1, [
-                                        _createVNode$3(_component_v_icon, {
+                                    default: _withCtx$4(() => [
+                                      _cache[12] || (_cache[12] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件格式", -1)),
+                                      _createElementVNode$4("div", _hoisted_4$2, [
+                                        _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "purple"
                                         }, {
-                                          default: _withCtx$3(() => [..._cache[11] || (_cache[11] = [
-                                            _createTextVNode$3("mdi-file-document", -1)
+                                          default: _withCtx$4(() => [..._cache[11] || (_cache[11] = [
+                                            _createTextVNode$4("mdi-file-document", -1)
                                           ])]),
                                           _: 1
                                         }),
-                                        _createTextVNode$3(" " + _toDisplayString$2(__props.book.format || "EPUB"), 1)
+                                        _createTextVNode$4(" " + _toDisplayString$3(__props.book.format || "EPUB"), 1)
                                       ])
                                     ]),
                                     _: 1
                                   }),
-                                  _createVNode$3(_component_v_col, {
+                                  _createVNode$4(_component_v_col, {
                                     cols: "6",
                                     sm: "4"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _cache[14] || (_cache[14] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件大小", -1)),
-                                      _createElementVNode$3("div", _hoisted_5$1, [
-                                        _createVNode$3(_component_v_icon, {
+                                    default: _withCtx$4(() => [
+                                      _cache[14] || (_cache[14] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "文件大小", -1)),
+                                      _createElementVNode$4("div", _hoisted_5$2, [
+                                        _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "teal"
                                         }, {
-                                          default: _withCtx$3(() => [..._cache[13] || (_cache[13] = [
-                                            _createTextVNode$3("mdi-database", -1)
+                                          default: _withCtx$4(() => [..._cache[13] || (_cache[13] = [
+                                            _createTextVNode$4("mdi-database", -1)
                                           ])]),
                                           _: 1
                                         }),
-                                        _createTextVNode$3(" " + _toDisplayString$2(__props.book.size ? formatFileSize(__props.book.size) : "未知"), 1)
+                                        _createTextVNode$4(" " + _toDisplayString$3(__props.book.size ? formatFileSize(__props.book.size) : "未知"), 1)
                                       ])
                                     ]),
                                     _: 1
                                   }),
-                                  _createVNode$3(_component_v_col, {
+                                  _createVNode$4(_component_v_col, {
                                     cols: "6",
                                     sm: "4"
                                   }, {
-                                    default: _withCtx$3(() => [
-                                      _cache[16] || (_cache[16] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-1" }, "ISBN", -1)),
-                                      _createElementVNode$3("div", _hoisted_6, [
-                                        _createVNode$3(_component_v_icon, {
+                                    default: _withCtx$4(() => [
+                                      _cache[16] || (_cache[16] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "ISBN", -1)),
+                                      _createElementVNode$4("div", _hoisted_6, [
+                                        _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
                                           color: "deep-purple"
                                         }, {
-                                          default: _withCtx$3(() => [..._cache[15] || (_cache[15] = [
-                                            _createTextVNode$3("mdi-barcode", -1)
+                                          default: _withCtx$4(() => [..._cache[15] || (_cache[15] = [
+                                            _createTextVNode$4("mdi-barcode", -1)
                                           ])]),
                                           _: 1
                                         }),
-                                        _createTextVNode$3(" " + _toDisplayString$2(__props.book.isbn || "无"), 1)
+                                        _createTextVNode$4(" " + _toDisplayString$3(__props.book.isbn || "无"), 1)
                                       ])
                                     ]),
                                     _: 1
@@ -612,20 +612,20 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                                 ]),
                                 _: 1
                               }),
-                              __props.book.tags || __props.book.tag ? (_openBlock$3(), _createElementBlock$1("div", _hoisted_7, [
-                                _cache[17] || (_cache[17] = _createElementVNode$3("div", { class: "text-caption text-medium-emphasis mb-2" }, "标签", -1)),
-                                _createVNode$3(_component_v_chip_group, { column: "" }, {
-                                  default: _withCtx$3(() => [
-                                    (_openBlock$3(true), _createElementBlock$1(_Fragment, null, _renderList(__props.book.tags || [__props.book.tag], (tag) => {
-                                      return _openBlock$3(), _createBlock$3(_component_v_chip, {
+                              __props.book.tags || __props.book.tag ? (_openBlock$4(), _createElementBlock$2("div", _hoisted_7, [
+                                _cache[17] || (_cache[17] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-2" }, "标签", -1)),
+                                _createVNode$4(_component_v_chip_group, { column: "" }, {
+                                  default: _withCtx$4(() => [
+                                    (_openBlock$4(true), _createElementBlock$2(_Fragment$1, null, _renderList$1(__props.book.tags || [__props.book.tag], (tag) => {
+                                      return _openBlock$4(), _createBlock$4(_component_v_chip, {
                                         key: tag,
                                         size: "small",
                                         variant: "tonal",
                                         color: "primary",
                                         "prepend-icon": "mdi-tag"
                                       }, {
-                                        default: _withCtx$3(() => [
-                                          _createTextVNode$3(_toDisplayString$2(tag), 1)
+                                        default: _withCtx$4(() => [
+                                          _createTextVNode$4(_toDisplayString$3(tag), 1)
                                         ]),
                                         _: 2
                                       }, 1024);
@@ -633,46 +633,46 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                                   ]),
                                   _: 1
                                 })
-                              ])) : _createCommentVNode$2("", true)
+                              ])) : _createCommentVNode$3("", true)
                             ]),
                             _: 1
                           }),
-                          __props.book.comments ? (_openBlock$3(), _createBlock$3(_component_v_card, {
+                          __props.book.comments ? (_openBlock$4(), _createBlock$4(_component_v_card, {
                             key: 0,
                             flat: "",
                             class: "mb-4"
                           }, {
-                            default: _withCtx$3(() => [
-                              _createVNode$3(_component_v_card_title, { class: "text-h6 font-weight-bold d-flex align-center py-2" }, {
-                                default: _withCtx$3(() => [
-                                  _createVNode$3(_component_v_icon, {
+                            default: _withCtx$4(() => [
+                              _createVNode$4(_component_v_card_title, { class: "text-h6 font-weight-bold d-flex align-center py-2" }, {
+                                default: _withCtx$4(() => [
+                                  _createVNode$4(_component_v_icon, {
                                     start: "",
                                     color: "primary"
                                   }, {
-                                    default: _withCtx$3(() => [..._cache[18] || (_cache[18] = [
-                                      _createTextVNode$3("mdi-text-box-outline", -1)
+                                    default: _withCtx$4(() => [..._cache[18] || (_cache[18] = [
+                                      _createTextVNode$4("mdi-text-box-outline", -1)
                                     ])]),
                                     _: 1
                                   }),
-                                  _cache[19] || (_cache[19] = _createTextVNode$3(" 内容简介 ", -1))
+                                  _cache[19] || (_cache[19] = _createTextVNode$4(" 内容简介 ", -1))
                                 ]),
                                 _: 1
                               }),
-                              _createVNode$3(_component_v_card_text, { class: "text-body-2 text-medium-emphasis pt-0" }, {
-                                default: _withCtx$3(() => [
-                                  _createElementVNode$3("div", _hoisted_8, _toDisplayString$2(__props.book.comments), 1)
+                              _createVNode$4(_component_v_card_text, { class: "text-body-2 text-medium-emphasis pt-0" }, {
+                                default: _withCtx$4(() => [
+                                  _createElementVNode$4("div", _hoisted_8, _toDisplayString$3(__props.book.comments), 1)
                                 ]),
                                 _: 1
                               })
                             ]),
                             _: 1
-                          })) : _createCommentVNode$2("", true),
-                          _createVNode$3(_component_v_card, { flat: "" }, {
-                            default: _withCtx$3(() => [
-                              _createVNode$3(_component_v_card_actions, { class: "px-0" }, {
-                                default: _withCtx$3(() => [
-                                  _createVNode$3(_component_v_spacer),
-                                  _createVNode$3(_component_v_btn, {
+                          })) : _createCommentVNode$3("", true),
+                          _createVNode$4(_component_v_card, { flat: "" }, {
+                            default: _withCtx$4(() => [
+                              _createVNode$4(_component_v_card_actions, { class: "px-0" }, {
+                                default: _withCtx$4(() => [
+                                  _createVNode$4(_component_v_spacer),
+                                  _createVNode$4(_component_v_btn, {
                                     color: "success",
                                     size: "large",
                                     variant: "elevated",
@@ -681,8 +681,8 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                                     onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("download", __props.book.id)),
                                     class: "elevation-2"
                                   }, {
-                                    default: _withCtx$3(() => [..._cache[20] || (_cache[20] = [
-                                      _createTextVNode$3(" 下载图书 ", -1)
+                                    default: _withCtx$4(() => [..._cache[20] || (_cache[20] = [
+                                      _createTextVNode$4(" 下载图书 ", -1)
                                     ])]),
                                     _: 1
                                   }, 8, ["loading"])
@@ -703,7 +703,7 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
               })
             ]),
             _: 1
-          })) : _createCommentVNode$2("", true)
+          })) : _createCommentVNode$3("", true)
         ]),
         _: 1
       }, 8, ["modelValue"]);
@@ -711,21 +711,21 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
   }
 });
 
-const BookDetailDialog = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-68b194f6"]]);
+const BookDetailDialog = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-68b194f6"]]);
 
-const {defineComponent:_defineComponent$2} = await importShared('vue');
+const {defineComponent:_defineComponent$3} = await importShared('vue');
 
-const {createTextVNode:_createTextVNode$2,resolveComponent:_resolveComponent$2,withCtx:_withCtx$2,createVNode:_createVNode$2,toDisplayString:_toDisplayString$1,createElementVNode:_createElementVNode$2,openBlock:_openBlock$2,createElementBlock:_createElementBlock,createCommentVNode:_createCommentVNode$1,createBlock:_createBlock$2} = await importShared('vue');
+const {createTextVNode:_createTextVNode$3,resolveComponent:_resolveComponent$3,withCtx:_withCtx$3,createVNode:_createVNode$3,toDisplayString:_toDisplayString$2,createElementVNode:_createElementVNode$3,openBlock:_openBlock$3,createElementBlock:_createElementBlock$1,createCommentVNode:_createCommentVNode$2,createBlock:_createBlock$3} = await importShared('vue');
 
-const _hoisted_1$1 = {
+const _hoisted_1$2 = {
   key: 0,
   class: "mt-3"
 };
-const _hoisted_2 = { class: "text-h5 font-weight-bold text-grey-darken-2" };
-const _hoisted_3 = { class: "text-h5 font-weight-bold" };
-const _hoisted_4 = { class: "text-h5 font-weight-bold" };
-const _hoisted_5 = { class: "text-h5 font-weight-bold" };
-const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
+const _hoisted_2$1 = { class: "text-h5 font-weight-bold text-grey-darken-2" };
+const _hoisted_3$1 = { class: "text-h5 font-weight-bold" };
+const _hoisted_4$1 = { class: "text-h5 font-weight-bold" };
+const _hoisted_5$1 = { class: "text-h5 font-weight-bold" };
+const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
   __name: "ScanPanel",
   props: {
     scanning: { type: Boolean },
@@ -734,164 +734,164 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
   emits: ["scan", "view-recent"],
   setup(__props) {
     return (_ctx, _cache) => {
-      const _component_v_icon = _resolveComponent$2("v-icon");
-      const _component_v_card_title = _resolveComponent$2("v-card-title");
-      const _component_v_alert = _resolveComponent$2("v-alert");
-      const _component_v_stepper = _resolveComponent$2("v-stepper");
-      const _component_v_divider = _resolveComponent$2("v-divider");
-      const _component_v_card = _resolveComponent$2("v-card");
-      const _component_v_col = _resolveComponent$2("v-col");
-      const _component_v_row = _resolveComponent$2("v-row");
-      const _component_v_card_text = _resolveComponent$2("v-card-text");
-      const _component_v_btn = _resolveComponent$2("v-btn");
-      return _openBlock$2(), _createElementBlock("div", null, [
-        __props.scanning ? (_openBlock$2(), _createBlock$2(_component_v_card, {
+      const _component_v_icon = _resolveComponent$3("v-icon");
+      const _component_v_card_title = _resolveComponent$3("v-card-title");
+      const _component_v_alert = _resolveComponent$3("v-alert");
+      const _component_v_stepper = _resolveComponent$3("v-stepper");
+      const _component_v_divider = _resolveComponent$3("v-divider");
+      const _component_v_card = _resolveComponent$3("v-card");
+      const _component_v_col = _resolveComponent$3("v-col");
+      const _component_v_row = _resolveComponent$3("v-row");
+      const _component_v_card_text = _resolveComponent$3("v-card-text");
+      const _component_v_btn = _resolveComponent$3("v-btn");
+      return _openBlock$3(), _createElementBlock$1("div", null, [
+        __props.scanning ? (_openBlock$3(), _createBlock$3(_component_v_card, {
           key: 0,
           class: "mb-6 elevation-4"
         }, {
-          default: _withCtx$2(() => [
-            _createVNode$2(_component_v_card_title, { class: "text-subtitle-1 py-3" }, {
-              default: _withCtx$2(() => [
-                _createVNode$2(_component_v_icon, {
+          default: _withCtx$3(() => [
+            _createVNode$3(_component_v_card_title, { class: "text-subtitle-1 py-3" }, {
+              default: _withCtx$3(() => [
+                _createVNode$3(_component_v_icon, {
                   start: "",
                   color: "primary",
                   class: "animate-spin"
                 }, {
-                  default: _withCtx$2(() => [..._cache[2] || (_cache[2] = [
-                    _createTextVNode$2("mdi-loading", -1)
+                  default: _withCtx$3(() => [..._cache[2] || (_cache[2] = [
+                    _createTextVNode$3("mdi-loading", -1)
                   ])]),
                   _: 1
                 }),
-                _createTextVNode$2(" " + _toDisplayString$1(__props.progress.stepName), 1)
+                _createTextVNode$3(" " + _toDisplayString$2(__props.progress.stepName), 1)
               ]),
               _: 1
             }),
-            _createVNode$2(_component_v_card_text, { class: "pa-5" }, {
-              default: _withCtx$2(() => [
-                _createVNode$2(_component_v_stepper, {
+            _createVNode$3(_component_v_card_text, { class: "pa-5" }, {
+              default: _withCtx$3(() => [
+                _createVNode$3(_component_v_stepper, {
                   "model-value": __props.progress.step,
                   "alt-labels": "",
                   class: "elevation-0"
                 }, {
-                  "item.1": _withCtx$2(() => [
-                    _createVNode$2(_component_v_alert, {
+                  "item.1": _withCtx$3(() => [
+                    _createVNode$3(_component_v_alert, {
                       type: "info",
                       variant: "tonal"
                     }, {
-                      default: _withCtx$2(() => [
-                        _createTextVNode$2(_toDisplayString$1(__props.progress.message), 1)
+                      default: _withCtx$3(() => [
+                        _createTextVNode$3(_toDisplayString$2(__props.progress.message), 1)
                       ]),
                       _: 1
                     })
                   ]),
-                  "item.2": _withCtx$2(() => [
-                    _createVNode$2(_component_v_alert, {
+                  "item.2": _withCtx$3(() => [
+                    _createVNode$3(_component_v_alert, {
                       type: "info",
                       variant: "tonal"
                     }, {
-                      default: _withCtx$2(() => [
-                        _createTextVNode$2(_toDisplayString$1(__props.progress.message), 1)
+                      default: _withCtx$3(() => [
+                        _createTextVNode$3(_toDisplayString$2(__props.progress.message), 1)
                       ]),
                       _: 1
                     })
                   ]),
-                  "item.3": _withCtx$2(() => [
-                    _createVNode$2(_component_v_alert, {
+                  "item.3": _withCtx$3(() => [
+                    _createVNode$3(_component_v_alert, {
                       type: "success",
                       variant: "tonal"
                     }, {
-                      default: _withCtx$2(() => [
-                        _createTextVNode$2(_toDisplayString$1(__props.progress.message), 1)
+                      default: _withCtx$3(() => [
+                        _createTextVNode$3(_toDisplayString$2(__props.progress.message), 1)
                       ]),
                       _: 1
                     })
                   ]),
-                  "item.4": _withCtx$2(() => [
-                    _createVNode$2(_component_v_alert, {
+                  "item.4": _withCtx$3(() => [
+                    _createVNode$3(_component_v_alert, {
                       type: "success",
                       variant: "tonal"
                     }, {
-                      default: _withCtx$2(() => [
-                        _createTextVNode$2(_toDisplayString$1(__props.progress.message), 1)
+                      default: _withCtx$3(() => [
+                        _createTextVNode$3(_toDisplayString$2(__props.progress.message), 1)
                       ]),
                       _: 1
                     })
                   ]),
                   _: 1
                 }, 8, ["model-value"]),
-                _createVNode$2(_component_v_divider, { class: "my-4" }),
-                __props.progress.details.totalFiles !== void 0 ? (_openBlock$2(), _createElementBlock("div", _hoisted_1$1, [
-                  _createVNode$2(_component_v_row, null, {
-                    default: _withCtx$2(() => [
-                      _createVNode$2(_component_v_col, {
+                _createVNode$3(_component_v_divider, { class: "my-4" }),
+                __props.progress.details.totalFiles !== void 0 ? (_openBlock$3(), _createElementBlock$1("div", _hoisted_1$2, [
+                  _createVNode$3(_component_v_row, null, {
+                    default: _withCtx$3(() => [
+                      _createVNode$3(_component_v_col, {
                         cols: "6",
                         md: "3"
                       }, {
-                        default: _withCtx$2(() => [
-                          _createVNode$2(_component_v_card, {
+                        default: _withCtx$3(() => [
+                          _createVNode$3(_component_v_card, {
                             variant: "outlined",
                             class: "text-center py-3 rounded-xl"
                           }, {
-                            default: _withCtx$2(() => [
-                              _createElementVNode$2("div", _hoisted_2, _toDisplayString$1(__props.progress.details.totalFiles), 1),
-                              _cache[3] || (_cache[3] = _createElementVNode$2("div", { class: "text-caption text-grey mt-1" }, "总文件数", -1))
+                            default: _withCtx$3(() => [
+                              _createElementVNode$3("div", _hoisted_2$1, _toDisplayString$2(__props.progress.details.totalFiles), 1),
+                              _cache[3] || (_cache[3] = _createElementVNode$3("div", { class: "text-caption text-grey mt-1" }, "总文件数", -1))
                             ]),
                             _: 1
                           })
                         ]),
                         _: 1
                       }),
-                      _createVNode$2(_component_v_col, {
+                      _createVNode$3(_component_v_col, {
                         cols: "6",
                         md: "3"
                       }, {
-                        default: _withCtx$2(() => [
-                          _createVNode$2(_component_v_card, {
+                        default: _withCtx$3(() => [
+                          _createVNode$3(_component_v_card, {
                             variant: "outlined",
                             class: "text-center py-3 rounded-xl",
                             color: "info"
                           }, {
-                            default: _withCtx$2(() => [
-                              _createElementVNode$2("div", _hoisted_3, _toDisplayString$1(__props.progress.details.newFiles || 0), 1),
-                              _cache[4] || (_cache[4] = _createElementVNode$2("div", { class: "text-caption mt-1" }, "新增文件", -1))
+                            default: _withCtx$3(() => [
+                              _createElementVNode$3("div", _hoisted_3$1, _toDisplayString$2(__props.progress.details.newFiles || 0), 1),
+                              _cache[4] || (_cache[4] = _createElementVNode$3("div", { class: "text-caption mt-1" }, "新增文件", -1))
                             ]),
                             _: 1
                           })
                         ]),
                         _: 1
                       }),
-                      _createVNode$2(_component_v_col, {
+                      _createVNode$3(_component_v_col, {
                         cols: "6",
                         md: "3"
                       }, {
-                        default: _withCtx$2(() => [
-                          _createVNode$2(_component_v_card, {
+                        default: _withCtx$3(() => [
+                          _createVNode$3(_component_v_card, {
                             variant: "outlined",
                             class: "text-center py-3 rounded-xl",
                             color: "warning"
                           }, {
-                            default: _withCtx$2(() => [
-                              _createElementVNode$2("div", _hoisted_4, _toDisplayString$1(__props.progress.details.existFiles || 0), 1),
-                              _cache[5] || (_cache[5] = _createElementVNode$2("div", { class: "text-caption mt-1" }, "已存在", -1))
+                            default: _withCtx$3(() => [
+                              _createElementVNode$3("div", _hoisted_4$1, _toDisplayString$2(__props.progress.details.existFiles || 0), 1),
+                              _cache[5] || (_cache[5] = _createElementVNode$3("div", { class: "text-caption mt-1" }, "已存在", -1))
                             ]),
                             _: 1
                           })
                         ]),
                         _: 1
                       }),
-                      _createVNode$2(_component_v_col, {
+                      _createVNode$3(_component_v_col, {
                         cols: "6",
                         md: "3"
                       }, {
-                        default: _withCtx$2(() => [
-                          _createVNode$2(_component_v_card, {
+                        default: _withCtx$3(() => [
+                          _createVNode$3(_component_v_card, {
                             variant: "outlined",
                             class: "text-center py-3 rounded-xl",
                             color: "success"
                           }, {
-                            default: _withCtx$2(() => [
-                              _createElementVNode$2("div", _hoisted_5, _toDisplayString$1(__props.progress.details.importedCount || 0), 1),
-                              _cache[6] || (_cache[6] = _createElementVNode$2("div", { class: "text-caption mt-1" }, "已导入", -1))
+                            default: _withCtx$3(() => [
+                              _createElementVNode$3("div", _hoisted_5$1, _toDisplayString$2(__props.progress.details.importedCount || 0), 1),
+                              _cache[6] || (_cache[6] = _createElementVNode$3("div", { class: "text-caption mt-1" }, "已导入", -1))
                             ]),
                             _: 1
                           })
@@ -901,25 +901,25 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
                     ]),
                     _: 1
                   })
-                ])) : _createCommentVNode$1("", true)
+                ])) : _createCommentVNode$2("", true)
               ]),
               _: 1
             })
           ]),
           _: 1
-        })) : _createCommentVNode$1("", true),
-        _createVNode$2(_component_v_card, { class: "mb-6 elevation-4" }, {
-          default: _withCtx$2(() => [
-            _createVNode$2(_component_v_card_text, { class: "pa-5" }, {
-              default: _withCtx$2(() => [
-                _createVNode$2(_component_v_row, null, {
-                  default: _withCtx$2(() => [
-                    _createVNode$2(_component_v_col, {
+        })) : _createCommentVNode$2("", true),
+        _createVNode$3(_component_v_card, { class: "mb-6 elevation-4" }, {
+          default: _withCtx$3(() => [
+            _createVNode$3(_component_v_card_text, { class: "pa-5" }, {
+              default: _withCtx$3(() => [
+                _createVNode$3(_component_v_row, null, {
+                  default: _withCtx$3(() => [
+                    _createVNode$3(_component_v_col, {
                       cols: "12",
                       md: "6"
                     }, {
-                      default: _withCtx$2(() => [
-                        _createVNode$2(_component_v_btn, {
+                      default: _withCtx$3(() => [
+                        _createVNode$3(_component_v_btn, {
                           color: "primary",
                           size: "large",
                           variant: "elevated",
@@ -928,20 +928,20 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
                           block: "",
                           onClick: _cache[0] || (_cache[0] = ($event) => _ctx.$emit("scan"))
                         }, {
-                          default: _withCtx$2(() => [..._cache[7] || (_cache[7] = [
-                            _createTextVNode$2(" 一键扫描导入 ", -1)
+                          default: _withCtx$3(() => [..._cache[7] || (_cache[7] = [
+                            _createTextVNode$3(" 一键扫描导入 ", -1)
                           ])]),
                           _: 1
                         }, 8, ["loading"])
                       ]),
                       _: 1
                     }),
-                    _createVNode$2(_component_v_col, {
+                    _createVNode$3(_component_v_col, {
                       cols: "12",
                       md: "6"
                     }, {
-                      default: _withCtx$2(() => [
-                        _createVNode$2(_component_v_btn, {
+                      default: _withCtx$3(() => [
+                        _createVNode$3(_component_v_btn, {
                           color: "secondary",
                           variant: "tonal",
                           size: "large",
@@ -949,8 +949,8 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
                           block: "",
                           onClick: _cache[1] || (_cache[1] = ($event) => _ctx.$emit("view-recent"))
                         }, {
-                          default: _withCtx$2(() => [..._cache[8] || (_cache[8] = [
-                            _createTextVNode$2(" 查看最近添加 ", -1)
+                          default: _withCtx$3(() => [..._cache[8] || (_cache[8] = [
+                            _createTextVNode$3(" 查看最近添加 ", -1)
                           ])]),
                           _: 1
                         })
@@ -971,11 +971,11 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
   }
 });
 
-const ScanPanel = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-95a3d129"]]);
+const ScanPanel = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-95a3d129"]]);
 
-const {ref: ref$1} = await importShared('vue');
+const {ref: ref$2} = await importShared('vue');
 
-const snackbar = ref$1({
+const snackbar = ref$2({
   show: false,
   message: "",
   color: "success",
@@ -1021,20 +1021,20 @@ function useToast() {
   };
 }
 
-const {defineComponent:_defineComponent$1} = await importShared('vue');
+const {defineComponent:_defineComponent$2} = await importShared('vue');
 
-const {unref:_unref,toDisplayString:_toDisplayString,createTextVNode:_createTextVNode$1,resolveComponent:_resolveComponent$1,withCtx:_withCtx$1,createVNode:_createVNode$1,createElementVNode:_createElementVNode$1,openBlock:_openBlock$1,createBlock:_createBlock$1} = await importShared('vue');
+const {unref:_unref,toDisplayString:_toDisplayString$1,createTextVNode:_createTextVNode$2,resolveComponent:_resolveComponent$2,withCtx:_withCtx$2,createVNode:_createVNode$2,createElementVNode:_createElementVNode$2,openBlock:_openBlock$2,createBlock:_createBlock$2} = await importShared('vue');
 
-const _hoisted_1 = { class: "d-flex align-center" };
-const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
+const _hoisted_1$1 = { class: "d-flex align-center" };
+const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
   __name: "ToastNotification",
   setup(__props) {
     const { snackbar } = useToast();
     return (_ctx, _cache) => {
-      const _component_v_icon = _resolveComponent$1("v-icon");
-      const _component_v_btn = _resolveComponent$1("v-btn");
-      const _component_v_snackbar = _resolveComponent$1("v-snackbar");
-      return _openBlock$1(), _createBlock$1(_component_v_snackbar, {
+      const _component_v_icon = _resolveComponent$2("v-icon");
+      const _component_v_btn = _resolveComponent$2("v-btn");
+      const _component_v_snackbar = _resolveComponent$2("v-snackbar");
+      return _openBlock$2(), _createBlock$2(_component_v_snackbar, {
         modelValue: _unref(snackbar).show,
         "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => _unref(snackbar).show = $event),
         color: _unref(snackbar).color,
@@ -1044,27 +1044,27 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         elevation: "8",
         rounded: "lg"
       }, {
-        actions: _withCtx$1(() => [
-          _createVNode$1(_component_v_btn, {
+        actions: _withCtx$2(() => [
+          _createVNode$2(_component_v_btn, {
             color: "white",
             variant: "text",
             onClick: _cache[0] || (_cache[0] = ($event) => _unref(snackbar).show = false)
           }, {
-            default: _withCtx$1(() => [..._cache[2] || (_cache[2] = [
-              _createTextVNode$1(" 关闭 ", -1)
+            default: _withCtx$2(() => [..._cache[2] || (_cache[2] = [
+              _createTextVNode$2(" 关闭 ", -1)
             ])]),
             _: 1
           })
         ]),
-        default: _withCtx$1(() => [
-          _createElementVNode$1("div", _hoisted_1, [
-            _createVNode$1(_component_v_icon, { start: "" }, {
-              default: _withCtx$1(() => [
-                _createTextVNode$1(_toDisplayString(_unref(snackbar).icon), 1)
+        default: _withCtx$2(() => [
+          _createElementVNode$2("div", _hoisted_1$1, [
+            _createVNode$2(_component_v_icon, { start: "" }, {
+              default: _withCtx$2(() => [
+                _createTextVNode$2(_toDisplayString$1(_unref(snackbar).icon), 1)
               ]),
               _: 1
             }),
-            _createElementVNode$1("span", null, _toDisplayString(_unref(snackbar).message), 1)
+            _createElementVNode$2("span", null, _toDisplayString$1(_unref(snackbar).message), 1)
           ])
         ]),
         _: 1
@@ -1072,6 +1072,247 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     };
   }
 });
+
+const {defineComponent:_defineComponent$1} = await importShared('vue');
+
+const {resolveComponent:_resolveComponent$1,createVNode:_createVNode$1,withCtx:_withCtx$1,createTextVNode:_createTextVNode$1,toDisplayString:_toDisplayString,renderList:_renderList,Fragment:_Fragment,openBlock:_openBlock$1,createElementBlock:_createElementBlock,createElementVNode:_createElementVNode$1,mergeProps:_mergeProps,createBlock:_createBlock$1,createCommentVNode:_createCommentVNode$1} = await importShared('vue');
+
+const _hoisted_1 = { class: "meta-category-page" };
+const _hoisted_2 = { class: "d-flex align-center justify-space-between" };
+const _hoisted_3 = { class: "flex-grow-1 mr-2" };
+const _hoisted_4 = { class: "text-subtitle-1 font-weight-medium text-truncate" };
+const _hoisted_5 = { class: "text-caption text-grey mt-1" };
+const {ref: ref$1,onMounted: onMounted$1} = await importShared('vue');
+
+const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
+  __name: "MetaCategory",
+  setup(__props) {
+    const selectedMetaType = ref$1("tag");
+    const metaList = ref$1([]);
+    const loading = ref$1(false);
+    const metaTypes = [
+      { label: "标签", value: "tag", icon: "mdi-tag" },
+      { label: "作者", value: "author", icon: "mdi-account" },
+      { label: "丛书", value: "series", icon: "mdi-bookshelf" },
+      { label: "评分", value: "rating", icon: "mdi-star" },
+      { label: "出版社", value: "publisher", icon: "mdi-domain" },
+      { label: "语言", value: "language", icon: "mdi-translate" }
+    ];
+    function getMetaTypeName(type) {
+      const typeMap = {
+        tag: "标签",
+        author: "作者",
+        series: "丛书",
+        rating: "评分",
+        publisher: "出版社",
+        language: "语言"
+      };
+      return typeMap[type] || type;
+    }
+    async function loadMetaList() {
+      loading.value = true;
+      metaList.value = [];
+      try {
+        const response = await fetch(`/api/v1/plugin/Talebook/meta/${selectedMetaType.value}?show_all=true`);
+        const data = await response.json();
+        if (data.code === 200) {
+          metaList.value = data.data || [];
+        } else {
+          console.error("加载元数据列表失败:", data.message);
+        }
+      } catch (error) {
+        console.error("加载元数据列表异常:", error);
+      } finally {
+        loading.value = false;
+      }
+    }
+    function viewMetaBooks(name) {
+      const encodedName = encodeURIComponent(name);
+      window.location.href = `#/browse?meta=${selectedMetaType.value}&name=${encodedName}`;
+    }
+    onMounted$1(() => {
+      loadMetaList();
+    });
+    return (_ctx, _cache) => {
+      const _component_v_select = _resolveComponent$1("v-select");
+      const _component_v_col = _resolveComponent$1("v-col");
+      const _component_v_icon = _resolveComponent$1("v-icon");
+      const _component_v_chip = _resolveComponent$1("v-chip");
+      const _component_v_row = _resolveComponent$1("v-row");
+      const _component_v_card_text = _resolveComponent$1("v-card-text");
+      const _component_v_card = _resolveComponent$1("v-card");
+      const _component_v_hover = _resolveComponent$1("v-hover");
+      const _component_v_empty_state = _resolveComponent$1("v-empty-state");
+      const _component_v_progress_circular = _resolveComponent$1("v-progress-circular");
+      return _openBlock$1(), _createElementBlock("div", _hoisted_1, [
+        _createVNode$1(_component_v_card, { class: "mb-4 elevation-2" }, {
+          default: _withCtx$1(() => [
+            _createVNode$1(_component_v_card_text, null, {
+              default: _withCtx$1(() => [
+                _createVNode$1(_component_v_row, { align: "center" }, {
+                  default: _withCtx$1(() => [
+                    _createVNode$1(_component_v_col, {
+                      cols: "12",
+                      md: "6"
+                    }, {
+                      default: _withCtx$1(() => [
+                        _createVNode$1(_component_v_select, {
+                          modelValue: selectedMetaType.value,
+                          "onUpdate:modelValue": [
+                            _cache[0] || (_cache[0] = ($event) => selectedMetaType.value = $event),
+                            loadMetaList
+                          ],
+                          items: metaTypes,
+                          "item-title": "label",
+                          "item-value": "value",
+                          label: "选择元数据类型",
+                          "prepend-icon": "mdi-tag-multiple",
+                          variant: "outlined",
+                          density: "comfortable"
+                        }, null, 8, ["modelValue"])
+                      ]),
+                      _: 1
+                    }),
+                    _createVNode$1(_component_v_col, {
+                      cols: "12",
+                      md: "6",
+                      class: "text-right"
+                    }, {
+                      default: _withCtx$1(() => [
+                        _createVNode$1(_component_v_chip, {
+                          color: "primary",
+                          size: "large"
+                        }, {
+                          default: _withCtx$1(() => [
+                            _createVNode$1(_component_v_icon, { start: "" }, {
+                              default: _withCtx$1(() => [..._cache[1] || (_cache[1] = [
+                                _createTextVNode$1("mdi-format-list-bulleted", -1)
+                              ])]),
+                              _: 1
+                            }),
+                            _createTextVNode$1(" 共 " + _toDisplayString(metaList.value.length) + " 项 ", 1)
+                          ]),
+                          _: 1
+                        })
+                      ]),
+                      _: 1
+                    })
+                  ]),
+                  _: 1
+                })
+              ]),
+              _: 1
+            })
+          ]),
+          _: 1
+        }),
+        !loading.value ? (_openBlock$1(), _createBlock$1(_component_v_card, {
+          key: 0,
+          class: "elevation-2"
+        }, {
+          default: _withCtx$1(() => [
+            _createVNode$1(_component_v_card_text, null, {
+              default: _withCtx$1(() => [
+                _createVNode$1(_component_v_row, null, {
+                  default: _withCtx$1(() => [
+                    (_openBlock$1(true), _createElementBlock(_Fragment, null, _renderList(metaList.value, (item) => {
+                      return _openBlock$1(), _createBlock$1(_component_v_col, {
+                        key: item.name,
+                        cols: "12",
+                        sm: "6",
+                        md: "4",
+                        lg: "3"
+                      }, {
+                        default: _withCtx$1(() => [
+                          _createVNode$1(_component_v_hover, null, {
+                            default: _withCtx$1(({ isHovering, props }) => [
+                              _createVNode$1(_component_v_card, _mergeProps({ ref_for: true }, props, {
+                                class: [{ "on-hover": isHovering }, "transition-swing"],
+                                elevation: isHovering ? 8 : 2,
+                                onClick: ($event) => viewMetaBooks(item.name)
+                              }), {
+                                default: _withCtx$1(() => [
+                                  _createVNode$1(_component_v_card_text, { class: "pa-4" }, {
+                                    default: _withCtx$1(() => [
+                                      _createElementVNode$1("div", _hoisted_2, [
+                                        _createElementVNode$1("div", _hoisted_3, [
+                                          _createElementVNode$1("div", _hoisted_4, _toDisplayString(item.name), 1),
+                                          _createElementVNode$1("div", _hoisted_5, [
+                                            _createVNode$1(_component_v_icon, {
+                                              size: "small",
+                                              class: "mr-1"
+                                            }, {
+                                              default: _withCtx$1(() => [..._cache[2] || (_cache[2] = [
+                                                _createTextVNode$1("mdi-book-multiple", -1)
+                                              ])]),
+                                              _: 1
+                                            }),
+                                            _createTextVNode$1(" " + _toDisplayString(item.count) + " 本书 ", 1)
+                                          ])
+                                        ]),
+                                        _createVNode$1(_component_v_icon, {
+                                          color: "primary",
+                                          size: "large"
+                                        }, {
+                                          default: _withCtx$1(() => [..._cache[3] || (_cache[3] = [
+                                            _createTextVNode$1(" mdi-chevron-right ", -1)
+                                          ])]),
+                                          _: 1
+                                        })
+                                      ])
+                                    ]),
+                                    _: 2
+                                  }, 1024)
+                                ]),
+                                _: 2
+                              }, 1040, ["class", "elevation", "onClick"])
+                            ]),
+                            _: 2
+                          }, 1024)
+                        ]),
+                        _: 2
+                      }, 1024);
+                    }), 128))
+                  ]),
+                  _: 1
+                }),
+                metaList.value.length === 0 ? (_openBlock$1(), _createBlock$1(_component_v_empty_state, {
+                  key: 0,
+                  icon: "mdi-tag-off-outline",
+                  title: "暂无数据",
+                  text: `还没有${getMetaTypeName(selectedMetaType.value)}信息`,
+                  class: "mt-8"
+                }, null, 8, ["text"])) : _createCommentVNode$1("", true)
+              ]),
+              _: 1
+            })
+          ]),
+          _: 1
+        })) : (_openBlock$1(), _createBlock$1(_component_v_card, {
+          key: 1,
+          class: "elevation-2"
+        }, {
+          default: _withCtx$1(() => [
+            _createVNode$1(_component_v_card_text, { class: "text-center py-8" }, {
+              default: _withCtx$1(() => [
+                _createVNode$1(_component_v_progress_circular, {
+                  indeterminate: "",
+                  color: "primary",
+                  size: "64"
+                }),
+                _cache[4] || (_cache[4] = _createElementVNode$1("div", { class: "mt-4 text-body-1" }, "加载中...", -1))
+              ]),
+              _: 1
+            })
+          ]),
+          _: 1
+        }))
+      ]);
+    };
+  }
+});
+
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-55645d61"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -1793,6 +2034,18 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                       _cache[18] || (_cache[18] = _createTextVNode(" 正在阅读 ", -1))
                     ]),
                     _: 1
+                  }),
+                  _createVNode(_component_v_tab, { value: "meta" }, {
+                    default: _withCtx(() => [
+                      _createVNode(_component_v_icon, { start: "" }, {
+                        default: _withCtx(() => [..._cache[19] || (_cache[19] = [
+                          _createTextVNode("mdi-tag-multiple", -1)
+                        ])]),
+                        _: 1
+                      }),
+                      _cache[20] || (_cache[20] = _createTextVNode(" 元数据分类 ", -1))
+                    ]),
+                    _: 1
                   })
                 ]),
                 _: 1
@@ -1826,12 +2079,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             start: "",
                             color: "primary"
                           }, {
-                            default: _withCtx(() => [..._cache[19] || (_cache[19] = [
+                            default: _withCtx(() => [..._cache[21] || (_cache[21] = [
                               _createTextVNode("mdi-book-search", -1)
                             ])]),
                             _: 1
                           }),
-                          _cache[20] || (_cache[20] = _createTextVNode(" 搜索并浏览书籍 ", -1))
+                          _cache[22] || (_cache[22] = _createTextVNode(" 搜索并浏览书籍 ", -1))
                         ]),
                         _: 1
                       }),
@@ -1844,7 +2097,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             border: "start",
                             icon: "mdi-information"
                           }, {
-                            default: _withCtx(() => [..._cache[21] || (_cache[21] = [
+                            default: _withCtx(() => [..._cache[23] || (_cache[23] = [
                               _createElementVNode("div", { class: "text-body-2" }, [
                                 _createElementVNode("strong", null, "功能说明："),
                                 _createElementVNode("br"),
@@ -1887,7 +2140,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                                     block: "",
                                     onClick: handleSearch
                                   }, {
-                                    default: _withCtx(() => [..._cache[22] || (_cache[22] = [
+                                    default: _withCtx(() => [..._cache[24] || (_cache[24] = [
                                       _createTextVNode(" 搜索 ", -1)
                                     ])]),
                                     _: 1
@@ -1904,7 +2157,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     ]),
                     _: 1
                   }),
-                  books.value.length > 0 && searched.value ? (_openBlock(), _createBlock(_sfc_main$4, {
+                  books.value.length > 0 && searched.value ? (_openBlock(), _createBlock(_sfc_main$5, {
                     key: 0,
                     books: books.value,
                     title: listTitle.value,
@@ -1927,7 +2180,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
               }),
               _createVNode(_component_v_window_item, { value: "recent" }, {
                 default: _withCtx(() => [
-                  _createVNode(_sfc_main$4, {
+                  _createVNode(_sfc_main$5, {
                     books: books.value,
                     title: "最近添加的书籍",
                     icon: "mdi-history",
@@ -1951,7 +2204,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
               }),
               _createVNode(_component_v_window_item, { value: "favorites" }, {
                 default: _withCtx(() => [
-                  _createVNode(_sfc_main$4, {
+                  _createVNode(_sfc_main$5, {
                     books: favoriteBooks.value,
                     title: "我的收藏",
                     icon: "mdi-heart",
@@ -1974,7 +2227,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-heart",
                         variant: "flat"
                       }, {
-                        default: _withCtx(() => [..._cache[23] || (_cache[23] = [
+                        default: _withCtx(() => [..._cache[25] || (_cache[25] = [
                           _createTextVNode(" 收藏 ", -1)
                         ])]),
                         _: 1
@@ -1988,7 +2241,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-information-outline",
                         onClick: ($event) => showBookDetail(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[24] || (_cache[24] = [
+                        default: _withCtx(() => [..._cache[26] || (_cache[26] = [
                           _createTextVNode(" 详情 ", -1)
                         ])]),
                         _: 1
@@ -2001,7 +2254,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-heart-off",
                         onClick: ($event) => removeFromFavorites(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[25] || (_cache[25] = [
+                        default: _withCtx(() => [..._cache[27] || (_cache[27] = [
                           _createTextVNode(" 取消收藏 ", -1)
                         ])]),
                         _: 1
@@ -2021,7 +2274,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
               }),
               _createVNode(_component_v_window_item, { value: "reading" }, {
                 default: _withCtx(() => [
-                  _createVNode(_sfc_main$4, {
+                  _createVNode(_sfc_main$5, {
                     books: readingBooks.value,
                     title: "正在阅读",
                     icon: "mdi-book-open-variant",
@@ -2044,7 +2297,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-book-open-page-variant",
                         variant: "flat"
                       }, {
-                        default: _withCtx(() => [..._cache[26] || (_cache[26] = [
+                        default: _withCtx(() => [..._cache[28] || (_cache[28] = [
                           _createTextVNode(" 在读 ", -1)
                         ])]),
                         _: 1
@@ -2058,7 +2311,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-information-outline",
                         onClick: ($event) => showBookDetail(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[27] || (_cache[27] = [
+                        default: _withCtx(() => [..._cache[29] || (_cache[29] = [
                           _createTextVNode(" 详情 ", -1)
                         ])]),
                         _: 1
@@ -2071,7 +2324,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-check-circle",
                         onClick: ($event) => markAsRead(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[28] || (_cache[28] = [
+                        default: _withCtx(() => [..._cache[30] || (_cache[30] = [
                           _createTextVNode(" 标记已读 ", -1)
                         ])]),
                         _: 1
@@ -2083,9 +2336,15 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     key: 0,
                     icon: "mdi-book-off-outline",
                     title: "暂无在读",
-                    text: '浏览书籍并设置阅读状态为"在读"',
+                    text: "浏览书籍并设置阅读状态为“在读”",
                     class: "mt-8"
                   })) : _createCommentVNode("", true)
+                ]),
+                _: 1
+              }),
+              _createVNode(_component_v_window_item, { value: "meta" }, {
+                default: _withCtx(() => [
+                  _createVNode(MetaCategory)
                 ]),
                 _: 1
               })
@@ -2102,7 +2361,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
             onToggleFavorite: _cache[4] || (_cache[4] = ($event) => selectedBook.value && toggleFavorite(selectedBook.value.id)),
             onDownload: _cache[5] || (_cache[5] = ($event) => selectedBook.value && downloadBook(selectedBook.value.id))
           }, null, 8, ["modelValue", "book", "cover-url", "is-favorited", "is-downloading"]),
-          _createVNode(_sfc_main$1)
+          _createVNode(_sfc_main$2)
         ]),
         _: 1
       });
@@ -2110,6 +2369,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-29bde4f8"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-e50a6aee"]]);
 
 export { Page as default };

@@ -329,6 +329,264 @@ class TalebookApiClient:
             logger.error(f"搜索电子书失败: {str(e)}")
             return []
     
+    def get_book_refer_meta(self, book_id: int) -> Dict:
+        """
+        获取书籍的外部元数据(从豆瓣等源)
+        
+        :param book_id: 书籍 ID
+        :return: 外部元数据列表
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return {"code": 500, "message": "登录失败"}
+            
+            url = f"{self._server_url}/api/book/{book_id}/refer"
+            response = session.get(url, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                books = data.get("books", [])
+                logger.info(f"获取外部元数据成功: {len(books)} 条")
+                return {"code": 200, "data": books}
+            else:
+                logger.error(f"获取外部元数据失败: {data.get('msg')}")
+                return {"code": 400, "message": data.get("msg", "获取失败")}
+                
+        except Exception as e:
+            logger.error(f"获取外部元数据失败: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def apply_book_refer_meta(self, book_id: int, provider_key: str, provider_value: str, 
+                              only_meta: bool = False, only_cover: bool = False) -> Dict:
+        """
+        应用外部元数据到书籍
+        
+        :param book_id: 书籍 ID
+        :param provider_key: 元数据来源 (如 "douban")
+        :param provider_value: 元数据值 (如豆瓣 ID)
+        :param only_meta: 仅应用元数据
+        :param only_cover: 仅应用封面
+        :return: 操作结果
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return {"code": 500, "message": "登录失败"}
+            
+            url = f"{self._server_url}/api/book/{book_id}/refer"
+            payload = {
+                "provider_key": provider_key,
+                "provider_value": provider_value
+            }
+            
+            if only_meta:
+                payload["only_meta"] = "yes"
+            if only_cover:
+                payload["only_cover"] = "yes"
+            
+            response = session.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                logger.info(f"应用外部元数据成功: book_id={book_id}")
+                return {"code": 200, "message": "应用成功"}
+            else:
+                logger.error(f"应用外部元数据失败: {data.get('msg')}")
+                return {"code": 400, "message": data.get("msg", "应用失败")}
+                
+        except Exception as e:
+            logger.error(f"应用外部元数据失败: {str(e)}")
+            return {"code": 500, "message": f"应用失败: {str(e)}"}
+    
+    def get_related_books(self, book_id: int, limit: int = 10) -> List[dict]:
+        """
+        获取相关书籍(基于作者、标签等)
+        
+        :param book_id: 书籍 ID
+        :param limit: 返回数量限制
+        :return: 相关书籍列表
+        """
+        try:
+            # 先获取书籍详情
+            detail_result = self.get_book_detail(book_id)
+            if detail_result.get("code") != 200:
+                return []
+            
+            book = detail_result.get("data", {})
+            authors = book.get("authors", [])
+            tags = book.get("tags", [])
+            
+            if not authors and not tags:
+                logger.warning(f"书籍 {book_id} 没有作者或标签信息")
+                return []
+            
+            related_books = []
+            seen_ids = {book_id}
+            
+            # 根据作者查找相关书籍
+            for author in authors[:2]:  # 最多取前2个作者
+                if author:
+                    author_books = self._search_by_author(author, limit // 2)
+                    for b in author_books:
+                        if b.get("id") not in seen_ids:
+                            related_books.append(b)
+                            seen_ids.add(b.get("id"))
+                    if len(related_books) >= limit:
+                        break
+            
+            # 如果还不够,根据标签查找
+            if len(related_books) < limit:
+                for tag in tags[:3]:  # 最多取前3个标签
+                    if tag:
+                        tag_books = self._search_by_tag(tag, limit - len(related_books))
+                        for b in tag_books:
+                            if b.get("id") not in seen_ids:
+                                related_books.append(b)
+                                seen_ids.add(b.get("id"))
+                        if len(related_books) >= limit:
+                            break
+            
+            logger.info(f"获取相关书籍成功: {len(related_books)} 本")
+            return related_books[:limit]
+            
+        except Exception as e:
+            logger.error(f"获取相关书籍失败: {str(e)}")
+            return []
+    
+    def _search_by_author(self, author: str, limit: int = 5) -> List[dict]:
+        """
+        根据作者搜索书籍
+        
+        :param author: 作者名
+        :param limit: 数量限制
+        :return: 书籍列表
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return []
+            
+            # 使用作者 API
+            url = f"{self._server_url}/api/author/{author}"
+            params = {"num": limit}
+            
+            response = session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                return data.get("books", [])
+            return []
+        except Exception as e:
+            logger.debug(f"按作者搜索失败: {str(e)}")
+            return []
+    
+    def _search_by_tag(self, tag: str, limit: int = 5) -> List[dict]:
+        """
+        根据标签搜索书籍
+        
+        :param tag: 标签名
+        :param limit: 数量限制
+        :return: 书籍列表
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return []
+            
+            # 使用标签 API
+            url = f"{self._server_url}/api/tag/{tag}"
+            params = {"num": limit}
+            
+            response = session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                return data.get("books", [])
+            return []
+        except Exception as e:
+            logger.debug(f"按标签搜索失败: {str(e)}")
+            return []
+    
+    def get_meta_list(self, meta_type: str, show_all: bool = False) -> Dict:
+        """
+        获取元数据列表(标签/作者/丛书等)
+        
+        :param meta_type: 元数据类型 (tag/author/series/rating/publisher/language)
+        :param show_all: 是否显示所有条目
+        :return: 元数据列表
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return {"code": 500, "message": "登录失败"}
+            
+            url = f"{self._server_url}/api/{meta_type}"
+            params = {}
+            if show_all:
+                params["show"] = "all"
+            
+            response = session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                items = data.get("items", [])
+                total = data.get("total", len(items))
+                logger.info(f"获取{meta_type}列表成功: {total} 条")
+                return {"code": 200, "data": items, "total": total}
+            else:
+                logger.error(f"获取{meta_type}列表失败: {data.get('msg')}")
+                return {"code": 400, "message": data.get("msg", "获取失败")}
+                
+        except Exception as e:
+            logger.error(f"获取{meta_type}列表失败: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def get_meta_books(self, meta_type: str, name: str, page: int = 1, num: int = 20) -> Dict:
+        """
+        获取指定元数据的书籍列表
+        
+        :param meta_type: 元数据类型 (tag/author/series/rating/publisher/language)
+        :param name: 元数据名称
+        :param page: 页码
+        :param num: 每页数量
+        :return: 书籍列表
+        """
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return {"code": 500, "message": "登录失败"}
+            
+            # URL 编码名称
+            from urllib.parse import quote
+            encoded_name = quote(name, safe='')
+            
+            url = f"{self._server_url}/api/{meta_type}/{encoded_name}"
+            params = {"page": page, "num": num}
+            
+            response = session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                books = data.get("books", [])
+                total = data.get("total", len(books))
+                title = data.get("title", "")
+                logger.info(f"获取{meta_type}='{name}'的书籍成功: {total} 本")
+                return {"code": 200, "data": books, "total": total, "title": title}
+            else:
+                logger.error(f"获取{meta_type}='{name}'的书籍失败: {data.get('msg')}")
+                return {"code": 400, "message": data.get("msg", "获取失败")}
+                
+        except Exception as e:
+            logger.error(f"获取{meta_type}='{name}'的书籍失败: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
     def get_recent_books(self, limit: int = 20) -> List[dict]:
         """
         获取最近添加的书籍
