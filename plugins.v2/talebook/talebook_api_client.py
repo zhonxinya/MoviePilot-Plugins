@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 import time
 import requests
 from app.log import logger
-from app.core.cache import TTLCache
+from app.core.cache import TTLCache, cached
 
 
 class TalebookApiClient:
@@ -173,100 +173,71 @@ class TalebookApiClient:
         # 创建新会话并登录
         logger.info(f"🔐 正在登录 Talebook: {self._username}@{self._server_url}")
         
-        # 尝试登录，最多重试 2 次
-        max_retries = 2
-        for attempt in range(1, max_retries + 1):
-            try:
-                session = requests.Session()
-                
-                # 设置请求头
-                session.headers.update({
-                    'User-Agent': 'MoviePilot-Talebook-Plugin/1.0',
-                    'Accept': 'application/json'
-                    # 注意: 不设置 Content-Type,让 requests 根据请求类型自动设置
-                })
-                
-                # 禁用 SSL 验证(如果配置)
-                if not self._verify_ssl:
-                    logger.warning("⚠️ 已禁用 SSL 验证(仅用于自签名证书)")
-                    session.verify = False
-                    import urllib3
-                    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-                
-                # 登录
-                login_url = f"{self._server_url}/api/user/sign_in"
-                login_data = {
-                    "username": self._username,
-                    "password": self._password
-                }
-                
-                logger.info(f"   登录 URL: {login_url}")
-                logger.info(f"   用户名: {self._username}")
-                if attempt > 1:
-                    logger.info(f"   重试次数: {attempt}/{max_retries}")
-                
-                login_response = session.post(login_url, data=login_data, timeout=30)
-                login_response.raise_for_status()
-                
-                login_result = login_response.json()
-                logger.debug(f"登录响应: {login_result}")
-                if login_result.get("err") != "ok":
-                    error_msg = login_result.get('msg', '未知错误')
-                    logger.error(f"❌ 登录失败: {error_msg}")
-                    logger.error(f"   服务器: {self._server_url}")
-                    logger.error(f"   用户名: {self._username}")
-                    session.close()
-                    
-                    # 如果是最后一次尝试，返回 None
-                    if attempt == max_retries:
-                        return None
-                    # 否则继续重试
-                    logger.info(f"   将在 2 秒后重试...")
-                    time.sleep(2)
-                    continue
-                
-                # 保存会话和过期时间
-                self._session = session
-                self._session_expiry = current_time + self._session_timeout
-                
-                # 保存到持久化缓存
-                cache_key = f"talebook_session:{self._server_url}:{self._username}"
-                self._save_session_to_cache(cache_key, session)
-                
-                logger.info(f"✅ 登录成功! 会话有效期: {self._session_timeout} 秒")
-                return session
-                
-            except requests.exceptions.Timeout:
-                logger.error(f"⏰ 登录超时: {self._server_url}")
-                logger.error(f"   提示: 请检查网络连接或服务器是否可访问")
-                if attempt < max_retries:
-                    logger.info(f"   将在 2 秒后重试...")
-                    time.sleep(2)
-                    continue
+        try:
+            session = requests.Session()
+            
+            # 设置请求头
+            session.headers.update({
+                'User-Agent': 'MoviePilot-Talebook-Plugin/1.0',
+                'Accept': 'application/json'
+                # 注意: 不设置 Content-Type,让 requests 根据请求类型自动设置
+            })
+            
+            # 禁用 SSL 验证(如果配置)
+            if not self._verify_ssl:
+                logger.warning("⚠️ 已禁用 SSL 验证(仅用于自签名证书)")
+                session.verify = False
+                import urllib3
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            # 登录
+            login_url = f"{self._server_url}/api/user/sign_in"
+            login_data = {
+                "username": self._username,
+                "password": self._password
+            }
+            
+            logger.info(f"   登录 URL: {login_url}")
+            logger.info(f"   用户名: {self._username}")
+            login_response = session.post(login_url, data=login_data, timeout=30)
+            login_response.raise_for_status()
+            
+            login_result = login_response.json()
+            logger.debug(f"登录响应: {login_result}")
+            if login_result.get("err") != "ok":
+                error_msg = login_result.get('msg', '未知错误')
+                logger.error(f"❌ 登录失败: {error_msg}")
+                logger.error(f"   服务器: {self._server_url}")
+                logger.error(f"   用户名: {self._username}")
+                session.close()
                 return None
-            except requests.exceptions.ConnectionError as e:
-                logger.error(f"🔌 连接失败: {self._server_url}")
-                logger.error(f"   错误详情: {str(e)}")
-                if attempt < max_retries:
-                    logger.info(f"   将在 2 秒后重试...")
-                    time.sleep(2)
-                    continue
-                return None
-            except requests.exceptions.SSLError as e:
-                logger.error(f"🔒 SSL 证书错误: {self._server_url}")
-                logger.error(f"   错误详情: {str(e)}")
-                return None  # SSL 错误不重试
-            except Exception as e:
-                logger.error(f"❌ 登录异常: {str(e)}", exc_info=True)
-                if attempt < max_retries:
-                    logger.info(f"   将在 2 秒后重试...")
-                    time.sleep(2)
-                    continue
-                return None
-        
-        # 所有重试都失败
-        logger.error(f"❌ 登录失败，已重试 {max_retries} 次")
-        return None
+            
+            # 保存会话和过期时间
+            self._session = session
+            self._session_expiry = current_time + self._session_timeout
+            
+            # 保存到持久化缓存
+            cache_key = f"talebook_session:{self._server_url}:{self._username}"
+            self._save_session_to_cache(cache_key, session)
+            
+            logger.info(f"✅ 登录成功! 会话有效期: {self._session_timeout} 秒")
+            return session
+            
+        except requests.exceptions.Timeout:
+            logger.error(f"⏰ 登录超时: {self._server_url}")
+            logger.error(f"   提示: 请检查网络连接或服务器是否可访问")
+            return None
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"🔌 连接失败: {self._server_url}")
+            logger.error(f"   错误详情: {str(e)}")
+            return None
+        except requests.exceptions.SSLError as e:
+            logger.error(f"🔒 SSL 证书错误: {self._server_url}")
+            logger.error(f"   错误详情: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"❌ 登录异常: {str(e)}", exc_info=True)
+            return None
     
     def clear_session(self):
         """清除认证会话（包括内存和缓存）"""
@@ -293,6 +264,7 @@ class TalebookApiClient:
         """关闭客户端,释放资源"""
         self.clear_session()
     
+    @cached(region="talebook_api", maxsize=100, ttl=300)
     def get_book_detail(self, book_id: int) -> Dict:
         """
         获取书籍详细信息
@@ -300,75 +272,27 @@ class TalebookApiClient:
         :param book_id: 书籍 ID
         :return: 书籍详细信息字典
         """
-        # 自动重试机制：最多重试 2 次（针对 502 错误）
-        max_retries = 2
-        last_exception = None
-        
-        for attempt in range(max_retries + 1):
-            try:
-                session = self._get_authenticated_session()
-                if not session:
-                    return {"code": 500, "message": "登录失败"}
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                return {"code": 500, "message": "登录失败"}
+            
+            book_info_url = f"{self._server_url}/api/book/{book_id}"
+            book_response = session.get(book_info_url, timeout=10)
+            book_response.raise_for_status()
+            
+            data = book_response.json()
+            if data.get("err") == "ok":
+                book = data.get("book", {})
+                logger.info(f"获取书籍详情成功: {book.get('title')}")
+                return {"code": 200, "data": book}
+            else:
+                logger.error(f"获取书籍详情失败: {data.get('msg')}")
+                return {"code": 404, "message": data.get("msg", "书籍不存在")}
                 
-                book_info_url = f"{self._server_url}/api/book/{book_id}"
-                book_response = session.get(book_info_url, timeout=10)
-                
-                # 处理 502 错误
-                if book_response.status_code == 502:
-                    error_msg = f'服务暂时不可用 (502 Bad Gateway)'
-                    logger.warning(f'⚠️ {error_msg} (尝试 {attempt + 1}/{max_retries + 1})')
-                    
-                    if attempt < max_retries:
-                        # 指数退避：第1次重试等待2秒，第2次等待4秒
-                        import time
-                        wait_time = 2 ** (attempt + 1)
-                        logger.info(f'⏳ 等待 {wait_time} 秒后重试...')
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        logger.error(f'❌ 服务持续不可用，已重试 {max_retries} 次')
-                        return {"code": 502, "message": "服务暂时不可用，请稍后重试"}
-                
-                book_response.raise_for_status()
-                
-                data = book_response.json()
-                if data.get("err") == "ok":
-                    book = data.get("book", {})
-                    logger.info(f"获取书籍详情成功: {book.get('title')}")
-                    return {"code": 200, "data": book}
-                else:
-                    logger.error(f"获取书籍详情失败: {data.get('msg')}")
-                    return {"code": 404, "message": data.get("msg", "书籍不存在")}
-                    
-            except requests.exceptions.Timeout as e:
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(f'⚠️ 获取详情超时 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
-                    continue
-                else:
-                    logger.error(f'❌ 获取详情超时，已重试 {max_retries} 次')
-                    return {"code": 504, "message": f"获取超时: {str(e)}"}
-                    
-            except requests.exceptions.ConnectionError as e:
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(f'⚠️ 连接错误 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
-                    continue
-                else:
-                    logger.error(f'❌ 连接失败，已重试 {max_retries} 次')
-                    return {"code": 503, "message": f"连接失败: {str(e)}"}
-                    
-            except requests.exceptions.SSLError as e:
-                # SSL 错误不重试
-                logger.error(f'❌ SSL 错误: {str(e)}')
-                return {"code": 500, "message": f"SSL 错误: {str(e)}"}
-                
-            except Exception as e:
-                logger.error(f"获取书籍详情失败: {str(e)}")
-                return {"code": 500, "message": f"获取失败: {str(e)}"}
-        
-        # 理论上不会到达这里
-        return {"code": 500, "message": "获取失败"}
+        except Exception as e:
+            logger.error(f"获取书籍详情失败: {str(e)}")
+            return {"code": 500, "message": f"获取失败: {str(e)}"}
     
     def search_books(self, keyword: str) -> List[dict]:
         """
@@ -381,79 +305,32 @@ class TalebookApiClient:
             logger.warning("Talebook 服务器地址未配置")
             return []
         
-        # 自动重试机制：最多重试 2 次（针对 502 错误）
-        max_retries = 2
-        last_exception = None
-        
-        for attempt in range(max_retries + 1):
-            try:
-                session = self._get_authenticated_session()
-                if not session:
-                    logger.error("登录失败,无法执行搜索")
-                    return []
-                
-                url = f"{self._server_url}/api/search"
-                params = {"name": keyword}
-                
-                response = session.get(url, params=params, timeout=10)
-                
-                # 处理 502 错误
-                if response.status_code == 502:
-                    error_msg = f'服务暂时不可用 (502 Bad Gateway)'
-                    logger.warning(f'⚠️ {error_msg} (尝试 {attempt + 1}/{max_retries + 1})')
-                    
-                    if attempt < max_retries:
-                        # 指数退避：第1次重试等待2秒，第2次等待4秒
-                        import time
-                        wait_time = 2 ** (attempt + 1)
-                        logger.info(f'⏳ 等待 {wait_time} 秒后重试...')
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        logger.error(f'❌ 服务持续不可用，已重试 {max_retries} 次')
-                        return []
-                
-                response.raise_for_status()
-                
-                data = response.json()
-                if data.get("err") == "ok":
-                    books = data.get("books", [])
-                    logger.info(f"搜索成功: {keyword}, 找到 {len(books)} 本书")
-                    return books
-                else:
-                    logger.error(f"搜索失败: {data.get('msg')}")
-                    return []
-                    
-            except requests.exceptions.Timeout as e:
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(f'⚠️ 搜索超时 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
-                    continue
-                else:
-                    logger.error(f'❌ 搜索超时，已重试 {max_retries} 次')
-                    return []
-                    
-            except requests.exceptions.ConnectionError as e:
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(f'⚠️ 连接错误 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
-                    continue
-                else:
-                    logger.error(f'❌ 连接失败，已重试 {max_retries} 次')
-                    return []
-                    
-            except requests.exceptions.SSLError as e:
-                # SSL 错误不重试
-                logger.error(f'❌ SSL 错误: {str(e)}')
+        try:
+            session = self._get_authenticated_session()
+            if not session:
+                logger.error("登录失败,无法执行搜索")
+                return []
+            
+            url = f"{self._server_url}/api/search"
+            params = {"name": keyword}
+            
+            response = session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            if data.get("err") == "ok":
+                books = data.get("books", [])
+                logger.info(f"搜索成功: {keyword}, 找到 {len(books)} 本书")
+                return books
+            else:
+                logger.error(f"搜索失败: {data.get('msg')}")
                 return []
                 
-            except Exception as e:
-                logger.error(f"搜索电子书失败: {str(e)}")
-                return []
-        
-        # 理论上不会到达这里
-        return []
+        except Exception as e:
+            logger.error(f"搜索电子书失败: {str(e)}")
+            return []
     
+    @cached(region="talebook_api", maxsize=100, ttl=600)
     def get_book_refer_meta(self, book_id: int) -> Dict:
         """
         获取书籍的外部元数据(从豆瓣等源)
@@ -637,6 +514,7 @@ class TalebookApiClient:
             logger.debug(f"按标签搜索失败: {str(e)}")
             return []
     
+    @cached(region="talebook_api", maxsize=100, ttl=300)
     def get_meta_list(self, meta_type: str, show_all: bool = False) -> Dict:
         """
         获取元数据列表(标签/作者/丛书等)
@@ -678,6 +556,7 @@ class TalebookApiClient:
             logger.error(f"获取{meta_type}列表失败: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
+    @cached(region="talebook_api", maxsize=100, ttl=300)
     def get_meta_books(self, meta_type: str, name: str, page: int = 1, num: int = 20) -> Dict:
         """
         获取指定元数据的书籍列表
@@ -724,6 +603,7 @@ class TalebookApiClient:
             logger.error(f"获取{meta_type}='{name}'的书籍失败: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
+    @cached(region="talebook_api", maxsize=50, ttl=300)
     def get_recent_books(self, limit: int = 20) -> List[dict]:
         """
         获取最近添加的书籍
@@ -813,11 +693,8 @@ class TalebookApiClient:
                 files = {
                     'ebook': (file.name, f, self._get_mime_type(file.suffix))
                 }
-                # 使用带502重试的请求方法
-                response = self._make_request_with_retry(session, 'post', upload_url, files=files, timeout=120)
-                if not response:
-                    logger.error(f"❌ 上传请求失败: {file.name}")
-                    return False
+                response = session.post(upload_url, files=files, timeout=120)
+                response.raise_for_status()
             
             data = response.json()
             if data.get("err") == "ok":
@@ -1112,79 +989,6 @@ class TalebookApiClient:
             logger.error(f"❌ 获取收藏列表异常: {str(e)}", exc_info=True)
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def _make_request_with_retry(self, session: requests.Session, method: str, url: str, 
-                                  max_retries: int = 2, **kwargs) -> Optional[requests.Response]:
-        """
-        带502重试机制的 HTTP 请求方法
-        
-        :param session: requests 会话对象
-        :param method: HTTP 方法 ('get', 'post', etc.)
-        :param url: 请求 URL
-        :param max_retries: 最大重试次数
-        :param kwargs: 其他请求参数 (timeout, params, json, etc.)
-        :return: Response 对象或 None (失败时)
-        """
-        last_exception = None
-        
-        for attempt in range(max_retries + 1):
-            try:
-                # 执行请求
-                if method.lower() == 'get':
-                    response = session.get(url, **kwargs)
-                elif method.lower() == 'post':
-                    response = session.post(url, **kwargs)
-                else:
-                    raise ValueError(f"不支持的 HTTP 方法: {method}")
-                
-                # 处理 502 错误
-                if response.status_code == 502:
-                    error_msg = f'服务暂时不可用 (502 Bad Gateway)'
-                    logger.warning(f'⚠️ {error_msg} (尝试 {attempt + 1}/{max_retries + 1})')
-                    
-                    if attempt < max_retries:
-                        # 指数退避：第1次重试等待2秒，第2次等待4秒
-                        import time
-                        wait_time = 2 ** (attempt + 1)
-                        logger.info(f'⏳ 等待 {wait_time} 秒后重试...')
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        logger.error(f'❌ 服务持续不可用，已重试 {max_retries} 次')
-                        return None
-                
-                # 其他状态码直接返回
-                return response
-                    
-            except requests.exceptions.Timeout as e:
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(f'⚠️ 请求超时 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
-                    continue
-                else:
-                    logger.error(f'❌ 请求超时，已重试 {max_retries} 次')
-                    return None
-                    
-            except requests.exceptions.ConnectionError as e:
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(f'⚠️ 连接错误 (尝试 {attempt + 1}/{max_retries + 1}), 正在重试...')
-                    continue
-                else:
-                    logger.error(f'❌ 连接失败，已重试 {max_retries} 次')
-                    return None
-                    
-            except requests.exceptions.SSLError as e:
-                # SSL 错误不重试
-                logger.error(f'❌ SSL 错误: {str(e)}')
-                return None
-                
-            except Exception as e:
-                logger.error(f"请求失败: {str(e)}")
-                return None
-        
-        # 理论上不会到达这里
-        return None
-
     def scan_and_import_remote(self) -> Dict:
         """
         触发远端 Talebook 扫描并导入
@@ -1242,10 +1046,7 @@ class TalebookApiClient:
             
             logger.info("   📤 正在发送 POST 请求...")
             request_start = time_module.time()
-            run_resp = self._make_request_with_retry(session, 'post', run_url, timeout=15)
-            if not run_resp:
-                logger.error(f"❌ 触发扫描请求失败 (耗时: {time_module.time() - request_start:.2f}秒)")
-                return {"code": 500, "message": "触发扫描请求失败，请稍后重试"}
+            run_resp = session.post(run_url, timeout=15)
             request_elapsed = time_module.time() - request_start
             logger.info(f"   📥 收到响应 (耗时: {request_elapsed:.2f}秒)")
             logger.debug(f"   响应状态码: {run_resp.status_code}")
@@ -1284,10 +1085,8 @@ class TalebookApiClient:
                 
                 try:
                     logger.debug(f"   [{attempt}/{max_attempts}] 发送请求...")
-                    sresp = self._make_request_with_retry(session, 'get', status_url, timeout=10)
-                    if not sresp:
-                        logger.warning(f"   [{attempt}/{max_attempts}] ⚠️  轮询请求失败")
-                        continue
+                    sresp = session.get(status_url, timeout=10)
+                    sresp.raise_for_status()
                     scan_status_data = sresp.json()
                     poll_elapsed = time_module.time() - poll_start
                     
@@ -1363,14 +1162,11 @@ class TalebookApiClient:
             logger.info(f"   请求体: {{'hashlist': 'all'}}")
             
             logger.debug("   发送请求...")
-            import_resp = self._make_request_with_retry(
-                session, 'post', import_run_url,
+            import_resp = session.post(
+                import_run_url,
                 json={"hashlist": "all"},  # 导入所有就绪文件
                 timeout=15
             )
-            if not import_resp:
-                logger.error(f"❌ 启动导入请求失败")
-                return {"code": 500, "message": "启动导入请求失败，请稍后重试"}
             logger.debug(f"   响应状态码: {import_resp.status_code}")
             
             import_resp.raise_for_status()
@@ -1406,10 +1202,8 @@ class TalebookApiClient:
                 
                 try:
                     logger.debug(f"   [{import_attempt}/{import_max_attempts}] 发送请求...")
-                    istatus_resp = self._make_request_with_retry(session, 'get', import_status_url, timeout=10)
-                    if not istatus_resp:
-                        logger.warning(f"   [{import_attempt}/{import_max_attempts}] ⚠️  导入状态轮询请求失败")
-                        continue
+                    istatus_resp = session.get(import_status_url, timeout=10)
+                    istatus_resp.raise_for_status()
                     final_import_status = istatus_resp.json()
                     poll_elapsed = time_module.time() - poll_start
                     
@@ -1490,59 +1284,3 @@ class TalebookApiClient:
             logger.error(f"{'=' * 80}\n")
             logger.error(f"堆栈跟踪:", exc_info=True)
             return {"code": 500, "message": f"扫描导入失败: {str(e)}"}
-    
-    def get_book_cover(self, book_id: int) -> Optional[bytes]:
-        """
-        获取书籍封面图片
-        
-        :param book_id: 书籍 ID
-        :return: 图片二进制数据(bytes) 或 None
-        """
-        try:
-            session = self._get_authenticated_session()
-            if not session:
-                logger.error("无法建立会话")
-                return None
-            
-            # 构建封面 URL
-            url = f"{self._server_url}/get/cover/{book_id}.jpg"
-            logger.debug(f"获取封面图片: {url}")
-            
-            response = session.get(url, timeout=30)
-            response.raise_for_status()
-            
-            logger.debug(f"成功获取封面图片: size={len(response.content)} bytes")
-            return response.content
-            
-        except Exception as e:
-            logger.error(f"获取封面图片异常: book_id={book_id}, error={str(e)}")
-            return None
-    
-    def get_book_thumb(self, book_id: int, width: int = 240, height: int = 320) -> Optional[bytes]:
-        """
-        获取书籍缩略图
-        
-        :param book_id: 书籍 ID
-        :param width: 缩略图宽度
-        :param height: 缩略图高度
-        :return: 图片二进制数据(bytes) 或 None
-        """
-        try:
-            session = self._get_authenticated_session()
-            if not session:
-                logger.error("无法建立会话")
-                return None
-            
-            # 构建缩略图 URL
-            url = f"{self._server_url}/get/thumb_{width}_{height}/{book_id}.jpg"
-            logger.debug(f"获取缩略图: {url}")
-            
-            response = session.get(url, timeout=30)
-            response.raise_for_status()
-            
-            logger.debug(f"成功获取缩略图: size={len(response.content)} bytes")
-            return response.content
-            
-        except Exception as e:
-            logger.error(f"获取缩略图异常: book_id={book_id}, size={width}x{height}, error={str(e)}")
-            return None

@@ -422,7 +422,7 @@ const {defineComponent:_defineComponent$4} = await importShared('vue');
 
 const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,createElementVNode:_createElementVNode$4,renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$4,createElementBlock:_createElementBlock$2,createBlock:_createBlock$4,createCommentVNode:_createCommentVNode$3} = await importShared('vue');
 
-const _hoisted_1$3 = { class: "text-body-2 font-weight-medium" };
+const _hoisted_1$4 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_2$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_3$2 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_4$2 = { class: "text-body-2 font-weight-medium" };
@@ -618,7 +618,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                                   }, {
                                     default: _withCtx$4(() => [
                                       _cache[6] || (_cache[6] = _createElementVNode$4("div", { class: "text-caption text-medium-emphasis mb-1" }, "出版社", -1)),
-                                      _createElementVNode$4("div", _hoisted_1$3, [
+                                      _createElementVNode$4("div", _hoisted_1$4, [
                                         _createVNode$4(_component_v_icon, {
                                           start: "",
                                           size: "x-small",
@@ -852,7 +852,7 @@ const {defineComponent:_defineComponent$3} = await importShared('vue');
 
 const {createTextVNode:_createTextVNode$3,resolveComponent:_resolveComponent$3,withCtx:_withCtx$3,createVNode:_createVNode$3,toDisplayString:_toDisplayString$2,createElementVNode:_createElementVNode$3,openBlock:_openBlock$3,createElementBlock:_createElementBlock$1,createCommentVNode:_createCommentVNode$2,createBlock:_createBlock$3} = await importShared('vue');
 
-const _hoisted_1$2 = {
+const _hoisted_1$3 = {
   key: 0,
   class: "mt-3"
 };
@@ -955,7 +955,7 @@ const _sfc_main$3 = /* @__PURE__ */ _defineComponent$3({
                   _: 1
                 }, 8, ["model-value"]),
                 _createVNode$3(_component_v_divider, { class: "my-4" }),
-                __props.progress.details.totalFiles !== void 0 ? (_openBlock$3(), _createElementBlock$1("div", _hoisted_1$2, [
+                __props.progress.details.totalFiles !== void 0 ? (_openBlock$3(), _createElementBlock$1("div", _hoisted_1$3, [
                   _createVNode$3(_component_v_row, null, {
                     default: _withCtx$3(() => [
                       _createVNode$3(_component_v_col, {
@@ -1160,7 +1160,7 @@ const {defineComponent:_defineComponent$2} = await importShared('vue');
 
 const {unref:_unref,toDisplayString:_toDisplayString$1,createTextVNode:_createTextVNode$2,resolveComponent:_resolveComponent$2,withCtx:_withCtx$2,createVNode:_createVNode$2,createElementVNode:_createElementVNode$2,openBlock:_openBlock$2,createBlock:_createBlock$2} = await importShared('vue');
 
-const _hoisted_1$1 = { class: "d-flex align-center" };
+const _hoisted_1$2 = { class: "d-flex align-center" };
 const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
   __name: "ToastNotification",
   setup(__props) {
@@ -1192,7 +1192,7 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
           })
         ]),
         default: _withCtx$2(() => [
-          _createElementVNode$2("div", _hoisted_1$1, [
+          _createElementVNode$2("div", _hoisted_1$2, [
             _createVNode$2(_component_v_icon, { start: "" }, {
               default: _withCtx$2(() => [
                 _createTextVNode$2(_toDisplayString$1(_unref(snackbar).icon), 1)
@@ -1212,7 +1212,7 @@ const {defineComponent:_defineComponent$1} = await importShared('vue');
 
 const {resolveComponent:_resolveComponent$1,createVNode:_createVNode$1,withCtx:_withCtx$1,createTextVNode:_createTextVNode$1,toDisplayString:_toDisplayString,openBlock:_openBlock$1,createBlock:_createBlock$1,createCommentVNode:_createCommentVNode$1,renderList:_renderList,Fragment:_Fragment,createElementBlock:_createElementBlock,createElementVNode:_createElementVNode$1,mergeProps:_mergeProps} = await importShared('vue');
 
-const _hoisted_1 = { class: "meta-category-page" };
+const _hoisted_1$1 = { class: "meta-category-page" };
 const _hoisted_2 = { class: "d-flex align-center" };
 const _hoisted_3 = { class: "flex-grow-1 mr-3" };
 const _hoisted_4 = { class: "text-subtitle-1 font-weight-bold text-truncate mb-1" };
@@ -1236,6 +1236,10 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     const metaList = ref$1([]);
     const loading = ref$1(false);
     const searchKeyword = ref$1("");
+    const talebookServerUrl = ref$1("");
+    const getApiUrl = (path) => {
+      return `/plugin/Talebook${path}`;
+    };
     const showBooksDialog = ref$1(false);
     const dialogLoading = ref$1(false);
     const dialogBooks = ref$1([]);
@@ -1287,22 +1291,39 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
+        const serverUrl = getServerUrl();
+        if (serverUrl) {
+          return `${serverUrl}${book.thumb}`;
         }
       }
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
-        const bookId = book.id;
-        if (bookId) {
-          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
+        const serverUrl = getServerUrl();
+        if (serverUrl) {
+          return `${serverUrl}${book.img}`;
         }
       }
       if (book.id) {
-        return `/api/v1/plugin/Talebook/image/cover/${book.id}`;
+        return `/api/v1/plugin/Talebook/image/thumb/${book.id}`;
+      }
+      return "";
+    }
+    async function loadConfig() {
+      if (!props.api) return;
+      try {
+        const response = await props.api.get(getApiUrl("/config"));
+        if (response && response.code === 200 && response.data) {
+          talebookServerUrl.value = response.data.server_url || "";
+        }
+      } catch (error) {
+        console.error("[MetaCategory] 加载配置失败:", error);
+      }
+    }
+    function getServerUrl() {
+      if (talebookServerUrl.value) {
+        return talebookServerUrl.value;
       }
       return "";
     }
@@ -1406,6 +1427,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       console.log("下载书籍:", bookId);
     }
     onMounted$1(() => {
+      loadConfig();
       loadMetaList();
     });
     return (_ctx, _cache) => {
@@ -1427,7 +1449,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
       const _component_v_spacer = _resolveComponent$1("v-spacer");
       const _component_v_card_title = _resolveComponent$1("v-card-title");
       const _component_v_dialog = _resolveComponent$1("v-dialog");
-      return _openBlock$1(), _createElementBlock("div", _hoisted_1, [
+      return _openBlock$1(), _createElementBlock("div", _hoisted_1$1, [
         _createVNode$1(_component_v_card, {
           class: "mb-4 elevation-2",
           color: "primary",
@@ -1729,12 +1751,12 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
                             default: _withCtx$1(() => [
                               _createVNode$1(BookCard, {
                                 book,
-                                "cover-url": getCoverUrl(book),
                                 api: props.api,
+                                "cover-url": getCoverUrl(book),
                                 "is-favorited": false,
                                 "is-downloading": false,
                                 onDetail: handleBookDetail
-                              }, null, 8, ["book", "cover-url", "api"])
+                              }, null, 8, ["book", "api", "cover-url"])
                             ]),
                             _: 2
                           }, 1024);
@@ -1770,12 +1792,13 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ce2e580a"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-4aa0f376"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
 const {createTextVNode:_createTextVNode,resolveComponent:_resolveComponent,withCtx:_withCtx,createVNode:_createVNode,createElementVNode:_createElementVNode,withKeys:_withKeys,openBlock:_openBlock,createBlock:_createBlock,createCommentVNode:_createCommentVNode} = await importShared('vue');
 
+const _hoisted_1 = { class: "d-flex align-center" };
 const {ref,onMounted,watch,computed} = await importShared('vue');
 const pluginId = "Talebook";
 const _sfc_main = /* @__PURE__ */ _defineComponent({
@@ -1790,8 +1813,10 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       default: () => ({})
     }
   },
-  setup(__props) {
+  emits: ["close"],
+  setup(__props, { emit: __emit }) {
     const props = __props;
+    const emit = __emit;
     const log = {
       info: (module, message, data) => {
         console.log(`[Talebook:${module}] ℹ️ ${message}`, data || "");
@@ -2335,6 +2360,10 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         downloadingBook.value = null;
       }
     };
+    const handleClose = () => {
+      log.info("Page", "用户点击关闭按钮");
+      emit("close");
+    };
     onMounted(async () => {
       console.log("[Page] ========== 组件挂载 ==========");
       console.log("[Page] props.model:", props.model);
@@ -2357,6 +2386,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     });
     return (_ctx, _cache) => {
       const _component_v_icon = _resolveComponent("v-icon");
+      const _component_v_btn = _resolveComponent("v-btn");
       const _component_v_card_title = _resolveComponent("v-card-title");
       const _component_v_card_subtitle = _resolveComponent("v-card-subtitle");
       const _component_v_card = _resolveComponent("v-card");
@@ -2366,7 +2396,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const _component_v_alert = _resolveComponent("v-alert");
       const _component_v_text_field = _resolveComponent("v-text-field");
       const _component_v_col = _resolveComponent("v-col");
-      const _component_v_btn = _resolveComponent("v-btn");
       const _component_v_row = _resolveComponent("v-row");
       const _component_v_card_text = _resolveComponent("v-card-text");
       const _component_v_empty_state = _resolveComponent("v-empty-state");
@@ -2381,23 +2410,44 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         default: _withCtx(() => [
           _createVNode(_component_v_card, { class: "mb-6 elevation-4" }, {
             default: _withCtx(() => [
-              _createVNode(_component_v_card_title, { class: "text-h5 bg-primary text-white d-flex align-center py-4" }, {
+              _createVNode(_component_v_card_title, { class: "text-h5 bg-primary text-white d-flex align-center justify-space-between py-4 px-6" }, {
                 default: _withCtx(() => [
-                  _createVNode(_component_v_icon, {
-                    start: "",
-                    color: "white"
+                  _createElementVNode("div", _hoisted_1, [
+                    _createVNode(_component_v_icon, {
+                      start: "",
+                      color: "white",
+                      class: "mr-3"
+                    }, {
+                      default: _withCtx(() => [..._cache[6] || (_cache[6] = [
+                        _createTextVNode("mdi-book-open-page-variant", -1)
+                      ])]),
+                      _: 1
+                    }),
+                    _cache[7] || (_cache[7] = _createTextVNode(" Talebook 本地书库管理 ", -1))
+                  ]),
+                  _createVNode(_component_v_btn, {
+                    icon: "",
+                    variant: "text",
+                    color: "white",
+                    size: "small",
+                    onClick: handleClose,
+                    title: "关闭页面"
                   }, {
-                    default: _withCtx(() => [..._cache[6] || (_cache[6] = [
-                      _createTextVNode("mdi-book-open-page-variant", -1)
-                    ])]),
+                    default: _withCtx(() => [
+                      _createVNode(_component_v_icon, null, {
+                        default: _withCtx(() => [..._cache[8] || (_cache[8] = [
+                          _createTextVNode("mdi-close", -1)
+                        ])]),
+                        _: 1
+                      })
+                    ]),
                     _: 1
-                  }),
-                  _cache[7] || (_cache[7] = _createTextVNode(" Talebook 本地书库管理 ", -1))
+                  })
                 ]),
                 _: 1
               }),
               _createVNode(_component_v_card_subtitle, { class: "text-grey-darken-1 pa-3" }, {
-                default: _withCtx(() => [..._cache[8] || (_cache[8] = [
+                default: _withCtx(() => [..._cache[9] || (_cache[9] = [
                   _createTextVNode(" 扫描本地目录，批量导入小说到 Talebook 书库（与 Sonovel 联动） ", -1)
                 ])]),
                 _: 1
@@ -2417,72 +2467,72 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                   _createVNode(_component_v_tab, { value: "scan" }, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, { start: "" }, {
-                        default: _withCtx(() => [..._cache[9] || (_cache[9] = [
+                        default: _withCtx(() => [..._cache[10] || (_cache[10] = [
                           _createTextVNode("mdi-folder-search", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[10] || (_cache[10] = _createTextVNode(" 扫描导入 ", -1))
+                      _cache[11] || (_cache[11] = _createTextVNode(" 扫描导入 ", -1))
                     ]),
                     _: 1
                   }),
                   _createVNode(_component_v_tab, { value: "browse" }, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, { start: "" }, {
-                        default: _withCtx(() => [..._cache[11] || (_cache[11] = [
+                        default: _withCtx(() => [..._cache[12] || (_cache[12] = [
                           _createTextVNode("mdi-book-search", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[12] || (_cache[12] = _createTextVNode(" 书籍浏览 ", -1))
+                      _cache[13] || (_cache[13] = _createTextVNode(" 书籍浏览 ", -1))
                     ]),
                     _: 1
                   }),
                   _createVNode(_component_v_tab, { value: "recent" }, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, { start: "" }, {
-                        default: _withCtx(() => [..._cache[13] || (_cache[13] = [
+                        default: _withCtx(() => [..._cache[14] || (_cache[14] = [
                           _createTextVNode("mdi-history", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[14] || (_cache[14] = _createTextVNode(" 最近添加 ", -1))
+                      _cache[15] || (_cache[15] = _createTextVNode(" 最近添加 ", -1))
                     ]),
                     _: 1
                   }),
                   _createVNode(_component_v_tab, { value: "favorites" }, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, { start: "" }, {
-                        default: _withCtx(() => [..._cache[15] || (_cache[15] = [
+                        default: _withCtx(() => [..._cache[16] || (_cache[16] = [
                           _createTextVNode("mdi-heart", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[16] || (_cache[16] = _createTextVNode(" 我的收藏 ", -1))
+                      _cache[17] || (_cache[17] = _createTextVNode(" 我的收藏 ", -1))
                     ]),
                     _: 1
                   }),
                   _createVNode(_component_v_tab, { value: "reading" }, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, { start: "" }, {
-                        default: _withCtx(() => [..._cache[17] || (_cache[17] = [
+                        default: _withCtx(() => [..._cache[18] || (_cache[18] = [
                           _createTextVNode("mdi-book-open-variant", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[18] || (_cache[18] = _createTextVNode(" 正在阅读 ", -1))
+                      _cache[19] || (_cache[19] = _createTextVNode(" 正在阅读 ", -1))
                     ]),
                     _: 1
                   }),
                   _createVNode(_component_v_tab, { value: "meta" }, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, { start: "" }, {
-                        default: _withCtx(() => [..._cache[19] || (_cache[19] = [
+                        default: _withCtx(() => [..._cache[20] || (_cache[20] = [
                           _createTextVNode("mdi-tag-multiple", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[20] || (_cache[20] = _createTextVNode(" 元数据分类 ", -1))
+                      _cache[21] || (_cache[21] = _createTextVNode(" 元数据分类 ", -1))
                     ]),
                     _: 1
                   })
@@ -2518,12 +2568,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             start: "",
                             color: "primary"
                           }, {
-                            default: _withCtx(() => [..._cache[21] || (_cache[21] = [
+                            default: _withCtx(() => [..._cache[22] || (_cache[22] = [
                               _createTextVNode("mdi-book-search", -1)
                             ])]),
                             _: 1
                           }),
-                          _cache[22] || (_cache[22] = _createTextVNode(" 搜索并浏览书籍 ", -1))
+                          _cache[23] || (_cache[23] = _createTextVNode(" 搜索并浏览书籍 ", -1))
                         ]),
                         _: 1
                       }),
@@ -2536,7 +2586,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             border: "start",
                             icon: "mdi-information"
                           }, {
-                            default: _withCtx(() => [..._cache[23] || (_cache[23] = [
+                            default: _withCtx(() => [..._cache[24] || (_cache[24] = [
                               _createElementVNode("div", { class: "text-body-2" }, [
                                 _createElementVNode("strong", null, "功能说明："),
                                 _createElementVNode("br"),
@@ -2579,7 +2629,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                                     block: "",
                                     onClick: handleSearch
                                   }, {
-                                    default: _withCtx(() => [..._cache[24] || (_cache[24] = [
+                                    default: _withCtx(() => [..._cache[25] || (_cache[25] = [
                                       _createTextVNode(" 搜索 ", -1)
                                     ])]),
                                     _: 1
@@ -2669,7 +2719,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-heart",
                         variant: "flat"
                       }, {
-                        default: _withCtx(() => [..._cache[25] || (_cache[25] = [
+                        default: _withCtx(() => [..._cache[26] || (_cache[26] = [
                           _createTextVNode(" 收藏 ", -1)
                         ])]),
                         _: 1
@@ -2683,7 +2733,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-information-outline",
                         onClick: ($event) => showBookDetail(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[26] || (_cache[26] = [
+                        default: _withCtx(() => [..._cache[27] || (_cache[27] = [
                           _createTextVNode(" 详情 ", -1)
                         ])]),
                         _: 1
@@ -2696,7 +2746,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-heart-off",
                         onClick: ($event) => removeFromFavorites(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[27] || (_cache[27] = [
+                        default: _withCtx(() => [..._cache[28] || (_cache[28] = [
                           _createTextVNode(" 取消收藏 ", -1)
                         ])]),
                         _: 1
@@ -2740,7 +2790,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-book-open-page-variant",
                         variant: "flat"
                       }, {
-                        default: _withCtx(() => [..._cache[28] || (_cache[28] = [
+                        default: _withCtx(() => [..._cache[29] || (_cache[29] = [
                           _createTextVNode(" 在读 ", -1)
                         ])]),
                         _: 1
@@ -2754,7 +2804,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-information-outline",
                         onClick: ($event) => showBookDetail(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[29] || (_cache[29] = [
+                        default: _withCtx(() => [..._cache[30] || (_cache[30] = [
                           _createTextVNode(" 详情 ", -1)
                         ])]),
                         _: 1
@@ -2767,7 +2817,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         "prepend-icon": "mdi-check-circle",
                         onClick: ($event) => markAsRead(book.id)
                       }, {
-                        default: _withCtx(() => [..._cache[30] || (_cache[30] = [
+                        default: _withCtx(() => [..._cache[31] || (_cache[31] = [
                           _createTextVNode(" 标记已读 ", -1)
                         ])]),
                         _: 1
@@ -2812,6 +2862,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-b3de4a6e"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-8fcbe1cd"]]);
 
 export { Page as default };

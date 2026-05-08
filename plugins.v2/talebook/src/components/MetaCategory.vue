@@ -187,8 +187,8 @@
             >
               <BookCard
                 :book="book"
-                :cover-url="getCoverUrl(book)"
                 :api="props.api"
+                :cover-url="getCoverUrl(book)"
                 :is-favorited="false"
                 :is-downloading="false"
                 @detail="handleBookDetail"
@@ -241,6 +241,14 @@ const selectedMetaType = ref('tag')
 const metaList = ref<MetaItem[]>([])
 const loading = ref(false)
 const searchKeyword = ref('')
+
+// Talebook 服务器地址（缓存）
+const talebookServerUrl = ref<string>('')
+
+// API 基础路径
+const getApiUrl = (path: string) => {
+  return `/plugin/Talebook${path}`
+}
 
 // 对话框相关
 const showBooksDialog = ref(false)
@@ -302,7 +310,7 @@ function getMetaTypeIcon(type: string): string {
 }
 
 /**
- * 获取封面 URL - 统一通过插件 API 代理
+ * 获取封面 URL
  */
 function getCoverUrl(book: any): string {
   if (!book) return ''
@@ -313,32 +321,62 @@ function getCoverUrl(book: any): string {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 通过插件 API 代理访问
-    // 格式: /api/v1/plugin/Talebook/image/thumb/{id}
-    const bookId = book.id
-    if (bookId) {
-      return `/api/v1/plugin/Talebook/image/thumb/${bookId}`
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    const serverUrl = getServerUrl()
+    if (serverUrl) {
+      // 直接拼接,利用浏览器默认缓存机制
+      return `${serverUrl}${book.thumb}`
     }
   }
   
   // 其次使用 img 字段(大图)
   if (book.img) {
+    // 如果是完整 URL,直接返回
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
     }
-    // 通过插件 API 代理访问
-    // 格式: /api/v1/plugin/Talebook/image/cover/{id}
-    const bookId = book.id
-    if (bookId) {
-      return `/api/v1/plugin/Talebook/image/cover/${bookId}`
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    const serverUrl = getServerUrl()
+    if (serverUrl) {
+      // 直接拼接,利用浏览器默认缓存机制
+      return `${serverUrl}${book.img}`
     }
   }
   
-  // 最后使用插件 API
+  // 最后使用插件 API 代理（仅在没有配置服务器地址时使用）
   if (book.id) {
-    return `/api/v1/plugin/Talebook/image/cover/${book.id}`
+    return `/api/v1/plugin/Talebook/image/thumb/${book.id}`
   }
   
+  return ''
+}
+
+/**
+ * 加载插件配置
+ */
+async function loadConfig() {
+  if (!props.api) return
+  
+  try {
+    const response = await props.api.get(getApiUrl('/config'))
+    if (response && response.code === 200 && response.data) {
+      talebookServerUrl.value = response.data.server_url || ''
+    }
+  } catch (error) {
+    console.error('[MetaCategory] 加载配置失败:', error)
+  }
+}
+
+/**
+ * 获取 Talebook 服务器地址
+ */
+function getServerUrl(): string {
+  // 优先使用缓存的服务器地址
+  if (talebookServerUrl.value) {
+    return talebookServerUrl.value
+  }
+  
+  // 如果没有配置，返回空字符串
   return ''
 }
 
@@ -480,6 +518,7 @@ function handleDownload(bookId: number) {
 
 // 组件挂载时加载数据
 onMounted(() => {
+  loadConfig()
   loadMetaList()
 })
 </script>
