@@ -56,10 +56,24 @@ async function loadImage(imageUrl, api, useCache = true) {
         throw new Error("响应数据为空");
       }
       console.log("[ImageLoader] 响应数据类型:", typeof response.data, response.data.constructor?.name);
+      console.log("[ImageLoader] 响应数据大小:", response.data.size || "unknown");
       const blob = response.data;
       if (!(blob instanceof Blob)) {
         console.error("[ImageLoader] 响应数据不是 Blob 对象:", blob);
+        if (blob instanceof ArrayBuffer || typeof blob === "string") {
+          try {
+            const text = typeof blob === "string" ? blob : new TextDecoder().decode(blob);
+            const errorData = JSON.parse(text);
+            console.error("[ImageLoader] 后端返回错误:", errorData);
+          } catch (e) {
+            console.error("[ImageLoader] 无法解析错误响应");
+          }
+        }
         throw new Error("响应数据格式错误");
+      }
+      if (blob.size === 0) {
+        console.error("[ImageLoader] Blob 数据为空");
+        throw new Error("图片数据为空");
       }
       const blobUrl = URL.createObjectURL(blob);
       if (useCache) {
@@ -1273,16 +1287,22 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
-        return `/api/v1/plugin/Talebook${book.thumb}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
+        }
       }
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
-        return `/api/v1/plugin/Talebook${book.img}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
+        }
       }
       if (book.id) {
-        return `/api/v1/plugin/Talebook/book/${book.id}/cover`;
+        return `/api/v1/plugin/Talebook/image/cover/${book.id}`;
       }
       return "";
     }
@@ -1750,7 +1770,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-c36881a9"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ce2e580a"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -1848,19 +1868,28 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
-        return `/api/v1/plugin/Talebook${book.thumb}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
+        }
       }
       if (book.img) {
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
-        return `/api/v1/plugin/Talebook${book.img}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
+        }
       }
       if (book.cover_url) {
         if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
           return book.cover_url;
         }
-        return `/api/v1/plugin/Talebook${book.cover_url}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
+        }
       }
       return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
     };
@@ -1869,19 +1898,28 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
-        return `/api/v1/plugin/Talebook${book.img}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
+        }
       }
       if (book.thumb) {
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
-        return `/api/v1/plugin/Talebook${book.thumb}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
+        }
       }
       if (book.cover_url) {
         if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
           return book.cover_url;
         }
-        return `/api/v1/plugin/Talebook${book.cover_url}`;
+        const bookId = book.id;
+        if (bookId) {
+          return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
+        }
       }
       return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
     };
@@ -2774,6 +2812,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-5e1b3c75"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-b3de4a6e"]]);
 
 export { Page as default };

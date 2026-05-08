@@ -162,8 +162,11 @@ function getCoverUrl(book: any): string {
       return book.thumb
     }
     // 通过插件 API 代理访问
-    // 格式: /api/v1/plugin/Talebook/get/thumb_240_320/{id}.jpg
-    return `/api/v1/plugin/Talebook${book.thumb}`
+    // 格式: /api/v1/plugin/Talebook/image/thumb/{id}
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/thumb/${bookId}`
+    }
   }
   
   // 其次使用 img 字段(大图)
@@ -172,13 +175,16 @@ function getCoverUrl(book: any): string {
       return book.img
     }
     // 通过插件 API 代理访问
-    // 格式: /api/v1/plugin/Talebook/get/cover/{id}.jpg
-    return `/api/v1/plugin/Talebook${book.img}`
+    // 格式: /api/v1/plugin/Talebook/image/cover/{id}
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/cover/${bookId}`
+    }
   }
   
   // 最后使用插件 API
   if (book.id) {
-    return `/api/v1/plugin/Talebook/book/${book.id}/cover`
+    return `/api/v1/plugin/Talebook/image/cover/${book.id}`
   }
   
   return ''

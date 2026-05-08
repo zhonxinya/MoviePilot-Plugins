@@ -97,6 +97,7 @@ export async function loadImage(
       }
       
       console.log('[ImageLoader] 响应数据类型:', typeof response.data, response.data.constructor?.name)
+      console.log('[ImageLoader] 响应数据大小:', response.data.size || 'unknown')
       
       // 获取 Blob 数据
       const blob = response.data
@@ -104,7 +105,23 @@ export async function loadImage(
       // 验证是否为 Blob 对象
       if (!(blob instanceof Blob)) {
         console.error('[ImageLoader] 响应数据不是 Blob 对象:', blob)
+        // 尝试解析为 JSON 错误信息
+        if (blob instanceof ArrayBuffer || typeof blob === 'string') {
+          try {
+            const text = typeof blob === 'string' ? blob : new TextDecoder().decode(blob)
+            const errorData = JSON.parse(text)
+            console.error('[ImageLoader] 后端返回错误:', errorData)
+          } catch (e) {
+            console.error('[ImageLoader] 无法解析错误响应')
+          }
+        }
         throw new Error('响应数据格式错误')
+      }
+      
+      // 检查 Blob 是否为空
+      if (blob.size === 0) {
+        console.error('[ImageLoader] Blob 数据为空')
+        throw new Error('图片数据为空')
       }
       
       // 创建 Blob URL

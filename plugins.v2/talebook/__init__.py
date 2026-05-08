@@ -367,7 +367,7 @@ class Talebook(_PluginBase):
             },
             # 图片代理 API (需要认证)
             {
-                "path": "/get/cover/{book_id}.jpg",
+                "path": "/image/cover/{book_id}",
                 "endpoint": self.api_proxy_cover_image,
                 "methods": ["GET"],
                 "auth": "bear",  # 需要认证
@@ -375,7 +375,7 @@ class Talebook(_PluginBase):
                 "description": "通过插件代理获取 Talebook 书籍封面图片(带缓存)",
             },
             {
-                "path": "/get/thumb_{width}_{height}/{book_id}.jpg",
+                "path": "/image/thumb/{book_id}",
                 "endpoint": self.api_proxy_thumb_image,
                 "methods": ["GET"],
                 "auth": "bear",  # 需要认证
@@ -1296,18 +1296,26 @@ class Talebook(_PluginBase):
         :param book_id: 书籍 ID
         :return: 图片二进制数据或错误响应
         """
+        logger.info(f"📸 收到封面图片请求: book_id={book_id}")
+        
         if not self._enabled:
+            logger.warning("插件未启用")
             return {"code": 400, "message": "插件未启用"}
         
         if not self._ensure_api_client():
+            logger.error("API 客户端未初始化")
             return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
         
         try:
             # 使用带缓存的方法获取封面
+            logger.info(f"   开始获取封面图片...")
             image_data = self._cached_get_cover_image(book_id)
             
             if image_data is None:
+                logger.warning(f"   封面图片不存在或获取失败: book_id={book_id}")
                 return {"code": 404, "message": "封面图片不存在"}
+            
+            logger.info(f"   ✅ 成功获取封面图片: size={len(image_data)} bytes")
             
             # 返回图片二进制数据
             from fastapi.responses import Response
@@ -1319,7 +1327,7 @@ class Talebook(_PluginBase):
                 }
             )
         except Exception as e:
-            logger.error(f"获取封面图片异常: {str(e)}")
+            logger.error(f"❌ 获取封面图片异常: book_id={book_id}, error={str(e)}", exc_info=True)
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
     @cached(
@@ -1344,8 +1352,15 @@ class Talebook(_PluginBase):
             logger.error("API 客户端在缓存方法中为 None")
             return None
         
-        logger.debug(f"从 API 获取封面图片: book_id={book_id}")
-        return self._api_client.get_book_cover(book_id)
+        logger.info(f"   🔄 从 Talebook API 获取封面图片: book_id={book_id}")
+        result = self._api_client.get_book_cover(book_id)
+        
+        if result:
+            logger.info(f"   ✅ API 返回图片数据: size={len(result)} bytes")
+        else:
+            logger.warning(f"   ❌ API 返回 None")
+        
+        return result
     
     def api_proxy_thumb_image(self, book_id: int, width: int = 240, height: int = 320):
         """
@@ -1356,18 +1371,26 @@ class Talebook(_PluginBase):
         :param height: 缩略图高度
         :return: 图片二进制数据或错误响应
         """
+        logger.info(f"📸 收到缩略图请求: book_id={book_id}, size={width}x{height}")
+        
         if not self._enabled:
+            logger.warning("插件未启用")
             return {"code": 400, "message": "插件未启用"}
         
         if not self._ensure_api_client():
+            logger.error("API 客户端未初始化")
             return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
         
         try:
             # 使用带缓存的方法获取缩略图
+            logger.info(f"   开始获取缩略图...")
             image_data = self._cached_get_thumb_image(book_id, width, height)
             
             if image_data is None:
+                logger.warning(f"   缩略图不存在或获取失败: book_id={book_id}")
                 return {"code": 404, "message": "缩略图不存在"}
+            
+            logger.info(f"   ✅ 成功获取缩略图: size={len(image_data)} bytes")
             
             # 返回图片二进制数据
             from fastapi.responses import Response
@@ -1379,7 +1402,7 @@ class Talebook(_PluginBase):
                 }
             )
         except Exception as e:
-            logger.error(f"获取缩略图异常: {str(e)}")
+            logger.error(f"❌ 获取缩略图异常: book_id={book_id}, error={str(e)}", exc_info=True)
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
     @cached(

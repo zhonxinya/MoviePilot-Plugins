@@ -436,8 +436,11 @@ const getCoverUrl = (book: any) => {
       return book.thumb
     }
     // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/get/thumb_240_320/{id}.jpg
-    return `/api/v1/plugin/Talebook${book.thumb}`
+    // 格式: /api/v1/plugin/Talebook/image/thumb/{id}
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/thumb/${bookId}`
+    }
   }
   
   // 其次使用 img 字段（适用于详情页显示）
@@ -447,8 +450,11 @@ const getCoverUrl = (book: any) => {
       return book.img
     }
     // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/get/cover/{id}.jpg
-    return `/api/v1/plugin/Talebook${book.img}`
+    // 格式: /api/v1/plugin/Talebook/image/cover/{id}
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/cover/${bookId}`
+    }
   }
   
   if (book.cover_url) {
@@ -457,7 +463,10 @@ const getCoverUrl = (book: any) => {
       return book.cover_url
     }
     // 通过插件 API 代理访问
-    return `/api/v1/plugin/Talebook${book.cover_url}`
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/cover/${bookId}`
+    }
   }
   
   // 如果没有封面,返回占位图
@@ -473,8 +482,11 @@ const getDetailCoverUrl = (book: any) => {
       return book.img
     }
     // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/get/cover/{id}.jpg
-    return `/api/v1/plugin/Talebook${book.img}`
+    // 格式: /api/v1/plugin/Talebook/image/cover/{id}
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/cover/${bookId}`
+    }
   }
   
   // 其次使用 thumb 字段
@@ -484,8 +496,11 @@ const getDetailCoverUrl = (book: any) => {
       return book.thumb
     }
     // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/get/thumb_240_320/{id}.jpg
-    return `/api/v1/plugin/Talebook${book.thumb}`
+    // 格式: /api/v1/plugin/Talebook/image/thumb/{id}
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/thumb/${bookId}`
+    }
   }
   
   if (book.cover_url) {
@@ -494,7 +509,10 @@ const getDetailCoverUrl = (book: any) => {
       return book.cover_url
     }
     // 通过插件 API 代理访问
-    return `/api/v1/plugin/Talebook${book.cover_url}`
+    const bookId = book.id
+    if (bookId) {
+      return `/api/v1/plugin/Talebook/image/cover/${bookId}`
+    }
   }
   
   // 如果没有封面,返回占位图
