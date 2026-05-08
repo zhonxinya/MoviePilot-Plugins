@@ -119,9 +119,6 @@ const showDetailDialog = ref(false)
 const selectedBookId = ref<number | null>(null)
 const selectedBook = ref<any | null>(null)
 
-// Talebook 服务器地址（缓存）
-const talebookServerUrl = ref('')
-
 /**
  * 获取元数据类型图标
  */
@@ -153,7 +150,7 @@ function getMetaTypeName(type: string): string {
 }
 
 /**
- * 获取封面 URL
+ * 获取封面 URL - 统一通过插件 API 代理
  */
 function getCoverUrl(book: any): string {
   if (!book) return ''
@@ -163,12 +160,7 @@ function getCoverUrl(book: any): string {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 如果有服务器地址,拼接完整 URL
-    const serverUrl = talebookServerUrl.value
-    if (serverUrl) {
-      return `${serverUrl}${book.thumb}`
-    }
-    // 否则通过插件 API 代理访问
+    // 通过插件 API 代理访问
     return getApiUrl(book.thumb)
   }
   
@@ -176,10 +168,6 @@ function getCoverUrl(book: any): string {
   if (book.img) {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
-    }
-    const serverUrl = talebookServerUrl.value
-    if (serverUrl) {
-      return `${serverUrl}${book.img}`
     }
     return getApiUrl(book.img)
   }
@@ -202,23 +190,6 @@ function getApiUrl(path: string): string {
   }
   // 否则通过插件 API 代理
   return `/api/v1/plugin/Talebook${path}`
-}
-
-/**
- * 加载配置
- */
-async function loadConfig() {
-  try {
-    if (!props.api) return
-    
-    const response = await props.api.get(getApiUrl('/config'))
-    if (response && response.code === 200 && response.data) {
-      talebookServerUrl.value = response.data.server_url || ''
-      console.log('[BrowsePage] 配置加载成功, server_url:', talebookServerUrl.value)
-    }
-  } catch (error) {
-    console.error('[BrowsePage] 加载配置失败:', error)
-  }
 }
 
 /**
@@ -349,7 +320,6 @@ watch(() => [props.metaType, props.metaName], () => {
 
 // 组件挂载时加载数据
 onMounted(() => {
-  loadConfig()
   loadBooks()
 })
 </script>
