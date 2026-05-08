@@ -365,12 +365,12 @@ class Talebook(_PluginBase):
                 "summary": "保存插件配置",
                 "description": "保存插件配置并重新初始化",
             },
-            # 图片代理 API (无需认证,因为图片URL本身已包含book_id作为标识)
+            # 图片代理 API (需要认证)
             {
                 "path": "/get/cover/{book_id}.jpg",
                 "endpoint": self.api_proxy_cover_image,
                 "methods": ["GET"],
-                "auth": None,  # 无需认证
+                "auth": "bear",  # 需要认证
                 "summary": "代理书籍封面图片",
                 "description": "通过插件代理获取 Talebook 书籍封面图片(带缓存)",
             },
@@ -378,7 +378,7 @@ class Talebook(_PluginBase):
                 "path": "/get/thumb_{width}_{height}/{book_id}.jpg",
                 "endpoint": self.api_proxy_thumb_image,
                 "methods": ["GET"],
-                "auth": None,  # 无需认证
+                "auth": "bear",  # 需要认证
                 "summary": "代理书籍缩略图",
                 "description": "通过插件代理获取 Talebook 书籍缩略图(带缓存)",
             },

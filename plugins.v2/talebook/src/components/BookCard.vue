@@ -2,7 +2,7 @@
   <v-card hover elevation="3" class="h-100 rounded-lg overflow-hidden" style="max-width: 280px;">
     <!-- 封面图片 -->
     <v-img
-      :src="coverUrl"
+      :src="loadedImageUrl || coverUrl"
       height="280"
       cover
       class="bg-grey-lighten-3"
@@ -79,6 +79,8 @@
 </template>
 
 <script setup lang="ts">
+import { useImageLoader } from '../utils/imageLoader'
+
 interface Props {
   book: any
   coverUrl: string
@@ -87,11 +89,14 @@ interface Props {
   showFavorite?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   isFavorited: false,
   isDownloading: false,
   showFavorite: true
 })
+
+// 使用图片加载器异步加载图片
+const { imageUrl: loadedImageUrl } = useImageLoader(props.coverUrl)
 
 defineEmits<{
   detail: [bookId: number]
