@@ -450,8 +450,11 @@ const getCoverUrl = (book: any) => {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/image/thumb/{id}
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    if (talebookServerUrl.value) {
+      return `${talebookServerUrl.value}${book.thumb}`
+    }
+    // 降级:通过插件 API 代理访问(带缓存)
     const bookId = book.id
     if (bookId) {
       return `/api/v1/plugin/Talebook/image/thumb/${bookId}`
@@ -464,8 +467,11 @@ const getCoverUrl = (book: any) => {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
     }
-    // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/image/cover/{id}
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    if (talebookServerUrl.value) {
+      return `${talebookServerUrl.value}${book.img}`
+    }
+    // 降级:通过插件 API 代理访问(带缓存)
     const bookId = book.id
     if (bookId) {
       return `/api/v1/plugin/Talebook/image/cover/${bookId}`
@@ -477,7 +483,11 @@ const getCoverUrl = (book: any) => {
     if (book.cover_url.startsWith('http://') || book.cover_url.startsWith('https://')) {
       return book.cover_url
     }
-    // 通过插件 API 代理访问
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    if (talebookServerUrl.value) {
+      return `${talebookServerUrl.value}${book.cover_url}`
+    }
+    // 降级:通过插件 API 代理访问
     const bookId = book.id
     if (bookId) {
       return `/api/v1/plugin/Talebook/image/cover/${bookId}`
@@ -496,8 +506,11 @@ const getDetailCoverUrl = (book: any) => {
     if (book.img.startsWith('http://') || book.img.startsWith('https://')) {
       return book.img
     }
-    // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/image/cover/{id}
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    if (talebookServerUrl.value) {
+      return `${talebookServerUrl.value}${book.img}`
+    }
+    // 降级:通过插件 API 代理访问(带缓存)
     const bookId = book.id
     if (bookId) {
       return `/api/v1/plugin/Talebook/image/cover/${bookId}`
@@ -510,8 +523,11 @@ const getDetailCoverUrl = (book: any) => {
     if (book.thumb.startsWith('http://') || book.thumb.startsWith('https://')) {
       return book.thumb
     }
-    // 通过插件 API 代理访问(带缓存)
-    // 格式: /api/v1/plugin/Talebook/image/thumb/{id}
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    if (talebookServerUrl.value) {
+      return `${talebookServerUrl.value}${book.thumb}`
+    }
+    // 降级:通过插件 API 代理访问(带缓存)
     const bookId = book.id
     if (bookId) {
       return `/api/v1/plugin/Talebook/image/thumb/${bookId}`
@@ -523,7 +539,11 @@ const getDetailCoverUrl = (book: any) => {
     if (book.cover_url.startsWith('http://') || book.cover_url.startsWith('https://')) {
       return book.cover_url
     }
-    // 通过插件 API 代理访问
+    // 如果是相对路径,与 Talebook 服务器地址拼接
+    if (talebookServerUrl.value) {
+      return `${talebookServerUrl.value}${book.cover_url}`
+    }
+    // 降级:通过插件 API 代理访问
     const bookId = book.id
     if (bookId) {
       return `/api/v1/plugin/Talebook/image/cover/${bookId}`

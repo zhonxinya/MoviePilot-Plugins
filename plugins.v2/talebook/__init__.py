@@ -27,7 +27,7 @@ class Talebook(_PluginBase):
     plugin_icon = "Calibre_B.png"
     plugin_version = "1.0.4"
     plugin_author = "trient"
-    author_url = "https://github.com/jxxghp/MoviePilot-Plugins"
+    author_url = "https://github.com/zhonxinya/MoviePilot-Plugins"
     plugin_config_prefix = "talebook_"
     plugin_order = 0
     auth_level = 1

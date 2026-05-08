@@ -1893,6 +1893,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
+        if (talebookServerUrl.value) {
+          return `${talebookServerUrl.value}${book.thumb}`;
+        }
         const bookId = book.id;
         if (bookId) {
           return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
@@ -1902,6 +1905,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
+        if (talebookServerUrl.value) {
+          return `${talebookServerUrl.value}${book.img}`;
+        }
         const bookId = book.id;
         if (bookId) {
           return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
@@ -1910,6 +1916,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       if (book.cover_url) {
         if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
           return book.cover_url;
+        }
+        if (talebookServerUrl.value) {
+          return `${talebookServerUrl.value}${book.cover_url}`;
         }
         const bookId = book.id;
         if (bookId) {
@@ -1923,6 +1932,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         if (book.img.startsWith("http://") || book.img.startsWith("https://")) {
           return book.img;
         }
+        if (talebookServerUrl.value) {
+          return `${talebookServerUrl.value}${book.img}`;
+        }
         const bookId = book.id;
         if (bookId) {
           return `/api/v1/plugin/Talebook/image/cover/${bookId}`;
@@ -1932,6 +1944,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         if (book.thumb.startsWith("http://") || book.thumb.startsWith("https://")) {
           return book.thumb;
         }
+        if (talebookServerUrl.value) {
+          return `${talebookServerUrl.value}${book.thumb}`;
+        }
         const bookId = book.id;
         if (bookId) {
           return `/api/v1/plugin/Talebook/image/thumb/${bookId}`;
@@ -1940,6 +1955,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       if (book.cover_url) {
         if (book.cover_url.startsWith("http://") || book.cover_url.startsWith("https://")) {
           return book.cover_url;
+        }
+        if (talebookServerUrl.value) {
+          return `${talebookServerUrl.value}${book.cover_url}`;
         }
         const bookId = book.id;
         if (bookId) {
@@ -2862,6 +2880,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-8fcbe1cd"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-3df07e99"]]);
 
 export { Page as default };
