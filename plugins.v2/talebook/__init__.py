@@ -42,6 +42,19 @@ class Talebook(_PluginBase):
         
         # API 客户端实例
         self._api_client: Optional[TalebookApiClient] = None
+    
+    def __del__(self):
+        """
+        析构函数：确保资源被清理
+        
+        作为 stop_service() 的兜底，防止插件异常退出时资源泄漏
+        """
+        try:
+            if self._api_client:
+                self._api_client.close()
+                logger.debug("Talebook 插件析构：API 客户端已清理")
+        except Exception:
+            pass  # 析构函数中不应抛出异常
         
     def init_plugin(self, config: dict = None):
         """
@@ -384,6 +397,45 @@ class Talebook(_PluginBase):
             },
         ]
     
+    def _check_plugin_ready(self) -> Optional[Dict[str, Any]]:
+        """
+        检查插件是否就绪（通用配置检查）
+        
+        统一的配置检查逻辑，避免在每个 API 方法中重复编写
+        
+        Returns:
+            None: 插件就绪，可以继续执行
+            Dict: 错误响应，包含 code 和 message
+        """
+        if not self._enabled:
+            logger.warning("Talebook 插件未启用")
+            return {"code": 400, "message": "插件未启用"}
+        
+        if not self._ensure_api_client():
+            config = self.get_config() or {}
+            enabled = bool(config.get("enabled", False))
+            server_url = config.get("server_url", "")
+            username = config.get("username", "")
+            password = config.get("password", "")
+            
+            missing_fields = []
+            if not enabled:
+                missing_fields.append("插件未启用")
+            if not server_url:
+                missing_fields.append("服务器地址")
+            if not username:
+                missing_fields.append("用户名")
+            if not password:
+                missing_fields.append("密码")
+            
+            error_msg = f"API 客户端未初始化。缺失配置: {', '.join(missing_fields)}"
+            logger.error(error_msg)
+            logger.error(f"当前配置状态: enabled={enabled}, server_url={'✓' if server_url else '✗'}, username={'✓' if username else '✗'}, password={'✓' if password else '✗'}")
+            
+            return {"code": 500, "message": error_msg}
+        
+        return None
+    
     def _ensure_api_client(self) -> bool:
         """
         确保 API 客户端已正确初始化
@@ -435,7 +487,7 @@ class Talebook(_PluginBase):
             logger.error(f"重新初始化 API 客户端异常: {str(e)}")
             return False
     
-    def get_book_detail(self, book_id: int):
+    def get_book_detail(self, book_id: int) -> Dict[str, Any]:
         """
         获取书籍详细信息
         
@@ -486,38 +538,14 @@ class Talebook(_PluginBase):
         logger.debug(f"从 API 获取书籍详情: book_id={book_id}")
         return self._api_client.get_book_detail(book_id)
     
-    def api_get_recent_books(self, limit: int = 20):
+    def api_get_recent_books(self, limit: int = 20) -> Dict[str, Any]:
         """
         API: 获取最近添加的书籍
         """
-        if not self._enabled:
-            logger.warning("Talebook 插件未启用，无法获取最近书籍")
-            return {"code": 400, "message": "插件未启用，请在配置中启用 Talebook 插件"}
-        
-        # 确保 API 客户端已正确初始化
-        if not self._ensure_api_client():
-            # 获取详细配置状态用于诊断
-            config = self.get_config() or {}
-            enabled = bool(config.get("enabled", False))
-            server_url = config.get("server_url", "")
-            username = config.get("username", "")
-            password = config.get("password", "")
-            
-            missing = []
-            if not enabled:
-                missing.append("插件未启用")
-            if not server_url:
-                missing.append("服务器地址")
-            if not username:
-                missing.append("用户名")
-            if not password:
-                missing.append("密码")
-            
-            error_msg = f"API 客户端未初始化。缺失配置: {', '.join(missing)}"
-            logger.error(error_msg)
-            logger.error(f"当前配置状态: enabled={enabled}, server_url={'✓' if server_url else '✗'}, username={'✓' if username else '✗'}, password={'✓' if password else '✗'}")
-            
-            return {"code": 500, "message": error_msg}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             # 使用带缓存的方法
@@ -554,16 +582,14 @@ class Talebook(_PluginBase):
         logger.debug(f"从 API 获取最近书籍: limit={limit}")
         return self._api_client.get_recent_books(limit)
     
-    def api_get_hot_books(self, limit: int = 20):
+    def api_get_hot_books(self, limit: int = 20) -> Dict[str, Any]:
         """
         API: 获取热门书籍
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        # 确保 API 客户端已正确初始化
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             # 使用带缓存的方法
@@ -600,7 +626,7 @@ class Talebook(_PluginBase):
         logger.debug(f"从 API 获取热门书籍: limit={limit}")
         return self._api_client.get_hot_books(limit)
     
-    def api_search_books(self, keyword: str = ""):
+    def api_search_books(self, keyword: str = "") -> Dict[str, Any]:
         """
         API: 搜索电子书
         """
@@ -608,31 +634,10 @@ class Talebook(_PluginBase):
             logger.warning("搜索关键词为空")
             return {"code": 400, "message": "请提供搜索关键词"}
         
-        if not self._enabled:
-            logger.warning("插件未启用，无法搜索")
-            return {"code": 400, "message": "插件未启用"}
-        
-        # 确保 API 客户端已正确初始化
-        if not self._ensure_api_client():
-            config = self.get_config() or {}
-            enabled = bool(config.get("enabled", False))
-            server_url = config.get("server_url", "")
-            username = config.get("username", "")
-            password = config.get("password", "")
-            
-            missing_fields = []
-            if not enabled:
-                missing_fields.append("插件未启用")
-            if not server_url:
-                missing_fields.append("服务器地址")
-            if not username:
-                missing_fields.append("用户名")
-            if not password:
-                missing_fields.append("密码")
-            
-            error_msg = f"API 客户端未初始化。缺失配置: {', '.join(missing_fields)}"
-            logger.error(error_msg)
-            return {"code": 500, "message": error_msg}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             logger.info(f"开始搜索书籍: keyword={keyword}")
@@ -671,7 +676,7 @@ class Talebook(_PluginBase):
         logger.debug(f"从 API 搜索书籍: keyword={keyword}")
         return self._api_client.search_books(keyword)
     
-    def api_scan_and_import(self):
+    def api_scan_and_import(self) -> Dict[str, Any]:
         """
         API: 扫描本地目录并批量导入小说
         
@@ -691,16 +696,10 @@ class Talebook(_PluginBase):
         logger.info(f"   用户配置: username={'✓' if self._username else '✗'}, password={'✓' if self._password else '✗'}")
         logger.info("=" * 80)
         
-        if not self._enabled:
-            logger.error("❌ 插件未启用")
-            return {"code": 400, "message": "插件未启用"}
-        
-        # 确保 API 客户端已正确初始化
-        logger.info("🔍 检查 API 客户端...")
-        if not self._ensure_api_client():
-            logger.error("❌ API 客户端未初始化")
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
-        logger.info("✅ API 客户端就绪")
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             # 使用 API 客户端执行远端扫描和导入
@@ -728,7 +727,7 @@ class Talebook(_PluginBase):
             logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
             return {"code": 500, "message": f"扫描失败: {str(e)}"}
     
-    def api_import_single_book(self, file_path: str):
+    def api_import_single_book(self, file_path: str) -> Dict[str, Any]:
         """
         API: 导入单个小说文件
         
@@ -738,12 +737,10 @@ class Talebook(_PluginBase):
         if not file_path:
             return {"code": 400, "message": "请提供文件路径"}
         
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        # 确保 API 客户端已正确初始化
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             success = self._api_client.import_book_to_talebook(file_path)
@@ -831,6 +828,20 @@ class Talebook(_PluginBase):
             }
         ]
     
+    def get_agent_tools(self):
+        """
+        注册智能体工具
+        
+        为 MoviePilot AI 智能体提供电子书管理功能:
+        - 搜索电子书
+        - 获取书籍详情
+        - 收藏/取消收藏
+        - 设置阅读状态
+        - 查看收藏和阅读列表
+        """
+        from .agent_tools import get_talebook_tools
+        return get_talebook_tools()
+    
     def stop_service(self):
         """
         停止插件服务时清理资源
@@ -844,18 +855,16 @@ class Talebook(_PluginBase):
             self._api_client = None
         logger.info("Talebook 插件服务已停止,API 客户端已清理")
     
-    def api_get_user_info(self):
+    def api_get_user_info(self) -> Dict[str, Any]:
         """
         API: 获取当前用户信息
         
         :return: 用户信息
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        # 确保 API 客户端已正确初始化
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             return self._api_client.get_user_info()
@@ -863,18 +872,17 @@ class Talebook(_PluginBase):
             logger.error(f"获取用户信息异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def api_get_book_refer_meta(self, book_id: int):
+    def api_get_book_refer_meta(self, book_id: int) -> Dict[str, Any]:
         """
         API: 获取书籍的外部元数据
         
         :param book_id: 书籍 ID
         :return: 外部元数据列表
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             return self._api_client.get_book_refer_meta(book_id)
@@ -884,7 +892,7 @@ class Talebook(_PluginBase):
     
     def api_apply_book_refer_meta(self, book_id: int, provider_key: str = "", 
                                   provider_value: str = "", only_meta: bool = False, 
-                                  only_cover: bool = False):
+                                  only_cover: bool = False) -> Dict[str, Any]:
         """
         API: 应用外部元数据到书籍
         
@@ -895,11 +903,10 @@ class Talebook(_PluginBase):
         :param only_cover: 仅应用封面
         :return: 操作结果
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             return self._api_client.apply_book_refer_meta(
@@ -909,7 +916,7 @@ class Talebook(_PluginBase):
             logger.error(f"应用外部元数据异常: {str(e)}")
             return {"code": 500, "message": f"应用失败: {str(e)}"}
     
-    def api_get_related_books(self, book_id: int, limit: int = 10):
+    def api_get_related_books(self, book_id: int, limit: int = 10) -> Dict[str, Any]:
         """
         API: 获取相关书籍
         
@@ -917,11 +924,10 @@ class Talebook(_PluginBase):
         :param limit: 返回数量限制
         :return: 相关书籍列表
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             books = self._api_client.get_related_books(book_id, limit)
@@ -930,7 +936,7 @@ class Talebook(_PluginBase):
             logger.error(f"获取相关书籍异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def api_get_books(self, page: int = 1, limit: int = 20, search: str = ""):
+    def api_get_books(self, page: int = 1, limit: int = 20, search: str = "") -> Dict[str, Any]:
         """
         API: 获取书籍列表(分页)
         
@@ -939,51 +945,81 @@ class Talebook(_PluginBase):
         :param search: 搜索关键词(可选)
         :return: 书籍列表和总数
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
-            # 调用 Talebook API 获取书籍列表
-            result = self._api_client.get_recent_books(limit * page)  # 获取足够多的书籍
-            
-            if result.get("code") != 200:
-                return result
-            
-            books = result.get("data", [])
-            total = len(books)
-            
-            # 如果有搜索关键词,进行过滤
+            # 如果有搜索关键词，使用搜索 API（更高效）
             if search:
-                search_lower = search.lower()
-                books = [
-                    book for book in books
-                    if search_lower in book.get("title", "").lower()
-                    or search_lower in book.get("author", "").lower()
-                ]
-                total = len(books)
-            
-            # 分页处理
-            start = (page - 1) * limit
-            end = start + limit
-            paginated_books = books[start:end]
-            
-            return {
-                "code": 200,
-                "data": {
-                    "books": paginated_books,
-                    "total": total,
-                    "page": page,
-                    "limit": limit
+                logger.info(f"搜索书籍: keyword={search}, page={page}, limit={limit}")
+                search_result = self._api_client.search_books(search)
+                
+                if not search_result:
+                    return {
+                        "code": 200,
+                        "data": {
+                            "books": [],
+                            "total": 0,
+                            "page": page,
+                            "limit": limit
+                        }
+                    }
+                
+                # 对搜索结果进行分页
+                total = len(search_result)
+                start = (page - 1) * limit
+                end = start + limit
+                paginated_books = search_result[start:end]
+                
+                return {
+                    "code": 200,
+                    "data": {
+                        "books": paginated_books,
+                        "total": total,
+                        "page": page,
+                        "limit": limit
+                    }
                 }
-            }
+            else:
+                # 无搜索关键词时，获取最近添加的书籍
+                # 优化：只获取当前页所需的数据量，而不是全部
+                fetch_limit = page * limit  # 获取到当前页末尾
+                books = self._api_client.get_recent_books(fetch_limit)
+                
+                if not books:
+                    return {
+                        "code": 200,
+                        "data": {
+                            "books": [],
+                            "total": 0,
+                            "page": page,
+                            "limit": limit
+                        }
+                    }
+                
+                total = len(books)
+                
+                # 分页处理
+                start = (page - 1) * limit
+                end = start + limit
+                paginated_books = books[start:end]
+                
+                return {
+                    "code": 200,
+                    "data": {
+                        "books": paginated_books,
+                        "total": total,
+                        "page": page,
+                        "limit": limit
+                    }
+                }
         except Exception as e:
             logger.error(f"获取书籍列表异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def api_get_meta_list(self, meta_type: str, show_all: bool = False):
+    def api_get_meta_list(self, meta_type: str, show_all: bool = False) -> Dict[str, Any]:
         """
         API: 获取元数据列表
         
@@ -991,11 +1027,10 @@ class Talebook(_PluginBase):
         :param show_all: 是否显示所有条目
         :return: 元数据列表
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         # 验证元数据类型
         valid_types = ['tag', 'author', 'series', 'rating', 'publisher', 'language']
@@ -1008,7 +1043,7 @@ class Talebook(_PluginBase):
             logger.error(f"获取元数据列表异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def api_get_meta_books(self, meta_type: str, name: str, page: int = 1, num: int = 20):
+    def api_get_meta_books(self, meta_type: str, name: str, page: int = 1, num: int = 20) -> Dict[str, Any]:
         """
         API: 获取指定元数据的书籍列表
         
@@ -1018,11 +1053,10 @@ class Talebook(_PluginBase):
         :param num: 每页数量
         :return: 书籍列表
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         # 验证元数据类型
         valid_types = ['tag', 'author', 'series', 'rating', 'publisher', 'language']
@@ -1035,7 +1069,7 @@ class Talebook(_PluginBase):
             logger.error(f"获取元数据书籍异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def api_add_favorite(self, book_id: int):
+    def api_add_favorite(self, book_id: int) -> Dict[str, Any]:
         """
         API: 收藏书籍
         
@@ -1044,13 +1078,10 @@ class Talebook(_PluginBase):
         """
         logger.info(f"📥 [API] 收到收藏请求: book_id={book_id}")
         
-        if not self._enabled:
-            logger.warning("⚠️ 插件未启用")
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            logger.error("❌ API 客户端未初始化")
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             logger.info(f"🔖 调用 API 客户端收藏书籍: book_id={book_id}")
@@ -1061,7 +1092,7 @@ class Talebook(_PluginBase):
             logger.error(f"❌ 收藏书籍异常: {str(e)}", exc_info=True)
             return {"code": 500, "message": f"操作失败: {str(e)}"}
     
-    def api_remove_favorite(self, book_id: int):
+    def api_remove_favorite(self, book_id: int) -> Dict[str, Any]:
         """
         API: 取消收藏
         
@@ -1070,13 +1101,10 @@ class Talebook(_PluginBase):
         """
         logger.info(f"📥 [API] 收到取消收藏请求: book_id={book_id}")
         
-        if not self._enabled:
-            logger.warning("⚠️ 插件未启用")
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            logger.error("❌ API 客户端未初始化")
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             logger.info(f"❌ 调用 API 客户端取消收藏: book_id={book_id}")
@@ -1087,7 +1115,7 @@ class Talebook(_PluginBase):
             logger.error(f"❌ 取消收藏异常: {str(e)}", exc_info=True)
             return {"code": 500, "message": f"操作失败: {str(e)}"}
     
-    def api_set_book_read_state(self, book_id: int, read_state: int):
+    def api_set_book_read_state(self, book_id: int, read_state: int) -> Dict[str, Any]:
         """
         API: 设置书籍阅读状态
         
@@ -1095,11 +1123,10 @@ class Talebook(_PluginBase):
         :param read_state: 阅读状态 (0=未读, 1=在读, 2=已读)
         :return: 操作结果
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             return self._api_client.set_book_read_state(book_id, read_state)
@@ -1107,18 +1134,17 @@ class Talebook(_PluginBase):
             logger.error(f"设置阅读状态异常: {str(e)}")
             return {"code": 500, "message": f"操作失败: {str(e)}"}
     
-    def api_get_reading_books(self, limit: int = 20):
+    def api_get_reading_books(self, limit: int = 20) -> Dict[str, Any]:
         """
         API: 获取正在阅读的书籍列表
         
         :param limit: 返回数量限制（默认20，范围1-100）
         :return: 书籍列表
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             return self._api_client.get_reading_books(limit)
@@ -1126,18 +1152,17 @@ class Talebook(_PluginBase):
             logger.error(f"获取在读列表异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
     
-    def api_get_favorite_books(self, limit: int = 50):
+    def api_get_favorite_books(self, limit: int = 50) -> Dict[str, Any]:
         """
         API: 获取收藏的书籍列表
         
         :param limit: 返回数量限制（默认50，范围1-100）
         :return: 书籍列表
         """
-        if not self._enabled:
-            return {"code": 400, "message": "插件未启用"}
-        
-        if not self._ensure_api_client():
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
         
         try:
             return self._api_client.get_favorite_books(limit)

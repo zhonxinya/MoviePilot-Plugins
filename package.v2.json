@@ -15,17 +15,29 @@
   },
   "Talebook": {
     "name": "Talebook",
-    "description": "Talebook 插件",
-    "labels": "",
+    "description": "Talebook 本地书库管理，支持扫描目录批量导入小说（与 Sonovel 联动）",
+    "labels": "电子书,管理,搜索,扫描,导入",
     "version": "1.0.3",
-    "icon": "",
-    "author": "",
+    "icon": "Calibre_B.png",
+    "author": "trient",
     "level": 1,
     "history": {
       "v1.0.3": "新增元数据分类功能(标签/作者/丛书/评分/出版社/语言)",
       "v1.0.2": "优化依赖管理和构建配置",
       "v1.0.1": "版本更新",
       "v1.0.0": "初始版本"
+    }
+  },
+  "QidianBook": {
+    "name": "起点图书",
+    "description": "获取起点中文网图书信息，支持搜索和详情查询。",
+    "labels": "图书,搜索,起点",
+    "version": "1.0.0",
+    "icon": "Bookstack_A.png",
+    "author": "trient",
+    "level": 1,
+    "history": {
+      "v1.0.0": "初始版本，支持起点图书搜索和详情查询"
     }
   }
 }

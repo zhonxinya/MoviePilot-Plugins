@@ -173,71 +173,100 @@ class TalebookApiClient:
         # 创建新会话并登录
         logger.info(f"🔐 正在登录 Talebook: {self._username}@{self._server_url}")
         
-        try:
-            session = requests.Session()
-            
-            # 设置请求头
-            session.headers.update({
-                'User-Agent': 'MoviePilot-Talebook-Plugin/1.0',
-                'Accept': 'application/json'
-                # 注意: 不设置 Content-Type,让 requests 根据请求类型自动设置
-            })
-            
-            # 禁用 SSL 验证(如果配置)
-            if not self._verify_ssl:
-                logger.warning("⚠️ 已禁用 SSL 验证(仅用于自签名证书)")
-                session.verify = False
-                import urllib3
-                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            
-            # 登录
-            login_url = f"{self._server_url}/api/user/sign_in"
-            login_data = {
-                "username": self._username,
-                "password": self._password
-            }
-            
-            logger.info(f"   登录 URL: {login_url}")
-            logger.info(f"   用户名: {self._username}")
-            login_response = session.post(login_url, data=login_data, timeout=30)
-            login_response.raise_for_status()
-            
-            login_result = login_response.json()
-            logger.debug(f"登录响应: {login_result}")
-            if login_result.get("err") != "ok":
-                error_msg = login_result.get('msg', '未知错误')
-                logger.error(f"❌ 登录失败: {error_msg}")
-                logger.error(f"   服务器: {self._server_url}")
-                logger.error(f"   用户名: {self._username}")
-                session.close()
+        # 尝试登录，最多重试 2 次
+        max_retries = 2
+        for attempt in range(1, max_retries + 1):
+            try:
+                session = requests.Session()
+                
+                # 设置请求头
+                session.headers.update({
+                    'User-Agent': 'MoviePilot-Talebook-Plugin/1.0',
+                    'Accept': 'application/json'
+                    # 注意: 不设置 Content-Type,让 requests 根据请求类型自动设置
+                })
+                
+                # 禁用 SSL 验证(如果配置)
+                if not self._verify_ssl:
+                    logger.warning("⚠️ 已禁用 SSL 验证(仅用于自签名证书)")
+                    session.verify = False
+                    import urllib3
+                    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                
+                # 登录
+                login_url = f"{self._server_url}/api/user/sign_in"
+                login_data = {
+                    "username": self._username,
+                    "password": self._password
+                }
+                
+                logger.info(f"   登录 URL: {login_url}")
+                logger.info(f"   用户名: {self._username}")
+                if attempt > 1:
+                    logger.info(f"   重试次数: {attempt}/{max_retries}")
+                
+                login_response = session.post(login_url, data=login_data, timeout=30)
+                login_response.raise_for_status()
+                
+                login_result = login_response.json()
+                logger.debug(f"登录响应: {login_result}")
+                if login_result.get("err") != "ok":
+                    error_msg = login_result.get('msg', '未知错误')
+                    logger.error(f"❌ 登录失败: {error_msg}")
+                    logger.error(f"   服务器: {self._server_url}")
+                    logger.error(f"   用户名: {self._username}")
+                    session.close()
+                    
+                    # 如果是最后一次尝试，返回 None
+                    if attempt == max_retries:
+                        return None
+                    # 否则继续重试
+                    logger.info(f"   将在 2 秒后重试...")
+                    time.sleep(2)
+                    continue
+                
+                # 保存会话和过期时间
+                self._session = session
+                self._session_expiry = current_time + self._session_timeout
+                
+                # 保存到持久化缓存
+                cache_key = f"talebook_session:{self._server_url}:{self._username}"
+                self._save_session_to_cache(cache_key, session)
+                
+                logger.info(f"✅ 登录成功! 会话有效期: {self._session_timeout} 秒")
+                return session
+                
+            except requests.exceptions.Timeout:
+                logger.error(f"⏰ 登录超时: {self._server_url}")
+                logger.error(f"   提示: 请检查网络连接或服务器是否可访问")
+                if attempt < max_retries:
+                    logger.info(f"   将在 2 秒后重试...")
+                    time.sleep(2)
+                    continue
                 return None
-            
-            # 保存会话和过期时间
-            self._session = session
-            self._session_expiry = current_time + self._session_timeout
-            
-            # 保存到持久化缓存
-            cache_key = f"talebook_session:{self._server_url}:{self._username}"
-            self._save_session_to_cache(cache_key, session)
-            
-            logger.info(f"✅ 登录成功! 会话有效期: {self._session_timeout} 秒")
-            return session
-            
-        except requests.exceptions.Timeout:
-            logger.error(f"⏰ 登录超时: {self._server_url}")
-            logger.error(f"   提示: 请检查网络连接或服务器是否可访问")
-            return None
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"🔌 连接失败: {self._server_url}")
-            logger.error(f"   错误详情: {str(e)}")
-            return None
-        except requests.exceptions.SSLError as e:
-            logger.error(f"🔒 SSL 证书错误: {self._server_url}")
-            logger.error(f"   错误详情: {str(e)}")
-            return None
-        except Exception as e:
-            logger.error(f"❌ 登录异常: {str(e)}", exc_info=True)
-            return None
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"🔌 连接失败: {self._server_url}")
+                logger.error(f"   错误详情: {str(e)}")
+                if attempt < max_retries:
+                    logger.info(f"   将在 2 秒后重试...")
+                    time.sleep(2)
+                    continue
+                return None
+            except requests.exceptions.SSLError as e:
+                logger.error(f"🔒 SSL 证书错误: {self._server_url}")
+                logger.error(f"   错误详情: {str(e)}")
+                return None  # SSL 错误不重试
+            except Exception as e:
+                logger.error(f"❌ 登录异常: {str(e)}", exc_info=True)
+                if attempt < max_retries:
+                    logger.info(f"   将在 2 秒后重试...")
+                    time.sleep(2)
+                    continue
+                return None
+        
+        # 所有重试都失败
+        logger.error(f"❌ 登录失败，已重试 {max_retries} 次")
+        return None
     
     def clear_session(self):
         """清除认证会话（包括内存和缓存）"""
