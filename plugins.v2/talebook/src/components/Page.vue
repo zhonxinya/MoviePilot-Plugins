@@ -2,9 +2,21 @@
   <v-container fluid class="pa-4">
     <!-- 标题卡片 -->
     <v-card class="mb-6 elevation-4">
-      <v-card-title class="text-h5 bg-primary text-white d-flex align-center py-4">
-        <v-icon start color="white">mdi-book-open-page-variant</v-icon>
-        Talebook 本地书库管理
+      <v-card-title class="text-h5 bg-primary text-white d-flex align-center justify-space-between py-4 px-6">
+        <div class="d-flex align-center">
+          <v-icon start color="white" class="mr-3">mdi-book-open-page-variant</v-icon>
+          Talebook 本地书库管理
+        </div>
+        <v-btn
+          icon
+          variant="text"
+          color="white"
+          size="small"
+          @click="handleClose"
+          title="关闭页面"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
       </v-card-title>
       <v-card-subtitle class="text-grey-darken-1 pa-3">
         扫描本地目录，批量导入小说到 Talebook 书库（与 Sonovel 联动）
@@ -319,6 +331,9 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+// Emits - 定义事件
+const emit = defineEmits(['close'])
 
 // 日志工具函数
 const log = {
@@ -1047,6 +1062,12 @@ const downloadBook = async (bookId: number) => {
   } finally {
     downloadingBook.value = null
   }
+}
+
+// 关闭页面
+const handleClose = () => {
+  log.info('Page', '用户点击关闭按钮')
+  emit('close')
 }
 
 // 组件挂载时加载配置和最近书籍
