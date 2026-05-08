@@ -1288,7 +1288,7 @@ class TalebookApiClient:
         :return: 图片二进制数据(bytes) 或 None
         """
         try:
-            session = self._ensure_session()
+            session = self._get_authenticated_session()
             if not session:
                 logger.error("无法建立会话")
                 return None
@@ -1317,7 +1317,7 @@ class TalebookApiClient:
         :return: 图片二进制数据(bytes) 或 None
         """
         try:
-            session = self._ensure_session()
+            session = self._get_authenticated_session()
             if not session:
                 logger.error("无法建立会话")
                 return None

@@ -36,11 +36,22 @@ async function loadImage(imageUrl, api, useCache = true) {
         fullUrl = `${window.location.origin}${imageUrl}`;
       }
       console.log("[ImageLoader] 请求 URL:", fullUrl);
-      const response = await api.get(fullUrl, {
-        responseType: "blob"
-      });
-      console.log("[ImageLoader] 响应状态:", response.status);
-      if (!response.data) {
+      let response;
+      try {
+        response = await api.get(fullUrl, {
+          responseType: "blob"
+        });
+        console.log("[ImageLoader] 响应状态:", response.status);
+        console.log("[ImageLoader] 响应头:", response.headers);
+      } catch (error) {
+        console.error("[ImageLoader] axios 请求失败:", error.message);
+        if (error.response) {
+          console.error("[ImageLoader] 错误响应状态:", error.response.status);
+          console.error("[ImageLoader] 错误响应数据:", error.response.data);
+        }
+        throw error;
+      }
+      if (!response || !response.data) {
         console.error("[ImageLoader] 响应数据为空");
         throw new Error("响应数据为空");
       }

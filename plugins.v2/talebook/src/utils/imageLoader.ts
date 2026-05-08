@@ -74,14 +74,24 @@ export async function loadImage(
       
       // 使用 axios 获取图片 blob
       // responseType: 'blob' 告诉 axios 返回二进制数据
-      const response = await api.get(fullUrl, {
-        responseType: 'blob'
-      })
-
-      console.log('[ImageLoader] 响应状态:', response.status)
+      let response
+      try {
+        response = await api.get(fullUrl, {
+          responseType: 'blob'
+        })
+        console.log('[ImageLoader] 响应状态:', response.status)
+        console.log('[ImageLoader] 响应头:', response.headers)
+      } catch (error: any) {
+        console.error('[ImageLoader] axios 请求失败:', error.message)
+        if (error.response) {
+          console.error('[ImageLoader] 错误响应状态:', error.response.status)
+          console.error('[ImageLoader] 错误响应数据:', error.response.data)
+        }
+        throw error
+      }
       
       // 检查响应数据是否存在
-      if (!response.data) {
+      if (!response || !response.data) {
         console.error('[ImageLoader] 响应数据为空')
         throw new Error('响应数据为空')
       }
