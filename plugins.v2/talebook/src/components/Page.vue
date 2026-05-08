@@ -300,6 +300,7 @@
       v-model="detailDialog"
       :book="selectedBook"
       :cover-url="selectedBook ? getDetailCoverUrl(selectedBook) : ''"
+      :api="props.api"
       :is-favorited="selectedBook ? favoriteBooks.some(b => b.id === selectedBook.id) : false"
       :is-downloading="downloadingBook === selectedBook?.id"
       @toggle-favorite="selectedBook && toggleFavorite(selectedBook.id)"
@@ -319,6 +320,7 @@ import ScanPanel from './ScanPanel.vue'
 import ToastNotification from './ToastNotification.vue'
 import MetaCategory from './MetaCategory.vue'
 import { useToast } from '../composables/useToast'
+import { buildProxyImageUrl, NO_COVER_PLACEHOLDER } from '../utils/coverProxy'
 
 // Props - 接收 MoviePilot-Frontend 传递的 api 对象和 model(配置)
 const props = defineProps({
@@ -445,35 +447,31 @@ const loadConfig = async () => {
 // 获取封面图 URL (用于卡片显示)
 const getCoverUrl = (book: any) => {
   if (!book || !book.id) {
-    // 如果没有书籍信息,返回占位图
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
+    return NO_COVER_PLACEHOLDER
   }
   
-  // 优先使用 thumb 字段(缩略图),其次使用 img 字段
-  const imageUrl = book.thumb || book.img
+  // 优先使用 cover_url，其次使用 thumb/img 字段
+  const imageUrl = book.cover_url || book.coverUrl || book.thumb || book.img
   if (!imageUrl) {
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
+    return NO_COVER_PLACEHOLDER
   }
-  
-  // 统一使用后端代理 API
-  return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`)
+
+  return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl('/image/proxy'))
 }
 
 // 获取高清封面图 URL (用于详情页显示)
 const getDetailCoverUrl = (book: any) => {
   if (!book || !book.id) {
-    // 如果没有书籍信息,返回占位图
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
+    return NO_COVER_PLACEHOLDER
   }
   
-  // 优先使用 img 字段(大图),其次使用 thumb 字段
-  const imageUrl = book.img || book.thumb
+  // 详情页优先使用 cover_url，其次使用大图 img，再回退到 thumb
+  const imageUrl = book.cover_url || book.coverUrl || book.img || book.thumb
   if (!imageUrl) {
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
+    return NO_COVER_PLACEHOLDER
   }
-  
-  // 统一使用后端代理 API
-  return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`)
+
+  return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl('/image/proxy'))
 }
 
 // API 错误处理工具函数(参考 Sonovel 插件)

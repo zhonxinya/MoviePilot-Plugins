@@ -5,6 +5,25 @@ const {ref: ref$3,onMounted: onMounted$2,onUnmounted} = await importShared('vue'
 
 const imageCache = /* @__PURE__ */ new Map();
 const loadingImages = /* @__PURE__ */ new Map();
+async function readBlobPreview(blob, maxLength = 200) {
+  try {
+    const text = await blob.text();
+    return text.slice(0, maxLength);
+  } catch {
+    return "";
+  }
+}
+async function parseBlobError(blob) {
+  try {
+    const text = await blob.text();
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+function isImageBlob(blob) {
+  return blob instanceof Blob && blob.size > 0 && blob.type.startsWith("image/");
+}
 async function loadImage(imageUrl, api, useCache = true) {
   if (!imageUrl) {
     console.warn("[ImageLoader] 图片 URL 为空");
@@ -25,18 +44,14 @@ async function loadImage(imageUrl, api, useCache = true) {
   const loadPromise = (async () => {
     try {
       console.log("[ImageLoader] 加载图片:", imageUrl);
-      let fullUrl = imageUrl;
-      if (imageUrl.startsWith("/")) {
-        fullUrl = `${window.location.origin}${imageUrl}`;
-      }
-      console.log("[ImageLoader] 请求 URL:", fullUrl);
+      console.log("[ImageLoader] 使用代理 URL:", imageUrl);
       let response;
       try {
-        response = await api.get(fullUrl, {
+        response = await api.get(imageUrl, {
           responseType: "blob"
         });
-        console.log("[ImageLoader] 响应状态:", response.status);
-        console.log("[ImageLoader] 响应头:", response.headers);
+        console.log("[ImageLoader] 响应状态:", response?.status);
+        console.log("[ImageLoader] 响应头:", response?.headers);
       } catch (error) {
         console.error("[ImageLoader] axios 请求失败:", error.message);
         if (error.response) {
@@ -45,13 +60,19 @@ async function loadImage(imageUrl, api, useCache = true) {
         }
         throw error;
       }
-      if (!response || !response.data) {
-        console.error("[ImageLoader] 响应数据为空");
+      const blob = response instanceof Blob ? response : response?.data instanceof Blob ? response.data : null;
+      if (!blob) {
+        console.error("[ImageLoader] 响应数据为空", {
+          hasResponse: !!response,
+          responseType: typeof response,
+          responseKeys: response && typeof response === "object" ? Object.keys(response) : []
+        });
         throw new Error("响应数据为空");
       }
-      console.log("[ImageLoader] 响应数据类型:", typeof response.data, response.data.constructor?.name);
-      console.log("[ImageLoader] 响应数据大小:", response.data.size || "unknown");
-      const blob = response.data;
+      const responseStatus = response?.status ?? 200;
+      const responseHeaders = response?.headers ?? {};
+      console.log("[ImageLoader] 响应数据类型:", typeof blob, blob.constructor?.name);
+      console.log("[ImageLoader] 响应数据大小:", blob.size || "unknown");
       if (!(blob instanceof Blob)) {
         console.error("[ImageLoader] 响应数据不是 Blob 对象:", blob);
         if (blob instanceof ArrayBuffer || typeof blob === "string") {
@@ -64,6 +85,17 @@ async function loadImage(imageUrl, api, useCache = true) {
           }
         }
         throw new Error("响应数据格式错误");
+      }
+      if (!isImageBlob(blob)) {
+        const parsedError = await parseBlobError(blob);
+        const preview = parsedError ? JSON.stringify(parsedError) : await readBlobPreview(blob);
+        console.error("[ImageLoader] 响应 Blob 不是有效图片:", {
+          status: responseStatus,
+          contentType: blob.type || responseHeaders?.["content-type"] || "unknown",
+          size: blob.size,
+          preview
+        });
+        throw new Error("代理返回的不是图片数据");
       }
       if (blob.size === 0) {
         console.error("[ImageLoader] Blob 数据为空");
@@ -128,7 +160,7 @@ function useImageLoader(imageUrl, api) {
 
 const {defineComponent:_defineComponent$6} = await importShared('vue');
 
-const {unref:_unref$1,resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,withCtx:_withCtx$6,renderSlot:_renderSlot$1,toDisplayString:_toDisplayString$5,createTextVNode:_createTextVNode$6,openBlock:_openBlock$6,createBlock:_createBlock$6,createCommentVNode:_createCommentVNode$5} = await importShared('vue');
+const {unref:_unref$2,resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,withCtx:_withCtx$6,renderSlot:_renderSlot$1,toDisplayString:_toDisplayString$5,createTextVNode:_createTextVNode$6,openBlock:_openBlock$6,createBlock:_createBlock$6,createCommentVNode:_createCommentVNode$5} = await importShared('vue');
 const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   __name: "BookCard",
   props: {
@@ -165,7 +197,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
       }, {
         default: _withCtx$6(() => [
           _createVNode$6(_component_v_img, {
-            src: _unref$1(loadedImageUrl),
+            src: _unref$2(loadedImageUrl),
             height: "280",
             cover: "",
             class: "bg-grey-lighten-3",
@@ -414,7 +446,7 @@ const _sfc_main$5 = /* @__PURE__ */ _defineComponent$5({
 
 const {defineComponent:_defineComponent$4} = await importShared('vue');
 
-const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,createElementVNode:_createElementVNode$4,renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$4,createElementBlock:_createElementBlock$2,createBlock:_createBlock$4,createCommentVNode:_createCommentVNode$3} = await importShared('vue');
+const {toDisplayString:_toDisplayString$3,createTextVNode:_createTextVNode$4,resolveComponent:_resolveComponent$4,withCtx:_withCtx$4,createVNode:_createVNode$4,unref:_unref$1,createElementVNode:_createElementVNode$4,renderList:_renderList$1,Fragment:_Fragment$1,openBlock:_openBlock$4,createElementBlock:_createElementBlock$2,createBlock:_createBlock$4,createCommentVNode:_createCommentVNode$3} = await importShared('vue');
 
 const _hoisted_1$4 = { class: "text-body-2 font-weight-medium" };
 const _hoisted_2$2 = { class: "text-body-2 font-weight-medium" };
@@ -431,19 +463,20 @@ const _hoisted_8$1 = {
   style: { "line-height": "1.8" }
 };
 const {computed: computed$2} = await importShared('vue');
-
 const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   __name: "BookDetailDialog",
   props: {
     modelValue: { type: Boolean },
     book: {},
     coverUrl: {},
+    api: { default: void 0 },
     isFavorited: { type: Boolean, default: false },
     isDownloading: { type: Boolean, default: false }
   },
   emits: ["update:modelValue", "toggle-favorite", "download"],
   setup(__props, { emit: __emit }) {
     const props = __props;
+    const { imageUrl: loadedCoverUrl } = useImageLoader(props.coverUrl, props.api);
     const emit = __emit;
     const dialogVisible = computed$2({
       get: () => props.modelValue,
@@ -527,7 +560,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
                           }, {
                             default: _withCtx$4(() => [
                               _createVNode$4(_component_v_img, {
-                                src: __props.coverUrl,
+                                src: _unref$1(loadedCoverUrl),
                                 height: "400",
                                 cover: "",
                                 class: "bg-grey-lighten-3"
@@ -840,7 +873,7 @@ const _sfc_main$4 = /* @__PURE__ */ _defineComponent$4({
   }
 });
 
-const BookDetailDialog = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-68b194f6"]]);
+const BookDetailDialog = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-2405e7d7"]]);
 
 const {defineComponent:_defineComponent$3} = await importShared('vue');
 
@@ -1202,6 +1235,21 @@ const _sfc_main$2 = /* @__PURE__ */ _defineComponent$2({
   }
 });
 
+const NO_COVER_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+function isAbsoluteUrl(url) {
+  return url.startsWith("http://") || url.startsWith("https://");
+}
+function buildProxyImageUrl(imageUrl, serverUrl, apiBasePath) {
+  if (!imageUrl) {
+    return NO_COVER_PLACEHOLDER;
+  }
+  let resolvedUrl = imageUrl;
+  if (resolvedUrl.startsWith("/") && !isAbsoluteUrl(resolvedUrl) && serverUrl) {
+    resolvedUrl = `${serverUrl}${resolvedUrl}`;
+  }
+  return `${apiBasePath}?url=${encodeURIComponent(resolvedUrl)}`;
+}
+
 const {defineComponent:_defineComponent$1} = await importShared('vue');
 
 const {resolveComponent:_resolveComponent$1,createVNode:_createVNode$1,withCtx:_withCtx$1,createTextVNode:_createTextVNode$1,toDisplayString:_toDisplayString,openBlock:_openBlock$1,createBlock:_createBlock$1,createCommentVNode:_createCommentVNode$1,renderList:_renderList,Fragment:_Fragment,createElementBlock:_createElementBlock,createElementVNode:_createElementVNode$1,mergeProps:_mergeProps} = await importShared('vue');
@@ -1281,13 +1329,13 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
     }
     function getCoverUrl(book) {
       if (!book || !book.id) {
-        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+        return NO_COVER_PLACEHOLDER;
       }
       const imageUrl = book.thumb || book.img;
       if (!imageUrl) {
-        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+        return NO_COVER_PLACEHOLDER;
       }
-      return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`);
+      return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl("/image/proxy"));
     }
     async function loadConfig() {
       if (!props.api) return;
@@ -1757,15 +1805,16 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
           "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => showDetailDialog.value = $event),
           book: selectedBook.value,
           "cover-url": selectedBook.value ? getCoverUrl(selectedBook.value) : "",
+          api: props.api,
           onToggleFavorite: handleToggleFavorite,
           onDownload: handleDownload
-        }, null, 8, ["modelValue", "book", "cover-url"])
+        }, null, 8, ["modelValue", "book", "cover-url", "api"])
       ]);
     };
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-090a132c"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-7fbfbd5d"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
@@ -1863,23 +1912,23 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     };
     const getCoverUrl = (book) => {
       if (!book || !book.id) {
-        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+        return NO_COVER_PLACEHOLDER;
       }
       const imageUrl = book.thumb || book.img;
       if (!imageUrl) {
-        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+        return NO_COVER_PLACEHOLDER;
       }
-      return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`);
+      return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl("/image/proxy"));
     };
     const getDetailCoverUrl = (book) => {
       if (!book || !book.id) {
-        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+        return NO_COVER_PLACEHOLDER;
       }
       const imageUrl = book.img || book.thumb;
       if (!imageUrl) {
-        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4=";
+        return NO_COVER_PLACEHOLDER;
       }
-      return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`);
+      return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl("/image/proxy"));
     };
     async function safeApiCall(apiCall, retries = 2, delay = 1e3, timeout = 3e4) {
       let lastError = null;
@@ -2782,11 +2831,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
             "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => detailDialog.value = $event),
             book: selectedBook.value,
             "cover-url": selectedBook.value ? getDetailCoverUrl(selectedBook.value) : "",
+            api: props.api,
             "is-favorited": selectedBook.value ? favoriteBooks.value.some((b) => b.id === selectedBook.value.id) : false,
             "is-downloading": downloadingBook.value === selectedBook.value?.id,
             onToggleFavorite: _cache[4] || (_cache[4] = ($event) => selectedBook.value && toggleFavorite(selectedBook.value.id)),
             onDownload: _cache[5] || (_cache[5] = ($event) => selectedBook.value && downloadBook(selectedBook.value.id))
-          }, null, 8, ["modelValue", "book", "cover-url", "is-favorited", "is-downloading"]),
+          }, null, 8, ["modelValue", "book", "cover-url", "api", "is-favorited", "is-downloading"]),
           _createVNode(_sfc_main$2)
         ]),
         _: 1
@@ -2795,6 +2845,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-97cfc346"]]);
+const Page = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-ba5495f0"]]);
 
 export { Page as default };

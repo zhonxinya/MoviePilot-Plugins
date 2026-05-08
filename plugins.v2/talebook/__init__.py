@@ -1331,15 +1331,15 @@ class Talebook(_PluginBase):
         
         if not self._enabled:
             logger.warning("插件未启用")
-            return {"code": 400, "message": "插件未启用"}
+            return self._image_error_response(400, "插件未启用")
         
         if not self._ensure_api_client():
             logger.error("API 客户端未初始化")
-            return {"code": 500, "message": "API 客户端未初始化,请检查配置"}
+            return self._image_error_response(500, "API 客户端未初始化,请检查配置")
         
         if not url:
             logger.warning("图片 URL 为空")
-            return {"code": 400, "message": "缺少图片 URL"}
+            return self._image_error_response(400, "缺少图片 URL")
         
         try:
             # 生成缓存键(URL 的 MD5 哈希)
@@ -1351,12 +1351,15 @@ class Talebook(_PluginBase):
             if cached_data is not None:
                 logger.info(f"   ✅ 使用缓存图片: size={len(cached_data)} bytes")
                 from fastapi.responses import Response
+                # 检测图片类型
+                media_type = self._detect_image_type(cached_data)
                 return Response(
                     content=cached_data,
-                    media_type="image/jpeg",
+                    media_type=media_type,
                     headers={
                         "Cache-Control": "public, max-age=86400",  # 缓存 24 小时
                         "X-Cache": "HIT",  # 标记缓存命中
+                        "Access-Control-Allow-Origin": "*",  # 允许跨域
                     }
                 )
             
@@ -1366,24 +1369,85 @@ class Talebook(_PluginBase):
             
             if image_data is None:
                 logger.warning(f"   图片下载失败: url={url}")
-                return {"code": 404, "message": "图片不存在或下载失败"}
+                return self._image_error_response(404, "图片不存在或下载失败")
             
             # 存入缓存(TTL 24小时)
             self._image_cache.set(cache_key, image_data, ttl=86400)
             logger.info(f"   ✅ 图片下载成功并缓存: size={len(image_data)} bytes")
             
+            # 检测图片类型
+            media_type = self._detect_image_type(image_data)
+            
             # 返回图片二进制数据
             from fastapi.responses import Response
             return Response(
                 content=image_data,
-                media_type="image/jpeg",
+                media_type=media_type,
                 headers={
                     "Cache-Control": "public, max-age=86400",  # 缓存 24 小时
                     "X-Cache": "MISS",  # 标记缓存未命中
+                    "Access-Control-Allow-Origin": "*",  # 允许跨域
                 }
             )
         except Exception as e:
             logger.error(f"❌ 获取图片异常: url={url}, error={str(e)}", exc_info=True)
-            return {"code": 500, "message": f"获取失败: {str(e)}"}
+            return self._image_error_response(500, f"获取失败: {str(e)}")
+
+    def _image_error_response(self, status_code: int, message: str):
+        from fastapi.responses import JSONResponse
+
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "code": status_code,
+                "message": message,
+            }
+        )
+    
+    def _detect_image_type(self, image_data: bytes) -> str:
+        """
+        根据图片数据的前几个字节检测图片类型
+        
+        :param image_data: 图片二进制数据
+        :return: MIME 类型
+        """
+        if not image_data:
+            return "application/octet-stream"
+
+        if len(image_data) < 4:
+            return "application/octet-stream"
+
+        stripped_data = image_data.lstrip()
+        lowered_preview = stripped_data[:256].lower()
+
+        if lowered_preview.startswith(b'<?xml') or lowered_preview.startswith(b'<svg'):
+            return "image/svg+xml"
+
+        if image_data[:2] == b'BM':
+            return "image/bmp"
+
+        if image_data[:4] == b'\x00\x00\x01\x00':
+            return "image/x-icon"
+
+        if image_data[:4] in (b'II*\x00', b'MM\x00*'):
+            return "image/tiff"
+        
+        # PNG: 89 50 4E 47
+        if image_data[:4] == b'\x89PNG':
+            return "image/png"
+        
+        # GIF: 47 49 46 38
+        if image_data[:4] == b'GIF8':
+            return "image/gif"
+        
+        # WebP: 52 49 46 46 ... 57 45 42 50
+        if image_data[:4] == b'RIFF' and image_data[8:12] == b'WEBP':
+            return "image/webp"
+        
+        # JPEG: FF D8 FF
+        if image_data[:3] == b'\xff\xd8\xff':
+            return "image/jpeg"
+        
+        return "application/octet-stream"
     
 

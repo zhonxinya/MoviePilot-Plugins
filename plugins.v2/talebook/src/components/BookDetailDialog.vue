@@ -14,7 +14,7 @@
           <v-col cols="12" md="4">
             <v-card flat class="elevation-3 rounded-xl overflow-hidden">
               <v-img
-                :src="coverUrl"
+                :src="loadedCoverUrl"
                 height="400"
                 cover
                 class="bg-grey-lighten-3"
@@ -156,19 +156,36 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useImageLoader } from '../utils/imageLoader'
 
 interface Props {
   modelValue: boolean
   book: any | null
   coverUrl: string
+  api?: any  // MoviePilot-Frontend 提供的 API 对象
   isFavorited?: boolean
   isDownloading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isFavorited: false,
-  isDownloading: false
+  isDownloading: false,
+  api: undefined
 })
+
+const resolvedCoverUrl = computed(() => {
+  return (
+    props.coverUrl ||
+    props.book?.cover_url ||
+    props.book?.coverUrl ||
+    props.book?.img ||
+    props.book?.thumb ||
+    ''
+  )
+})
+
+// 使用图片加载器异步加载封面图
+const { imageUrl: loadedCoverUrl } = useImageLoader(resolvedCoverUrl, props.api)
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
@@ -201,6 +218,7 @@ const formatFileSize = (bytes: number): string => {
 <style scoped>
 .line-clamp-8 {
   display: -webkit-box;
+  line-clamp: 8;
   -webkit-line-clamp: 8;
   -webkit-box-orient: vertical;
   overflow: hidden;

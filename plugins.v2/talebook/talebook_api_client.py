@@ -1289,7 +1289,7 @@ class TalebookApiClient:
         """
         下载图片
         
-        :param url: 图片 URL
+        :param url: 图片 URL (可以是相对路径或完整 URL)
         :return: 图片二进制数据或 None
         """
         try:
@@ -1297,6 +1297,12 @@ class TalebookApiClient:
             if not session:
                 logger.error("无法获取认证会话")
                 return None
+            
+            # 处理相对 URL: 如果 URL 以 / 开头但不是 http:// 或 https://,则拼接服务器地址
+            if url.startswith('/') and not url.startswith('http://') and not url.startswith('https://'):
+                full_url = f"{self._server_url}{url}"
+                logger.debug(f"相对 URL 转换为绝对 URL: {url} -> {full_url}")
+                url = full_url
             
             logger.debug(f"下载图片: {url}")
             response = session.get(url, timeout=10)

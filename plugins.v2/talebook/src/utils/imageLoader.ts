@@ -7,13 +7,35 @@
  * 3. 浏览器缓存管理
  */
 
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, unref, type MaybeRefOrGetter } from 'vue'
 
 // 图片缓存 Map: URL -> Blob URL
 const imageCache = new Map<string, string>()
 
 // 正在加载的图片 Promise Map: URL -> Promise<Blob URL>
 const loadingImages = new Map<string, Promise<string>>()
+
+async function readBlobPreview(blob: Blob, maxLength: number = 200): Promise<string> {
+  try {
+    const text = await blob.text()
+    return text.slice(0, maxLength)
+  } catch {
+    return ''
+  }
+}
+
+async function parseBlobError(blob: Blob): Promise<unknown> {
+  try {
+    const text = await blob.text()
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+function isImageBlob(blob: Blob): boolean {
+  return blob instanceof Blob && blob.size > 0 && blob.type.startsWith('image/')
+}
 
 /**
  * 加载图片并返回 Blob URL
@@ -56,24 +78,20 @@ export async function loadImage(
     try {
       console.log('[ImageLoader] 加载图片:', imageUrl)
       
-      // 构建完整 URL
-      let fullUrl = imageUrl
-      if (imageUrl.startsWith('/')) {
-        // 相对路径,拼接当前域名
-        fullUrl = `${window.location.origin}${imageUrl}`
-      }
-
-      console.log('[ImageLoader] 请求 URL:', fullUrl)
+      // imageUrl 已经是后端代理 URL（由 getCoverUrl 生成）
+      // 格式: /plugin/Talebook/image/proxy?url=xxx
+      // 直接使用该 URL 请求即可
+      console.log('[ImageLoader] 使用代理 URL:', imageUrl)
       
-      // 使用 axios 获取图片 blob
+      // 使用 axios 通过后端代理获取图片 blob
       // responseType: 'blob' 告诉 axios 返回二进制数据
       let response
       try {
-        response = await api.get(fullUrl, {
+        response = await api.get(imageUrl, {
           responseType: 'blob'
         })
-        console.log('[ImageLoader] 响应状态:', response.status)
-        console.log('[ImageLoader] 响应头:', response.headers)
+        console.log('[ImageLoader] 响应状态:', response?.status)
+        console.log('[ImageLoader] 响应头:', response?.headers)
       } catch (error: any) {
         console.error('[ImageLoader] axios 请求失败:', error.message)
         if (error.response) {
@@ -84,16 +102,25 @@ export async function loadImage(
       }
       
       // 检查响应数据是否存在
-      if (!response || !response.data) {
-        console.error('[ImageLoader] 响应数据为空')
+      const blob = response instanceof Blob
+        ? response
+        : response?.data instanceof Blob
+          ? response.data
+          : null
+
+      if (!blob) {
+        console.error('[ImageLoader] 响应数据为空', {
+          hasResponse: !!response,
+          responseType: typeof response,
+          responseKeys: response && typeof response === 'object' ? Object.keys(response) : []
+        })
         throw new Error('响应数据为空')
       }
-      
-      console.log('[ImageLoader] 响应数据类型:', typeof response.data, response.data.constructor?.name)
-      console.log('[ImageLoader] 响应数据大小:', response.data.size || 'unknown')
-      
-      // 获取 Blob 数据
-      const blob = response.data
+
+      const responseStatus = response?.status ?? 200
+      const responseHeaders = response?.headers ?? {}
+      console.log('[ImageLoader] 响应数据类型:', typeof blob, blob.constructor?.name)
+      console.log('[ImageLoader] 响应数据大小:', blob.size || 'unknown')
       
       // 验证是否为 Blob 对象
       if (!(blob instanceof Blob)) {
@@ -109,6 +136,18 @@ export async function loadImage(
           }
         }
         throw new Error('响应数据格式错误')
+      }
+
+      if (!isImageBlob(blob)) {
+        const parsedError = await parseBlobError(blob)
+        const preview = parsedError ? JSON.stringify(parsedError) : await readBlobPreview(blob)
+        console.error('[ImageLoader] 响应 Blob 不是有效图片:', {
+          status: responseStatus,
+          contentType: blob.type || responseHeaders?.['content-type'] || 'unknown',
+          size: blob.size,
+          preview
+        })
+        throw new Error('代理返回的不是图片数据')
       }
       
       // 检查 Blob 是否为空
@@ -197,50 +236,69 @@ export function getCacheStats(): { count: number; urls: string[] } {
  * const { imageUrl, loading, error } = useImageLoader(book.thumb, props.api)
  * ```
  */
-export function useImageLoader(imageUrl: string, api: any) {
+function resolveImageSource(imageSource: MaybeRefOrGetter<string>): string {
+  if (typeof imageSource === 'function') {
+    return (imageSource as () => string)()
+  }
+
+  return unref(imageSource)
+}
+
+export function useImageLoader(imageSource: MaybeRefOrGetter<string>, api: any) {
   const loadedUrl = ref<string>('')
   const loading = ref<boolean>(false)
   const error = ref<string>('')
 
   let cancelled = false
+  let requestVersion = 0
 
-  const load = async () => {
-    if (!imageUrl || !api || cancelled) return
-    
+  const runLoad = async (currentImageUrl: string) => {
+    const currentRequest = ++requestVersion
+
+    if (!currentImageUrl || !api || cancelled) {
+      loadedUrl.value = ''
+      error.value = ''
+      loading.value = false
+      return
+    }
+
     loading.value = true
     error.value = ''
-    
+
     try {
-      const url = await loadImage(imageUrl, api)
-      if (!cancelled) {
+      const url = await loadImage(currentImageUrl, api)
+      if (!cancelled && currentRequest === requestVersion) {
         loadedUrl.value = url
         if (!url) {
           error.value = '加载失败'
         }
       }
     } catch (e) {
-      if (!cancelled) {
+      if (!cancelled && currentRequest === requestVersion) {
         error.value = String(e)
       }
     } finally {
-      if (!cancelled) {
+      if (!cancelled && currentRequest === requestVersion) {
         loading.value = false
       }
     }
   }
 
-  onMounted(() => {
-    load()
-  })
+  const stop = watch(
+    () => resolveImageSource(imageSource),
+    runLoad,
+    { immediate: true }
+  )
 
   onUnmounted(() => {
     cancelled = true
+    stop()
   })
 
   return {
     imageUrl: loadedUrl,
     loading,
     error,
-    reload: load
+    reload: () => runLoad(resolveImageSource(imageSource))
   }
 }

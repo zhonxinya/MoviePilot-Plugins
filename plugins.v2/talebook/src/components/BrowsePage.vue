@@ -87,6 +87,7 @@
       v-model="showDetailDialog"
       :book="selectedBook"
       :cover-url="selectedBook ? getCoverUrl(selectedBook) : ''"
+      :api="props.api"
       @toggle-favorite="handleToggleFavorite"
       @download="handleDownload"
     />
@@ -97,6 +98,7 @@
 import { ref, onMounted, watch } from 'vue'
 import BookGrid from './BookGrid.vue'
 import BookDetailDialog from './BookDetailDialog.vue'
+import { buildProxyImageUrl, NO_COVER_PLACEHOLDER } from '../utils/coverProxy'
 
 interface Props {
   metaType?: string  // tag/author/series/rating/publisher/language
@@ -163,18 +165,16 @@ function getMetaTypeName(type: string): string {
  */
 function getCoverUrl(book: any): string {
   if (!book || !book.id) {
-    // 如果没有书籍信息,返回占位图
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
+    return NO_COVER_PLACEHOLDER
   }
   
-  // 优先使用 thumb 字段(缩略图),其次使用 img 字段
-  const imageUrl = book.thumb || book.img
+  // 优先使用 cover_url，其次使用 thumb/img 字段
+  const imageUrl = book.cover_url || book.coverUrl || book.thumb || book.img
   if (!imageUrl) {
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlNWU1Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIENvdmVyPC90ZXh0Pgo8L3N2Zz4='
+    return NO_COVER_PLACEHOLDER
   }
-  
-  // 统一使用后端代理 API
-  return getApiUrl(`/image/proxy?url=${encodeURIComponent(imageUrl)}`)
+
+  return buildProxyImageUrl(imageUrl, talebookServerUrl.value, getApiUrl('/image/proxy'))
 }
 
 /**
