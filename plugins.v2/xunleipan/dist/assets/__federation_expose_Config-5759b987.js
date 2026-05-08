@@ -37,6 +37,24 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     const passwordChanged = ref(false);
     const saving = ref(false);
     const testing = ref(false);
+    const rules = {
+      username: [
+        (v) => !!v || "请输入用户名",
+        (v) => v && v.length >= 3 || "用户名至少3个字符"
+      ],
+      password: [
+        (v) => !!v || "请输入密码",
+        (v) => v && v.length >= 6 || "密码至少6个字符"
+      ],
+      timeout: [
+        (v) => !!v || "请输入超时时间",
+        (v) => v >= 5 && v <= 120 || "超时时间应在5-120秒之间"
+      ],
+      max_retries: [
+        (v) => !!v || "请输入重试次数",
+        (v) => v >= 1 && v <= 10 || "重试次数应在1-10次之间"
+      ]
+    };
     const apiCall = async (endpoint, method = "GET", data) => {
       try {
         let response;
@@ -83,23 +101,37 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       }
     };
     const saveConfig = async () => {
-      if (!config.value.username || !config.value.password) {
-        toast.error("请填写完整的账号信息");
+      if (!config.value.username) {
+        toast.error("请填写用户名");
+        return;
+      }
+      const isFirstSetup = !passwordChanged.value && (!config.value.password || config.value.password === "********");
+      if (isFirstSetup && config.value.enabled) {
+        toast.error("启用插件时必须填写密码");
+        return;
+      }
+      if (passwordChanged.value && (!config.value.password || config.value.password === "********")) {
+        toast.error("请填写新密码");
+        return;
+      }
+      const form = document.querySelector("form");
+      if (form && !form.checkValidity()) {
+        toast.error("请检查输入格式");
         return;
       }
       saving.value = true;
       try {
         const configToSave = {
           enabled: config.value.enabled,
-          username: config.value.username,
-          timeout: config.value.timeout,
-          max_retries: config.value.max_retries,
+          username: config.value.username.trim(),
+          timeout: parseInt(config.value.timeout) || 10,
+          max_retries: parseInt(config.value.max_retries) || 3,
           auto_refresh: config.value.auto_refresh
         };
         if (passwordChanged.value && config.value.password !== "********") {
           configToSave.password = config.value.password;
           console.log("[Config] 密码已修改，将更新密码");
-        } else if (config.value.password !== "********") {
+        } else if (config.value.password !== "********" && config.value.password) {
           configToSave.password = config.value.password;
           console.log("[Config] 设置新密码");
         } else {
@@ -123,8 +155,8 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       }
     };
     const testConnection = async () => {
-      if (!config.value.username || !config.value.password) {
-        toast.error("请先填写账号信息");
+      if (!config.value.username || !config.value.password || config.value.password === "********") {
+        toast.error("请先填写完整的账号信息");
         return;
       }
       testing.value = true;
@@ -134,12 +166,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           password: config.value.password
         });
         if (result.code === 200) {
-          toast.success("连接测试成功!");
+          toast.success("✅ 连接测试成功!");
         } else {
-          toast.error(`连接失败: ${result.message}`);
+          toast.error(`❌ 连接失败: ${result.message}`);
         }
       } catch (error) {
         console.error("连接测试失败:", error);
+        toast.error(`❌ 连接测试失败: ${error.message}`);
       } finally {
         testing.value = false;
       }
@@ -150,13 +183,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     return (_ctx, _cache) => {
       const _component_v_icon = _resolveComponent("v-icon");
       const _component_v_card_title = _resolveComponent("v-card-title");
-      const _component_v_text_field = _resolveComponent("v-text-field");
+      const _component_v_switch = _resolveComponent("v-switch");
       const _component_v_col = _resolveComponent("v-col");
       const _component_v_row = _resolveComponent("v-row");
       const _component_v_alert = _resolveComponent("v-alert");
       const _component_v_card_text = _resolveComponent("v-card-text");
       const _component_v_card = _resolveComponent("v-card");
-      const _component_v_switch = _resolveComponent("v-switch");
+      const _component_v_text_field = _resolveComponent("v-text-field");
       const _component_v_list_item_title = _resolveComponent("v-list-item-title");
       const _component_v_list_item_subtitle = _resolveComponent("v-list-item-subtitle");
       const _component_v_list_item = _resolveComponent("v-list-item");
@@ -175,15 +208,91 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                   _createVNode(_component_v_card_title, null, {
                     default: _withCtx(() => [
                       _createVNode(_component_v_icon, {
+                        color: "success",
+                        class: "mr-2"
+                      }, {
+                        default: _withCtx(() => [..._cache[7] || (_cache[7] = [
+                          _createTextVNode("mdi-power", -1)
+                        ])]),
+                        _: 1
+                      }),
+                      _cache[8] || (_cache[8] = _createTextVNode(" 插件状态 ", -1))
+                    ]),
+                    _: 1
+                  }),
+                  _createVNode(_component_v_card_text, null, {
+                    default: _withCtx(() => [
+                      _createVNode(_component_v_row, null, {
+                        default: _withCtx(() => [
+                          _createVNode(_component_v_col, { cols: "12" }, {
+                            default: _withCtx(() => [
+                              _createVNode(_component_v_switch, {
+                                modelValue: config.value.enabled,
+                                "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => config.value.enabled = $event),
+                                label: "启用插件",
+                                "prepend-icon": "mdi-check-circle",
+                                hint: "开启后插件将自动运行",
+                                "persistent-hint": ""
+                              }, null, 8, ["modelValue"])
+                            ]),
+                            _: 1
+                          })
+                        ]),
+                        _: 1
+                      }),
+                      config.value.enabled ? (_openBlock(), _createBlock(_component_v_alert, {
+                        key: 0,
+                        type: "success",
+                        variant: "tonal",
+                        class: "mt-3"
+                      }, {
+                        default: _withCtx(() => [
+                          _createVNode(_component_v_icon, { class: "mr-2" }, {
+                            default: _withCtx(() => [..._cache[9] || (_cache[9] = [
+                              _createTextVNode("mdi-check-circle", -1)
+                            ])]),
+                            _: 1
+                          }),
+                          _cache[10] || (_cache[10] = _createTextVNode(" 插件已启用，可以正常使用所有功能 ", -1))
+                        ]),
+                        _: 1
+                      })) : (_openBlock(), _createBlock(_component_v_alert, {
+                        key: 1,
+                        type: "warning",
+                        variant: "tonal",
+                        class: "mt-3"
+                      }, {
+                        default: _withCtx(() => [
+                          _createVNode(_component_v_icon, { class: "mr-2" }, {
+                            default: _withCtx(() => [..._cache[11] || (_cache[11] = [
+                              _createTextVNode("mdi-alert-circle", -1)
+                            ])]),
+                            _: 1
+                          }),
+                          _cache[12] || (_cache[12] = _createTextVNode(" 插件已禁用，需要启用后才能使用功能 ", -1))
+                        ]),
+                        _: 1
+                      }))
+                    ]),
+                    _: 1
+                  })
+                ]),
+                _: 1
+              }),
+              _createVNode(_component_v_card, { class: "mb-4" }, {
+                default: _withCtx(() => [
+                  _createVNode(_component_v_card_title, null, {
+                    default: _withCtx(() => [
+                      _createVNode(_component_v_icon, {
                         color: "primary",
                         class: "mr-2"
                       }, {
-                        default: _withCtx(() => [..._cache[6] || (_cache[6] = [
+                        default: _withCtx(() => [..._cache[13] || (_cache[13] = [
                           _createTextVNode("mdi-account-key", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[7] || (_cache[7] = _createTextVNode(" 迅雷账号配置 ", -1))
+                      _cache[14] || (_cache[14] = _createTextVNode(" 迅雷账号配置 ", -1))
                     ]),
                     _: 1
                   }),
@@ -198,12 +307,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             default: _withCtx(() => [
                               _createVNode(_component_v_text_field, {
                                 modelValue: config.value.username,
-                                "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => config.value.username = $event),
+                                "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => config.value.username = $event),
                                 label: "用户名/手机号",
                                 placeholder: "请输入迅雷账号",
                                 "prepend-icon": "mdi-account",
-                                rules: [(v) => !!v || "请输入用户名"],
-                                required: ""
+                                rules: rules.username,
+                                required: "",
+                                clearable: ""
                               }, null, 8, ["modelValue", "rules"])
                             ]),
                             _: 1
@@ -215,14 +325,15 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             default: _withCtx(() => [
                               _createVNode(_component_v_text_field, {
                                 modelValue: config.value.password,
-                                "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => config.value.password = $event),
+                                "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => config.value.password = $event),
                                 label: "密码",
                                 type: "password",
                                 placeholder: "请输入密码",
                                 "prepend-icon": "mdi-lock",
-                                rules: [(v) => !!v || "请输入密码"],
+                                rules: rules.password,
                                 required: "",
-                                onInput: _cache[2] || (_cache[2] = ($event) => passwordChanged.value = true)
+                                onInput: _cache[3] || (_cache[3] = ($event) => passwordChanged.value = true),
+                                clearable: ""
                               }, null, 8, ["modelValue", "rules"])
                             ]),
                             _: 1
@@ -237,12 +348,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                       }, {
                         default: _withCtx(() => [
                           _createVNode(_component_v_icon, { class: "mr-2" }, {
-                            default: _withCtx(() => [..._cache[8] || (_cache[8] = [
+                            default: _withCtx(() => [..._cache[15] || (_cache[15] = [
                               _createTextVNode("mdi-information", -1)
                             ])]),
                             _: 1
                           }),
-                          _cache[9] || (_cache[9] = _createTextVNode(" 请确保输入的账号信息正确,插件将使用此账号登录迅雷网盘 ", -1))
+                          _cache[16] || (_cache[16] = _createTextVNode(" 请确保输入的账号信息正确，插件将使用此账号登录迅雷网盘。密码将以加密形式存储。 ", -1))
                         ]),
                         _: 1
                       })
@@ -260,12 +371,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         color: "secondary",
                         class: "mr-2"
                       }, {
-                        default: _withCtx(() => [..._cache[10] || (_cache[10] = [
+                        default: _withCtx(() => [..._cache[17] || (_cache[17] = [
                           _createTextVNode("mdi-cog", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[11] || (_cache[11] = _createTextVNode(" 高级设置 ", -1))
+                      _cache[18] || (_cache[18] = _createTextVNode(" 高级设置 ", -1))
                     ]),
                     _: 1
                   }),
@@ -280,15 +391,17 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             default: _withCtx(() => [
                               _createVNode(_component_v_text_field, {
                                 modelValue: config.value.timeout,
-                                "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => config.value.timeout = $event),
+                                "onUpdate:modelValue": _cache[4] || (_cache[4] = ($event) => config.value.timeout = $event),
                                 modelModifiers: { number: true },
                                 label: "请求超时时间(秒)",
                                 type: "number",
                                 min: "5",
                                 max: "120",
                                 "prepend-icon": "mdi-timer",
-                                hint: "API 请求超时时间,建议 10-30 秒"
-                              }, null, 8, ["modelValue"])
+                                rules: rules.timeout,
+                                hint: "API 请求超时时间，建议 10-30 秒",
+                                "persistent-hint": ""
+                              }, null, 8, ["modelValue", "rules"])
                             ]),
                             _: 1
                           }),
@@ -299,15 +412,17 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             default: _withCtx(() => [
                               _createVNode(_component_v_text_field, {
                                 modelValue: config.value.max_retries,
-                                "onUpdate:modelValue": _cache[4] || (_cache[4] = ($event) => config.value.max_retries = $event),
+                                "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => config.value.max_retries = $event),
                                 modelModifiers: { number: true },
                                 label: "最大重试次数",
                                 type: "number",
                                 min: "1",
                                 max: "10",
                                 "prepend-icon": "mdi-restart",
-                                hint: "失败时的最大重试次数"
-                              }, null, 8, ["modelValue"])
+                                rules: rules.max_retries,
+                                hint: "失败时的最大重试次数",
+                                "persistent-hint": ""
+                              }, null, 8, ["modelValue", "rules"])
                             ]),
                             _: 1
                           })
@@ -320,10 +435,11 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             default: _withCtx(() => [
                               _createVNode(_component_v_switch, {
                                 modelValue: config.value.auto_refresh,
-                                "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => config.value.auto_refresh = $event),
+                                "onUpdate:modelValue": _cache[6] || (_cache[6] = ($event) => config.value.auto_refresh = $event),
                                 label: "自动刷新任务状态",
                                 "prepend-icon": "mdi-autorenew",
-                                hint: "开启后将每 30 秒自动刷新离线下载任务状态"
+                                hint: "开启后将每 30 秒自动刷新离线下载任务状态",
+                                "persistent-hint": ""
                               }, null, 8, ["modelValue"])
                             ]),
                             _: 1
@@ -345,12 +461,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                         color: "success",
                         class: "mr-2"
                       }, {
-                        default: _withCtx(() => [..._cache[12] || (_cache[12] = [
+                        default: _withCtx(() => [..._cache[19] || (_cache[19] = [
                           _createTextVNode("mdi-help-circle", -1)
                         ])]),
                         _: 1
                       }),
-                      _cache[13] || (_cache[13] = _createTextVNode(" 功能说明 ", -1))
+                      _cache[20] || (_cache[20] = _createTextVNode(" 功能说明 ", -1))
                     ]),
                     _: 1
                   }),
@@ -361,7 +477,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                           _createVNode(_component_v_list_item, null, {
                             prepend: _withCtx(() => [
                               _createVNode(_component_v_icon, { color: "primary" }, {
-                                default: _withCtx(() => [..._cache[14] || (_cache[14] = [
+                                default: _withCtx(() => [..._cache[21] || (_cache[21] = [
                                   _createTextVNode("mdi-folder-outline", -1)
                                 ])]),
                                 _: 1
@@ -369,13 +485,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             ]),
                             default: _withCtx(() => [
                               _createVNode(_component_v_list_item_title, null, {
-                                default: _withCtx(() => [..._cache[15] || (_cache[15] = [
+                                default: _withCtx(() => [..._cache[22] || (_cache[22] = [
                                   _createTextVNode("文件浏览", -1)
                                 ])]),
                                 _: 1
                               }),
                               _createVNode(_component_v_list_item_subtitle, null, {
-                                default: _withCtx(() => [..._cache[16] || (_cache[16] = [
+                                default: _withCtx(() => [..._cache[23] || (_cache[23] = [
                                   _createTextVNode(" 支持浏览迅雷网盘中的文件和文件夹,查看文件大小、修改时间等信息 ", -1)
                                 ])]),
                                 _: 1
@@ -386,7 +502,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                           _createVNode(_component_v_list_item, null, {
                             prepend: _withCtx(() => [
                               _createVNode(_component_v_icon, { color: "primary" }, {
-                                default: _withCtx(() => [..._cache[17] || (_cache[17] = [
+                                default: _withCtx(() => [..._cache[24] || (_cache[24] = [
                                   _createTextVNode("mdi-cloud-download-outline", -1)
                                 ])]),
                                 _: 1
@@ -394,13 +510,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             ]),
                             default: _withCtx(() => [
                               _createVNode(_component_v_list_item_title, null, {
-                                default: _withCtx(() => [..._cache[18] || (_cache[18] = [
+                                default: _withCtx(() => [..._cache[25] || (_cache[25] = [
                                   _createTextVNode("离线下载", -1)
                                 ])]),
                                 _: 1
                               }),
                               _createVNode(_component_v_list_item_subtitle, null, {
-                                default: _withCtx(() => [..._cache[19] || (_cache[19] = [
+                                default: _withCtx(() => [..._cache[26] || (_cache[26] = [
                                   _createTextVNode(" 支持添加 HTTP、HTTPS、FTP、磁力链接等离线下载任务到迅雷网盘 ", -1)
                                 ])]),
                                 _: 1
@@ -411,7 +527,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                           _createVNode(_component_v_list_item, null, {
                             prepend: _withCtx(() => [
                               _createVNode(_component_v_icon, { color: "primary" }, {
-                                default: _withCtx(() => [..._cache[20] || (_cache[20] = [
+                                default: _withCtx(() => [..._cache[27] || (_cache[27] = [
                                   _createTextVNode("mdi-format-list-bulleted", -1)
                                 ])]),
                                 _: 1
@@ -419,13 +535,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             ]),
                             default: _withCtx(() => [
                               _createVNode(_component_v_list_item_title, null, {
-                                default: _withCtx(() => [..._cache[21] || (_cache[21] = [
+                                default: _withCtx(() => [..._cache[28] || (_cache[28] = [
                                   _createTextVNode("任务管理", -1)
                                 ])]),
                                 _: 1
                               }),
                               _createVNode(_component_v_list_item_subtitle, null, {
-                                default: _withCtx(() => [..._cache[22] || (_cache[22] = [
+                                default: _withCtx(() => [..._cache[29] || (_cache[29] = [
                                   _createTextVNode(" 查看离线下载任务列表,支持暂停、恢复、取消等操作 ", -1)
                                 ])]),
                                 _: 1
@@ -436,7 +552,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                           _createVNode(_component_v_list_item, null, {
                             prepend: _withCtx(() => [
                               _createVNode(_component_v_icon, { color: "primary" }, {
-                                default: _withCtx(() => [..._cache[23] || (_cache[23] = [
+                                default: _withCtx(() => [..._cache[30] || (_cache[30] = [
                                   _createTextVNode("mdi-download", -1)
                                 ])]),
                                 _: 1
@@ -444,13 +560,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                             ]),
                             default: _withCtx(() => [
                               _createVNode(_component_v_list_item_title, null, {
-                                default: _withCtx(() => [..._cache[24] || (_cache[24] = [
+                                default: _withCtx(() => [..._cache[31] || (_cache[31] = [
                                   _createTextVNode("文件下载", -1)
                                 ])]),
                                 _: 1
                               }),
                               _createVNode(_component_v_list_item_subtitle, null, {
-                                default: _withCtx(() => [..._cache[25] || (_cache[25] = [
+                                default: _withCtx(() => [..._cache[32] || (_cache[32] = [
                                   _createTextVNode(" 从迅雷网盘下载文件到本地(需要配置下载器) ", -1)
                                 ])]),
                                 _: 1
@@ -477,7 +593,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     loading: saving.value,
                     "prepend-icon": "mdi-content-save"
                   }, {
-                    default: _withCtx(() => [..._cache[26] || (_cache[26] = [
+                    default: _withCtx(() => [..._cache[33] || (_cache[33] = [
                       _createTextVNode(" 保存配置 ", -1)
                     ])]),
                     _: 1
@@ -490,7 +606,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                     "prepend-icon": "mdi-connection",
                     class: "ml-2"
                   }, {
-                    default: _withCtx(() => [..._cache[27] || (_cache[27] = [
+                    default: _withCtx(() => [..._cache[34] || (_cache[34] = [
                       _createTextVNode(" 测试连接 ", -1)
                     ])]),
                     _: 1
@@ -508,8 +624,8 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Config_vue_vue_type_style_index_0_scoped_61fed0c4_lang = '';
+const Config_vue_vue_type_style_index_0_scoped_c8c345e4_lang = '';
 
-const Config = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-61fed0c4"]]);
+const Config = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-c8c345e4"]]);
 
 export { Config as default };
