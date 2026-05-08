@@ -80,8 +80,22 @@ export async function loadImage(
 
       console.log('[ImageLoader] 响应状态:', response.status)
       
+      // 检查响应数据是否存在
+      if (!response.data) {
+        console.error('[ImageLoader] 响应数据为空')
+        throw new Error('响应数据为空')
+      }
+      
+      console.log('[ImageLoader] 响应数据类型:', typeof response.data, response.data.constructor?.name)
+      
       // 获取 Blob 数据
       const blob = response.data
+      
+      // 验证是否为 Blob 对象
+      if (!(blob instanceof Blob)) {
+        console.error('[ImageLoader] 响应数据不是 Blob 对象:', blob)
+        throw new Error('响应数据格式错误')
+      }
       
       // 创建 Blob URL
       const blobUrl = URL.createObjectURL(blob)

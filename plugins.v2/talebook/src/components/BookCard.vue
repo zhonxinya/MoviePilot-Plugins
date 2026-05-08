@@ -2,7 +2,7 @@
   <v-card hover elevation="3" class="h-100 rounded-lg overflow-hidden" style="max-width: 280px;">
     <!-- 封面图片 -->
     <v-img
-      :src="loadedImageUrl || coverUrl"
+      :src="loadedImageUrl"
       height="280"
       cover
       class="bg-grey-lighten-3"

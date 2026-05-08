@@ -40,7 +40,16 @@ async function loadImage(imageUrl, api, useCache = true) {
         responseType: "blob"
       });
       console.log("[ImageLoader] 响应状态:", response.status);
+      if (!response.data) {
+        console.error("[ImageLoader] 响应数据为空");
+        throw new Error("响应数据为空");
+      }
+      console.log("[ImageLoader] 响应数据类型:", typeof response.data, response.data.constructor?.name);
       const blob = response.data;
+      if (!(blob instanceof Blob)) {
+        console.error("[ImageLoader] 响应数据不是 Blob 对象:", blob);
+        throw new Error("响应数据格式错误");
+      }
       const blobUrl = URL.createObjectURL(blob);
       if (useCache) {
         imageCache.set(imageUrl, blobUrl);
@@ -137,7 +146,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
       }, {
         default: _withCtx$6(() => [
           _createVNode$6(_component_v_img, {
-            src: _unref$1(loadedImageUrl) || __props.coverUrl,
+            src: _unref$1(loadedImageUrl),
             height: "280",
             cover: "",
             class: "bg-grey-lighten-3",
@@ -267,7 +276,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   }
 });
 
-const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-cab198da"]]);
+const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-df18d645"]]);
 
 const {defineComponent:_defineComponent$5} = await importShared('vue');
 
