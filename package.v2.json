@@ -18,44 +18,18 @@
     "name": "Talebook",
     "description": "Talebook 本地书库管理，统一封面字段为 cover_url，支持扫描目录批量导入小说（与 Sonovel 联动）",
     "labels": "电子书,管理,搜索,扫描,导入",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "icon": "Calibre_B.png",
     "author": "trient",
     "level": 1,
     "history": {
+      "v1.0.6": "修复缓存失效后不会重新下载的问题，同时清除 talebook_api 和 talebook_recent 缓存区域",
       "v1.0.5": "统一书籍封面字段为 cover_url，并收敛会话缓存键",
       "v1.0.4": "添加502错误处理和通用重试机制",
       "v1.0.3": "新增元数据分类功能(标签/作者/丛书/评分/出版社/语言)",
       "v1.0.2": "优化依赖管理和构建配置",
       "v1.0.1": "版本更新",
       "v1.0.0": "初始版本"
-    }
-  },
-  "QidianBook": {
-    "name": "起点图书",
-    "description": "获取起点中文网图书信息，支持搜索和详情查询。",
-    "labels": "图书,搜索,起点",
-    "version": "1.0.1",
-    "icon": "Bookstack_A.png",
-    "author": "trient",
-    "level": 1,
-    "history": {
-      "v1.0.1": "版本更新",
-      "v1.0.0": "初始版本，支持起点图书搜索和详情查询"
-    }
-  },
-  "XunleiPan": {
-    "name": "迅雷网盘",
-    "description": "迅雷网盘文件浏览和离线下载管理，支持浏览器辅助登录与 Cookie 会话采集",
-    "labels": "网盘,下载,离线,迅雷",
-    "version": "1.0.5",
-    "icon": "Thunder_A.png",
-    "author": "trient",
-    "level": 1,
-    "history": {
-      "v1.0.5": "新增浏览器辅助登录闭环，支持打开登录页、手动完成登录后采集 Cookie 和 User-Agent",
-      "v1.0.4": "改为浏览器 Cookie 会话登录，移除用户名密码直登并补充测试连接提示",
-      "v1.0.0": "初始版本，支持文件浏览和离线下载"
     }
   }
 }
