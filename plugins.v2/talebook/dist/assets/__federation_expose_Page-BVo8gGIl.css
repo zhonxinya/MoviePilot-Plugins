@@ -32,24 +32,24 @@ to {
 }
 }
 
-.meta-category-page[data-v-0544a106] {
+.meta-category-page[data-v-fc04b3aa] {
   min-height: 100%;
 }
-.meta-card[data-v-0544a106] {
+.meta-card[data-v-fc04b3aa] {
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
 }
-.meta-card[data-v-0544a106]:hover {
+.meta-card[data-v-fc04b3aa]:hover {
   transform: translateY(-4px);
 }
-.card-footer[data-v-0544a106] {
+.card-footer[data-v-fc04b3aa] {
   background: linear-gradient(to right, rgba(var(--v-theme-primary), 0.05), transparent);
 }
-.on-hover[data-v-0544a106] {
+.on-hover[data-v-fc04b3aa] {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.transition-swing[data-v-0544a106] {
+.transition-swing[data-v-fc04b3aa] {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 

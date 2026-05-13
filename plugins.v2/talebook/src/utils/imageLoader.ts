@@ -161,6 +161,13 @@ export async function loadImage(
           size: blob.size,
           preview
         })
+        
+        // 如果是 JSON 错误响应,抛出具体错误信息
+        if (blob.type === 'application/json' && parsedError) {
+          const errorObj = parsedError as any
+          throw new Error(errorObj.message || `图片加载失败: ${errorObj.code || '未知错误'}`)
+        }
+        
         return ''
       }
       

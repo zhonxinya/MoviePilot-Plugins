@@ -97,6 +97,10 @@ async function loadImage(imageUrl, api, options = {}) {
           size: blob.size,
           preview
         });
+        if (blob.type === "application/json" && parsedError) {
+          const errorObj = parsedError;
+          throw new Error(errorObj.message || `图片加载失败: ${errorObj.code || "未知错误"}`);
+        }
         return "";
       }
       if (blob.size === 0) {
@@ -1929,7 +1933,7 @@ const _sfc_main$1 = /* @__PURE__ */ _defineComponent$1({
   }
 });
 
-const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-0544a106"]]);
+const MetaCategory = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-fc04b3aa"]]);
 
 const {defineComponent:_defineComponent} = await importShared('vue');
 
