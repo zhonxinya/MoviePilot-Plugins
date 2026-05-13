@@ -142,15 +142,15 @@ to {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.v-card[data-v-57515023] {
+.v-card[data-v-7d91c559] {
   transition: transform 0.2s;
 }
-.v-card[data-v-57515023]:hover {
+.v-card[data-v-7d91c559]:hover {
   transform: translateY(-2px);
 }
 
 /* 文本截断样式 */
-.line-clamp-1[data-v-57515023] {
+.line-clamp-1[data-v-7d91c559] {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   line-clamp: 1;
@@ -158,7 +158,7 @@ to {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.line-clamp-2[data-v-57515023] {
+.line-clamp-2[data-v-7d91c559] {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -168,10 +168,10 @@ to {
 }
 
 /* 旋转动画 */
-.animate-spin[data-v-57515023] {
-  animation: spin-57515023 1s linear infinite;
+.animate-spin[data-v-7d91c559] {
+  animation: spin-7d91c559 1s linear infinite;
 }
-@keyframes spin-57515023 {
+@keyframes spin-7d91c559 {
 from {
     transform: rotate(0deg);
 }

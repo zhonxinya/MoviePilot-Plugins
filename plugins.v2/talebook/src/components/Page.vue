@@ -73,15 +73,6 @@
             搜索并浏览书籍
           </v-card-title>
           <v-card-text class="pa-5">
-            <v-alert type="info" variant="tonal" class="mb-5" border="start" icon="mdi-information">
-              <div class="text-body-2">
-                <strong>功能说明：</strong><br>
-                • 支持按书名、作者或标签搜索<br>
-                • 点击卡片查看详情或直接下载<br>
-                • 支持多种格式：.epub、.mobi、.pdf
-              </div>
-            </v-alert>
-            
             <!-- 搜索框 -->
             <v-row class="mb-4">
               <v-col cols="12" md="8">
