@@ -31,5 +31,17 @@
       "v1.0.1": "版本更新",
       "v1.0.0": "初始版本"
     }
+  },
+  "Audiobookshelf": {
+    "name": "Audiobookshelf",
+    "description": "Audiobookshelf 有声书和播客管理，支持库管理、作者管理、播客下载等功能",
+    "labels": "有声书,播客,管理,库,作者",
+    "version": "1.0.0",
+    "icon": "Audiobookshelf.png",
+    "author": "MoviePilot Team",
+    "level": 1,
+    "history": {
+      "v1.0.0": "初始版本，支持库管理、作者管理、系列管理、播客管理、邮件设置、通知管理"
+    }
   }
 }
