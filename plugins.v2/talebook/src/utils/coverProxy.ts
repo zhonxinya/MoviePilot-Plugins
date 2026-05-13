@@ -46,7 +46,10 @@ export function buildProxyImageUrl(imageUrl: string, serverUrl: string, apiBaseP
     resolvedUrl = `${serverUrl}${resolvedUrl}`
   }
 
-  return `${apiBasePath}?url=${encodeURIComponent(resolvedUrl)}`
+  // 🔄 关键修复: 添加时间戳参数,防止浏览器缓存旧图片
+  // 当后端清除缓存后,新图片需要立即显示
+  const timestamp = Date.now()
+  return `${apiBasePath}?url=${encodeURIComponent(resolvedUrl)}&t=${timestamp}`
 }
 
 export function buildBookCoverUrl(

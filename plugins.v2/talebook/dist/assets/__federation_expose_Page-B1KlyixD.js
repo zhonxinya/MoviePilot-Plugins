@@ -1366,7 +1366,8 @@ function buildProxyImageUrl(imageUrl, serverUrl, apiBasePath) {
   if (resolvedUrl.startsWith("/") && !isAbsoluteUrl(resolvedUrl) && serverUrl) {
     resolvedUrl = `${serverUrl}${resolvedUrl}`;
   }
-  return `${apiBasePath}?url=${encodeURIComponent(resolvedUrl)}`;
+  const timestamp = Date.now();
+  return `${apiBasePath}?url=${encodeURIComponent(resolvedUrl)}&t=${timestamp}`;
 }
 function buildBookCoverUrl(book, serverUrl, apiBasePath, variant = "card") {
   const { url } = resolveCoverSource(book, variant);
