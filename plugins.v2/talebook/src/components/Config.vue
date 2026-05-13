@@ -287,34 +287,61 @@ async function testConnection() {
     return
   }
   
+  if (!config.value.username || !config.value.password) {
+    testResult.value = {
+      success: false,
+      message: '请先填写用户名和密码'
+    }
+    return
+  }
+  
   testing.value = true
   testResult.value = null
   
   try {
-    // 尝试访问 Talebook API
-    const testUrl = `${config.value.server_url}/api/search?name=test`
-    const response = await fetch(testUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+    // 先保存配置,确保后端有最新的配置
+    await saveConfig()
     
-    if (response.ok) {
-      testResult.value = {
-        success: true,
-        message: '连接成功!可以正常访问 Talebook 服务器'
+    // 调用后端 API 测试连接
+    const response = await props.api.get(`plugin/${PLUGIN_ID}/test_connection`)
+    
+    if (response.code === 200) {
+      const resultData = response.data
+      
+      if (resultData.success) {
+        // 连接成功
+        const userInfo = resultData.user_info
+        let message = '✅ 连接成功!'
+        
+        if (userInfo && userInfo.name) {
+          message += `\n用户: ${userInfo.name}`
+        }
+        if (userInfo && userInfo.email) {
+          message += ` (${userInfo.email})`
+        }
+        
+        testResult.value = {
+          success: true,
+          message: message
+        }
+      } else {
+        // 连接失败
+        testResult.value = {
+          success: false,
+          message: `❌ ${response.message}`
+        }
       }
     } else {
       testResult.value = {
         success: false,
-        message: `连接失败: HTTP ${response.status}`
+        message: `❌ 请求失败: ${response.message}`
       }
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('[Config] 测试连接失败:', error)
     testResult.value = {
       success: false,
-      message: `连接失败: ${error instanceof Error ? error.message : '未知错误'}`
+      message: `❌ 测试失败: ${error.message || '未知错误'}`
     }
   } finally {
     testing.value = false

@@ -1265,6 +1265,95 @@ class Talebook(_PluginBase):
             logger.error(f'❌ 保存配置失败: {str(e)}')
             return {"code": 500, "message": str(e)}
     
+    def api_test_connection(self) -> Dict[str, Any]:
+        """
+        API: 测试 Talebook 服务器连接
+        
+        Returns:
+            测试结果
+        """
+        try:
+            # 获取当前配置
+            config = self.get_config() or {}
+            server_url = config.get("server_url", "").rstrip("/")
+            username = config.get("username", "")
+            password = config.get("password", "")
+            verify_ssl = config.get("verify_ssl", True)
+            
+            # 验证配置完整性
+            if not server_url:
+                return {
+                    "code": 400,
+                    "message": "请先配置服务器地址",
+                    "data": {"success": False}
+                }
+            
+            if not username or not password:
+                return {
+                    "code": 400,
+                    "message": "请先配置用户名和密码",
+                    "data": {"success": False}
+                }
+            
+            logger.info(f"🔍 开始测试连接: {server_url}")
+            
+            # 创建临时客户端进行测试
+            from .talebook_api_client import TalebookAPIClient
+            temp_client = TalebookAPIClient(
+                base_url=server_url,
+                username=username,
+                password=password,
+                verify_ssl=verify_ssl
+            )
+            
+            try:
+                # 尝试登录
+                login_success = temp_client.login()
+                
+                if login_success:
+                    # 登录成功,尝试获取用户信息验证
+                    user_info = temp_client.get_user_info()
+                    
+                    if user_info and user_info.get("code") == 200:
+                        result = {
+                            "code": 200,
+                            "message": "连接成功!",
+                            "data": {
+                                "success": True,
+                                "user_info": user_info.get("data", {})
+                            }
+                        }
+                        logger.info("✅ 连接测试成功")
+                    else:
+                        result = {
+                            "code": 200,
+                            "message": f"登录成功但获取用户信息失败: {user_info.get('message', '未知错误')}",
+                            "data": {"success": True}
+                        }
+                        logger.warning("⚠️ 登录成功但获取用户信息失败")
+                else:
+                    result = {
+                        "code": 200,
+                        "message": "登录失败,请检查用户名和密码",
+                        "data": {"success": False}
+                    }
+                    logger.warning("⚠️ 登录失败")
+                    
+            finally:
+                # 关闭临时客户端
+                temp_client.close()
+            
+            return result
+            
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"❌ 连接测试失败: {error_msg}")
+            return {
+                "code": 200,
+                "message": f"连接失败: {error_msg}",
+                "data": {"success": False}
+            }
+    
     def handle_action(self, action: str, book_id: int = None, **kwargs):
         """
         处理前端操作

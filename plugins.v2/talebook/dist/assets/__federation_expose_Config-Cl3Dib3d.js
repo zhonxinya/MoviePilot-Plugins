@@ -135,31 +135,51 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         };
         return;
       }
+      if (!config.value.username || !config.value.password) {
+        testResult.value = {
+          success: false,
+          message: "请先填写用户名和密码"
+        };
+        return;
+      }
       testing.value = true;
       testResult.value = null;
       try {
-        const testUrl = `${config.value.server_url}/api/search?name=test`;
-        const response = await fetch(testUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
+        await saveConfig();
+        const response = await props.api.get(`plugin/${PLUGIN_ID}/test_connection`);
+        if (response.code === 200) {
+          const resultData = response.data;
+          if (resultData.success) {
+            const userInfo = resultData.user_info;
+            let message = "✅ 连接成功!";
+            if (userInfo && userInfo.name) {
+              message += `
+用户: ${userInfo.name}`;
+            }
+            if (userInfo && userInfo.email) {
+              message += ` (${userInfo.email})`;
+            }
+            testResult.value = {
+              success: true,
+              message
+            };
+          } else {
+            testResult.value = {
+              success: false,
+              message: `❌ ${response.message}`
+            };
           }
-        });
-        if (response.ok) {
-          testResult.value = {
-            success: true,
-            message: "连接成功!可以正常访问 Talebook 服务器"
-          };
         } else {
           testResult.value = {
             success: false,
-            message: `连接失败: HTTP ${response.status}`
+            message: `❌ 请求失败: ${response.message}`
           };
         }
       } catch (error) {
+        console.error("[Config] 测试连接失败:", error);
         testResult.value = {
           success: false,
-          message: `连接失败: ${error instanceof Error ? error.message : "未知错误"}`
+          message: `❌ 测试失败: ${error.message || "未知错误"}`
         };
       } finally {
         testing.value = false;
@@ -384,6 +404,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
 
-const Config = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-2650cbc2"]]);
+const Config = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-58574c30"]]);
 
 export { Config as default };
