@@ -1370,3 +1370,189 @@ class TalebookApiClient:
         except Exception as e:
             logger.error(f"下载图片失败: url={url}, error={str(e)}")
             return None
+    
+    def get_running_tasks(self) -> Dict:
+        """
+        获取云端正在运行的任务状态
+        
+        查询 Talebook 服务器端的扫描和导入任务状态
+        
+        :return: 任务状态信息
+        """
+        import time as time_module
+        start_time = time_module.time()
+        
+        logger.info("=" * 80)
+        logger.info("🔍 [Talebook] 查询正在运行的任务")
+        logger.info(f"   服务器: {self._server_url}")
+        logger.info(f"   用户名: {self._username}")
+        logger.info("=" * 80)
+        
+        if not self._server_url:
+            logger.error("❌ 服务器地址未配置")
+            return {
+                "code": 400,
+                "message": "服务器地址未配置",
+                "data": {
+                    "scan_task": None,
+                    "import_task": None,
+                    "has_running_tasks": False
+                }
+            }
+        
+        try:
+            # 获取认证会话
+            logger.info("🔐 [步骤 1] 获取认证会话...")
+            auth_start = time_module.time()
+            session = self._get_authenticated_session()
+            auth_elapsed = time_module.time() - auth_start
+            
+            if not session:
+                logger.error(f"❌ 登录失败 (耗时: {auth_elapsed:.2f}秒)")
+                return {
+                    "code": 500,
+                    "message": "登录失败,无法查询任务状态",
+                    "data": {
+                        "scan_task": None,
+                        "import_task": None,
+                        "has_running_tasks": False
+                    }
+                }
+            
+            logger.info(f"✅ 认证成功 (耗时: {auth_elapsed:.2f}秒)")
+            
+            # ========== 查询扫描任务状态 ==========
+            scan_status_data = None
+            scan_task_info = None
+            
+            try:
+                scan_status_url = f"{self._server_url}/api/admin/scan/status"
+                logger.info(f"\n📤 [步骤 2] 查询扫描任务状态")
+                logger.info(f"   URL: {scan_status_url}")
+                
+                sresp = session.get(scan_status_url, timeout=10)
+                sresp.raise_for_status()
+                scan_status_data = sresp.json()
+                
+                # 解析扫描状态
+                scanning = scan_status_data.get("scanning", False)
+                status_info = scan_status_data.get("status", {})
+                summary = scan_status_data.get("summary", {})
+                
+                total_files = status_info.get("total", 0)
+                new_files = status_info.get("new", 0)
+                exist_files = status_info.get("exist", 0)
+                ready_files = status_info.get("ready", 0)
+                
+                scan_task_info = {
+                    "type": "scan",
+                    "is_running": scanning,
+                    "status": "running" if scanning else "idle",
+                    "progress": {
+                        "total_files": total_files,
+                        "new_files": new_files,
+                        "exist_files": exist_files,
+                        "ready_files": ready_files
+                    },
+                    "raw_data": scan_status_data
+                }
+                
+                logger.info(f"✅ 扫描任务状态: {'运行中' if scanning else '空闲'}")
+                if scanning:
+                    logger.info(f"   文件统计: 总数={total_files}, 新增={new_files}, 存在={exist_files}, 就绪={ready_files}")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️  查询扫描任务状态失败: {e}")
+                scan_task_info = {
+                    "type": "scan",
+                    "is_running": False,
+                    "status": "error",
+                    "error": str(e),
+                    "progress": {},
+                    "raw_data": None
+                }
+            
+            # ========== 查询导入任务状态 ==========
+            import_status_data = None
+            import_task_info = None
+            
+            try:
+                import_status_url = f"{self._server_url}/api/admin/import/status"
+                logger.info(f"\n📤 [步骤 3] 查询导入任务状态")
+                logger.info(f"   URL: {import_status_url}")
+                
+                iresp = session.get(import_status_url, timeout=10)
+                iresp.raise_for_status()
+                import_status_data = iresp.json()
+                
+                # 解析导入状态
+                importing = import_status_data.get("importing", False)
+                status_info = import_status_data.get("status", {})
+                
+                total_to_import = status_info.get("total", 0)
+                imported_count = status_info.get("imported", 0)
+                failed_count = status_info.get("failed", 0)
+                
+                import_task_info = {
+                    "type": "import",
+                    "is_running": importing,
+                    "status": "running" if importing else "idle",
+                    "progress": {
+                        "total_to_import": total_to_import,
+                        "imported_count": imported_count,
+                        "failed_count": failed_count
+                    },
+                    "raw_data": import_status_data
+                }
+                
+                logger.info(f"✅ 导入任务状态: {'运行中' if importing else '空闲'}")
+                if importing:
+                    logger.info(f"   导入进度: 总数={total_to_import}, 已导入={imported_count}, 失败={failed_count}")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️  查询导入任务状态失败: {e}")
+                import_task_info = {
+                    "type": "import",
+                    "is_running": False,
+                    "status": "error",
+                    "error": str(e),
+                    "progress": {},
+                    "raw_data": None
+                }
+            
+            # ========== 汇总结果 ==========
+            has_running_tasks = (
+                (scan_task_info and scan_task_info.get("is_running", False)) or
+                (import_task_info and import_task_info.get("is_running", False))
+            )
+            
+            total_elapsed = time_module.time() - start_time
+            logger.info(f"\n{'=' * 80}")
+            logger.info(f"✅ [查询完成] 正在运行的任务: {'是' if has_running_tasks else '否'} (总耗时: {total_elapsed:.2f}秒)")
+            logger.info(f"{'=' * 80}\n")
+            
+            return {
+                "code": 200,
+                "message": "查询成功",
+                "data": {
+                    "scan_task": scan_task_info,
+                    "import_task": import_task_info,
+                    "has_running_tasks": has_running_tasks,
+                    "query_time": total_elapsed
+                }
+            }
+            
+        except Exception as e:
+            total_elapsed = time_module.time() - start_time
+            logger.error(f"❌ 查询任务状态异常 (耗时: {total_elapsed:.2f}秒): {str(e)}")
+            import traceback
+            logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
+            return {
+                "code": 500,
+                "message": f"查询失败: {str(e)}",
+                "data": {
+                    "scan_task": None,
+                    "import_task": None,
+                    "has_running_tasks": False
+                }
+            }

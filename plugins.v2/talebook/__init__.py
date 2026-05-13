@@ -316,6 +316,15 @@ class Talebook(_PluginBase):
                 "summary": "获取收藏的书籍列表",
                 "description": "获取当前用户收藏的书籍",
             },
+            # 任务管理 API
+            {
+                "path": "/admin/tasks/running",
+                "endpoint": self.api_get_running_tasks,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "获取云端正在运行的任务",
+                "description": "查询 Talebook 服务器端的扫描和导入任务状态",
+            },
             # 元数据相关 API
             {
                 "path": "/book/{book_id}/refer",
@@ -1201,6 +1210,25 @@ class Talebook(_PluginBase):
         except Exception as e:
             logger.error(f"获取收藏列表异常: {str(e)}")
             return {"code": 500, "message": f"获取失败: {str(e)}"}
+    
+    def api_get_running_tasks(self) -> Dict[str, Any]:
+        """
+        API: 获取云端正在运行的任务状态
+        
+        查询 Talebook 服务器端的扫描和导入任务状态
+        
+        :return: 任务状态信息
+        """
+        # 统一配置检查
+        error_response = self._check_plugin_ready()
+        if error_response:
+            return error_response
+        
+        try:
+            return self._api_client.get_running_tasks()
+        except Exception as e:
+            logger.error(f"查询任务状态异常: {str(e)}")
+            return {"code": 500, "message": f"查询失败: {str(e)}"}
     
     def api_get_config(self) -> Dict[str, Any]:
         """
