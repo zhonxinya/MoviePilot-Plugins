@@ -725,6 +725,15 @@ class Talebook(_PluginBase):
                            f"imported_count={data.get('imported_count', 0)}")
             logger.info(f"{'=' * 80}\n")
             
+            # 🔄 关键修复: 扫描导入成功后,清除相关缓存
+            # 确保新添加的书籍能立即在"最近添加"列表中显示
+            if result.get('code') == 200 and result.get('data', {}).get('imported_count', 0) > 0:
+                from app.core.cache import Cache
+                logger.info("🧹 清除最近书籍缓存,确保新添加的书籍立即可见...")
+                cache_backend = Cache()
+                cache_backend.clear(region="talebook_recent")
+                logger.info("✅ 缓存已清除")
+            
             return result
         except Exception as e:
             api_elapsed = time_module.time() - api_start_time
