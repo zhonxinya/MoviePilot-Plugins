@@ -1,0 +1,181 @@
+
+.line-clamp-2[data-v-40072c51] {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-1[data-v-40072c51] {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 标签容器 */
+.tags-container[data-v-40072c51] {
+  min-height: 28px;
+}
+
+/* 标签组样式 */
+.tag-group[data-v-40072c51] {
+  gap: 4px;
+}
+
+/* 标签样式美化 */
+.tag-chip[data-v-40072c51] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  font-size: 11px;
+  border-radius: 12px !important;
+  padding: 0 8px !important;
+  height: 20px !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+.tag-chip[data-v-40072c51]:hover {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.1);
+}
+.tag-chip[data-v-40072c51]:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* 标签图标样式 */
+.tag-chip .v-icon[data-v-40072c51] {
+  margin-right: 4px !important;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+}
+.tag-chip:hover .v-icon[data-v-40072c51] {
+  transform: rotate(15deg) scale(1.1);
+  opacity: 1;
+}
+
+/* 出版社标签特殊样式 */
+.publisher-tag[data-v-40072c51] {
+  background: linear-gradient(135deg, rgba(var(--v-theme-info), 0.2), rgba(var(--v-theme-info), 0.08));
+  border: 1px solid rgba(var(--v-theme-info), 0.4);
+  box-shadow: 0 2px 6px rgba(var(--v-theme-info), 0.15);
+}
+.publisher-tag[data-v-40072c51]:hover {
+  box-shadow: 0 6px 12px rgba(var(--v-theme-info), 0.3);
+}
+
+/* 单标签样式 */
+.single-tag[data-v-40072c51] {
+  background: linear-gradient(135deg, rgba(var(--v-theme-primary), 0.2), rgba(var(--v-theme-primary), 0.08));
+  border: 1px solid rgba(var(--v-theme-primary), 0.4);
+  box-shadow: 0 2px 6px rgba(var(--v-theme-primary), 0.15);
+}
+.single-tag[data-v-40072c51]:hover {
+  box-shadow: 0 6px 12px rgba(var(--v-theme-primary), 0.3);
+}
+
+/* 多标签样式 */
+.multi-tag[data-v-40072c51] {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 更多标签提示 */
+.more-tags[data-v-40072c51] {
+  font-style: italic;
+  font-weight: 700;
+  opacity: 0.75;
+  border-width: 1.5px;
+}
+.more-tags[data-v-40072c51]:hover {
+  opacity: 1;
+  background: rgba(var(--v-theme-grey), 0.1);
+}
+
+/* 标签文本溢出处理 */
+.tag-chip .v-chip__content[data-v-40072c51] {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-8[data-v-a2467e79] {
+  display: -webkit-box;
+  line-clamp: 8;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.animate-spin[data-v-95a3d129] {
+  animation: spin-95a3d129 1s linear infinite;
+}
+@keyframes spin-95a3d129 {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(360deg);
+}
+}
+
+.meta-category-page[data-v-ef653819] {
+  min-height: 100%;
+}
+.meta-card[data-v-ef653819] {
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.meta-card[data-v-ef653819]:hover {
+  transform: translateY(-4px);
+}
+.card-footer[data-v-ef653819] {
+  background: linear-gradient(to right, rgba(var(--v-theme-primary), 0.05), transparent);
+}
+.on-hover[data-v-ef653819] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.transition-swing[data-v-ef653819] {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.v-card[data-v-57515023] {
+  transition: transform 0.2s;
+}
+.v-card[data-v-57515023]:hover {
+  transform: translateY(-2px);
+}
+
+/* 文本截断样式 */
+.line-clamp-1[data-v-57515023] {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.line-clamp-2[data-v-57515023] {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 旋转动画 */
+.animate-spin[data-v-57515023] {
+  animation: spin-57515023 1s linear infinite;
+}
+@keyframes spin-57515023 {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(360deg);
+}
+}

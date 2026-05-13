@@ -208,7 +208,7 @@ function useImageLoader(imageSource, api) {
 
 const {defineComponent:_defineComponent$6} = await importShared('vue');
 
-const {unref:_unref$2,resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,createElementVNode:_createElementVNode$5,openBlock:_openBlock$6,createElementBlock:_createElementBlock$4,createCommentVNode:_createCommentVNode$5,createTextVNode:_createTextVNode$6,withCtx:_withCtx$6,toDisplayString:_toDisplayString$5,renderSlot:_renderSlot$1,createBlock:_createBlock$6} = await importShared('vue');
+const {unref:_unref$2,resolveComponent:_resolveComponent$6,createVNode:_createVNode$6,createElementVNode:_createElementVNode$5,openBlock:_openBlock$6,createElementBlock:_createElementBlock$4,createCommentVNode:_createCommentVNode$5,createTextVNode:_createTextVNode$6,withCtx:_withCtx$6,toDisplayString:_toDisplayString$5,renderSlot:_renderSlot$1,createBlock:_createBlock$6,renderList:_renderList$3,Fragment:_Fragment$3} = await importShared('vue');
 
 const _hoisted_1$5 = {
   key: 0,
@@ -219,6 +219,10 @@ const _hoisted_2$3 = {
   class: "d-flex flex-column align-center justify-center"
 };
 const _hoisted_3$3 = { class: "text-caption text-grey-lighten-4 mt-2" };
+const _hoisted_4$3 = {
+  key: 0,
+  class: "tags-container"
+};
 const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   __name: "BookCard",
   props: {
@@ -232,6 +236,10 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   setup(__props) {
     const props = __props;
     const { imageUrl: loadedImageUrl, loading, error: imageError } = useImageLoader(props.coverUrl, props.api);
+    const getTagColor = (index) => {
+      const colors = ["primary", "success", "warning", "deep-purple", "teal", "pink", "indigo"];
+      return colors[index % colors.length];
+    };
     return (_ctx, _cache) => {
       const _component_v_progress_circular = _resolveComponent$6("v-progress-circular");
       const _component_v_icon = _resolveComponent$6("v-icon");
@@ -315,39 +323,74 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
             ]),
             _: 1
           }),
-          _createVNode$6(_component_v_card_text, { class: "pb-1 px-2" }, {
+          _createVNode$6(_component_v_card_text, { class: "pb-2 px-2" }, {
             default: _withCtx$6(() => [
-              _createVNode$6(_component_v_chip_group, {
-                column: "",
-                density: "compact"
-              }, {
-                default: _withCtx$6(() => [
-                  __props.book.publisher ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
-                    key: 0,
-                    size: "x-small",
-                    variant: "tonal",
-                    color: "info",
-                    class: "mb-1"
-                  }, {
-                    default: _withCtx$6(() => [
-                      _createTextVNode$6(_toDisplayString$5(__props.book.publisher), 1)
-                    ]),
-                    _: 1
-                  })) : _createCommentVNode$5("", true),
-                  __props.book.tag ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
-                    key: 1,
-                    size: "x-small",
-                    variant: "tonal",
-                    color: "success"
-                  }, {
-                    default: _withCtx$6(() => [
-                      _createTextVNode$6(_toDisplayString$5(__props.book.tag), 1)
-                    ]),
-                    _: 1
-                  })) : _createCommentVNode$5("", true)
-                ]),
-                _: 1
-              })
+              __props.book.tags || __props.book.tag ? (_openBlock$6(), _createElementBlock$4("div", _hoisted_4$3, [
+                _createVNode$6(_component_v_chip_group, {
+                  column: "",
+                  density: "compact",
+                  class: "ma-0 tag-group"
+                }, {
+                  default: _withCtx$6(() => [
+                    __props.book.publisher ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
+                      key: 0,
+                      size: "x-small",
+                      variant: "flat",
+                      color: "info",
+                      "prepend-icon": "mdi-domain",
+                      class: "tag-chip publisher-tag mb-1"
+                    }, {
+                      default: _withCtx$6(() => [
+                        _createTextVNode$6(_toDisplayString$5(__props.book.publisher), 1)
+                      ]),
+                      _: 1
+                    })) : _createCommentVNode$5("", true),
+                    !__props.book.tags && __props.book.tag ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
+                      key: 1,
+                      size: "x-small",
+                      variant: "tonal",
+                      color: "primary",
+                      "prepend-icon": "mdi-tag-outline",
+                      class: "tag-chip single-tag"
+                    }, {
+                      default: _withCtx$6(() => [
+                        _createTextVNode$6(_toDisplayString$5(__props.book.tag), 1)
+                      ]),
+                      _: 1
+                    })) : _createCommentVNode$5("", true),
+                    __props.book.tags && Array.isArray(__props.book.tags) ? (_openBlock$6(), _createElementBlock$4(_Fragment$3, { key: 2 }, [
+                      (_openBlock$6(true), _createElementBlock$4(_Fragment$3, null, _renderList$3(__props.book.tags.slice(0, 3), (tag, idx) => {
+                        return _openBlock$6(), _createBlock$6(_component_v_chip, {
+                          key: idx,
+                          size: "x-small",
+                          variant: "tonal",
+                          color: getTagColor(Number(idx)),
+                          "prepend-icon": "mdi-tag-outline",
+                          class: "tag-chip multi-tag"
+                        }, {
+                          default: _withCtx$6(() => [
+                            _createTextVNode$6(_toDisplayString$5(tag), 1)
+                          ]),
+                          _: 2
+                        }, 1032, ["color"]);
+                      }), 128)),
+                      __props.book.tags.length > 3 ? (_openBlock$6(), _createBlock$6(_component_v_chip, {
+                        key: 0,
+                        size: "x-small",
+                        variant: "outlined",
+                        color: "grey",
+                        class: "tag-chip more-tags"
+                      }, {
+                        default: _withCtx$6(() => [
+                          _createTextVNode$6(" +" + _toDisplayString$5(__props.book.tags.length - 3), 1)
+                        ]),
+                        _: 1
+                      })) : _createCommentVNode$5("", true)
+                    ], 64)) : _createCommentVNode$5("", true)
+                  ]),
+                  _: 1
+                })
+              ])) : _createCommentVNode$5("", true)
             ]),
             _: 1
           }),
@@ -386,7 +429,7 @@ const _sfc_main$6 = /* @__PURE__ */ _defineComponent$6({
   }
 });
 
-const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-ce7fe851"]]);
+const BookCard = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-40072c51"]]);
 
 const {defineComponent:_defineComponent$5} = await importShared('vue');
 
