@@ -31,11 +31,9 @@
             :cover-url="getCoverUrl(book)"
             :api="api"
             :is-favorited="favoriteBookIds.has(book.id)"
-            :is-downloading="downloadingBookId === book.id"
             :show-favorite="showFavorite"
             @detail="$emit('detail', $event)"
             @toggle-favorite="$emit('toggle-favorite', $event)"
-            @download="$emit('download', $event)"
           >
             <!-- 允许父组件插入自定义内容(如收藏/在读标记) -->
             <template #badge="{ book }">
@@ -60,7 +58,6 @@ interface Props {
   icon: string
   api: any
   favoriteBookIds: Set<number>
-  downloadingBookId?: number | null
   loading?: boolean
   showRefresh?: boolean
   showFavorite?: boolean
@@ -68,7 +65,6 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  downloadingBookId: null,
   loading: false,
   showRefresh: false,
   showFavorite: true
@@ -77,7 +73,6 @@ withDefaults(defineProps<Props>(), {
 defineEmits<{
   detail: [bookId: number]
   'toggle-favorite': [bookId: number]
-  download: [bookId: number]
   refresh: []
 }>()
 </script>

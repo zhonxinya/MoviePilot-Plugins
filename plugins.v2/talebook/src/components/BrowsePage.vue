@@ -89,7 +89,6 @@
       :cover-url="selectedBook ? getCoverUrl(selectedBook) : ''"
       :api="props.api"
       @toggle-favorite="handleToggleFavorite"
-      @download="handleDownload"
     />
   </div>
 </template>
@@ -285,14 +284,6 @@ async function handleBookDetail(bookId: number) {
 function handleToggleFavorite(bookId: number) {
   console.log('切换收藏状态:', bookId)
   // TODO: 实现收藏功能
-}
-
-/**
- * 处理下载
- */
-function handleDownload(bookId: number) {
-  console.log('下载书籍:', bookId)
-  // TODO: 实现下载功能
 }
 
 /**

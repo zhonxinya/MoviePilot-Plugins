@@ -70,16 +70,6 @@
           :icon="isFavorited ? 'mdi-heart' : 'mdi-heart-outline'"
           @click="$emit('toggle-favorite', book.id)"
         />
-        <v-btn
-          size="x-small"
-          color="success"
-          variant="flat"
-          prepend-icon="mdi-download-box"
-          :loading="isDownloading"
-          @click="$emit('download', book.id)"
-        >
-          下载
-        </v-btn>
       </slot>
     </v-card-actions>
   </v-card>
@@ -93,13 +83,11 @@ interface Props {
   coverUrl: string
   api: any
   isFavorited?: boolean
-  isDownloading?: boolean
   showFavorite?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isFavorited: false,
-  isDownloading: false,
   showFavorite: true
 })
 
@@ -109,7 +97,6 @@ const { imageUrl: loadedImageUrl, loading, error: imageError } = useImageLoader(
 defineEmits<{
   detail: [bookId: number]
   'toggle-favorite': [bookId: number]
-  download: [bookId: number]
 }>()
 </script>
 

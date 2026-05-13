@@ -136,24 +136,6 @@
                 </div>
               </v-card-text>
             </v-card>
-            
-            <!-- 操作按钮 -->
-            <v-card flat>
-              <v-card-actions class="px-0">
-                <v-spacer />
-                <v-btn
-                  color="success"
-                  size="large"
-                  variant="elevated"
-                  prepend-icon="mdi-download-box"
-                  :loading="isDownloading"
-                  @click="$emit('download', book.id)"
-                  class="elevation-2"
-                >
-                  下载图书
-                </v-btn>
-              </v-card-actions>
-            </v-card>
           </v-col>
         </v-row>
       </v-card-text>
@@ -171,12 +153,10 @@ interface Props {
   coverUrl: string
   api?: any  // MoviePilot-Frontend 提供的 API 对象
   isFavorited?: boolean
-  isDownloading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isFavorited: false,
-  isDownloading: false,
   api: undefined
 })
 
@@ -197,7 +177,6 @@ const { imageUrl: loadedCoverUrl, loading, error: imageError } = useImageLoader(
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'toggle-favorite': [bookId: number]
-  download: [bookId: number]
 }>()
 
 const dialogVisible = computed({

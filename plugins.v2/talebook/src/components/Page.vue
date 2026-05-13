@@ -116,11 +116,9 @@
           icon="mdi-bookshelf"
           :api="props.api"
           :favorite-book-ids="favoriteBookIds"
-          :downloading-book-id="downloadingBook"
           :get-cover-url="getCoverUrl"
           @detail="showBookDetail"
           @toggle-favorite="toggleFavorite"
-          @download="downloadBook"
         />
 
         <!-- 空状态提示 -->
@@ -141,12 +139,10 @@
           icon="mdi-history"
           :api="props.api"
           :favorite-book-ids="favoriteBookIds"
-          :downloading-book-id="downloadingBook"
           :loading="loading"
           :get-cover-url="getCoverUrl"
           @detail="showBookDetail"
           @toggle-favorite="toggleFavorite"
-          @download="downloadBook"
         />
 
         <!-- 空状态提示 -->
@@ -172,7 +168,6 @@
           :show-favorite="false"
           :get-cover-url="getCoverUrl"
           @detail="showBookDetail"
-          @download="downloadBook"
           @refresh="loadFavoriteBooks"
         >
           <!-- 自定义徽章: 收藏标记 -->
@@ -237,7 +232,6 @@
           :show-favorite="false"
           :get-cover-url="getCoverUrl"
           @detail="showBookDetail"
-          @download="downloadBook"
           @refresh="loadReadingBooks"
         >
           <!-- 自定义徽章: 在读标记 -->
@@ -302,9 +296,7 @@
       :cover-url="selectedBook ? getDetailCoverUrl(selectedBook) : ''"
       :api="props.api"
       :is-favorited="selectedBook ? favoriteBooks.some(b => b.id === selectedBook.id) : false"
-      :is-downloading="downloadingBook === selectedBook?.id"
       @toggle-favorite="selectedBook && toggleFavorite(selectedBook.id)"
-      @download="selectedBook && downloadBook(selectedBook.id)"
     />
 
     <!-- Toast 通知 -->
@@ -384,7 +376,6 @@ const scanProgress = ref<ScanProgress>({
   message: '',
   details: {}
 })
-const downloadingBook = ref<number | null>(null)
 const detailDialog = ref(false)
 const selectedBook = ref<any>(null)
 const listTitle = ref('扫描结果')
@@ -947,34 +938,6 @@ const showBookDetail = async (bookId: number) => {
   } catch (error) {
     log.error('Detail', '❌ 获取书籍详情失败', error)
     showToast(`获取详情失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error')
-  }
-}
-
-// 下载书籍
-const downloadBook = async (bookId: number) => {
-  downloadingBook.value = bookId
-  
-  try {
-    const response = await safeApiCall(() => 
-      props.api.post(getApiUrl('/action'), {
-        action: 'download',
-        book_id: bookId,
-        format: 'epub'
-      })
-    )
-    
-    console.log('下载响应:', response)
-    
-    if (response && response.code === 200) {
-      showToast(`✅ 下载成功: ${response.data.filepath}`, 'success')
-    } else {
-      showToast(`❌ 下载失败: ${response?.message || '未知错误'}`, 'error')
-    }
-  } catch (error) {
-    console.error('下载失败:', error)
-    showToast('❌ 下载失败,请检查控制台日志', 'error')
-  } finally {
-    downloadingBook.value = null
   }
 }
 
