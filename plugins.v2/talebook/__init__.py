@@ -392,6 +392,15 @@ class Talebook(_PluginBase):
                 "summary": "通用图片代理",
                 "description": "通过插件代理下载任意图片 URL(解决 CORS 问题)",
             },
+            # 连接测试 API
+            {
+                "path": "/test_connection",
+                "endpoint": self.api_test_connection,
+                "methods": ["GET"],
+                "auth": "bear",
+                "summary": "测试 Talebook 服务器连接",
+                "description": "测试与 Talebook 服务器的连接是否正常",
+            },
         ]
     
     def _check_plugin_ready(self) -> Optional[Dict[str, Any]]:
