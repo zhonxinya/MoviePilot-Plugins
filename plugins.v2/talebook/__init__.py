@@ -729,10 +729,18 @@ class Talebook(_PluginBase):
             # 确保新添加的书籍能立即在"最近添加"列表中显示
             if result.get('code') == 200 and result.get('data', {}).get('imported_count', 0) > 0:
                 from app.core.cache import Cache
-                logger.info("🧹 清除最近书籍缓存,确保新添加的书籍立即可见...")
+                logger.info("🧹 清除所有 Talebook 缓存,确保新添加的书籍立即可见...")
                 cache_backend = Cache()
+                
+                # 清除最近书籍缓存
                 cache_backend.clear(region="talebook_recent")
-                logger.info("✅ 缓存已清除")
+                logger.info("✅ talebook_recent 缓存已清除")
+                
+                # 清除 API 数据缓存 (包括书籍详情、元数据列表等)
+                cache_backend.clear(region="talebook_api")
+                logger.info("✅ talebook_api 缓存已清除")
+                
+                logger.info("✅ 所有缓存已清除,前端将获取最新数据")
             
             return result
         except Exception as e:
@@ -1316,46 +1324,35 @@ class Talebook(_PluginBase):
             logger.info(f"🔍 开始测试连接: {server_url}")
             
             # 创建临时客户端进行测试
-            from .talebook_api_client import TalebookAPIClient
-            temp_client = TalebookAPIClient(
-                base_url=server_url,
+            temp_client = TalebookApiClient(
+                server_url=server_url,
                 username=username,
                 password=password,
                 verify_ssl=verify_ssl
             )
             
             try:
-                # 尝试登录
-                login_success = temp_client.login()
+                # 尝试获取用户信息（会自动触发认证）
+                user_info = temp_client.get_user_info()
                 
-                if login_success:
-                    # 登录成功,尝试获取用户信息验证
-                    user_info = temp_client.get_user_info()
-                    
-                    if user_info and user_info.get("code") == 200:
-                        result = {
-                            "code": 200,
-                            "message": "连接成功!",
-                            "data": {
-                                "success": True,
-                                "user_info": user_info.get("data", {})
-                            }
-                        }
-                        logger.info("✅ 连接测试成功")
-                    else:
-                        result = {
-                            "code": 200,
-                            "message": f"登录成功但获取用户信息失败: {user_info.get('message', '未知错误')}",
-                            "data": {"success": True}
-                        }
-                        logger.warning("⚠️ 登录成功但获取用户信息失败")
-                else:
+                if user_info and user_info.get("code") == 200:
                     result = {
                         "code": 200,
-                        "message": "登录失败,请检查用户名和密码",
+                        "message": "连接成功!",
+                        "data": {
+                            "success": True,
+                            "user_info": user_info.get("data", {})
+                        }
+                    }
+                    logger.info("✅ 连接测试成功")
+                else:
+                    error_msg = user_info.get('message', '未知错误') if user_info else '无响应'
+                    result = {
+                        "code": 200,
+                        "message": f"连接失败: {error_msg}",
                         "data": {"success": False}
                     }
-                    logger.warning("⚠️ 登录失败")
+                    logger.warning(f"⚠️ 连接测试失败: {error_msg}")
                     
             finally:
                 # 关闭临时客户端
